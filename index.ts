@@ -10,7 +10,22 @@ let DataInterface: Array<string> = Array();
 let fileData  = fs.readFileSync("test/data.asm", {encoding: 'utf-8'})
 
 let lines: string[] = fileData.split("\n");
+lines = preProcess(lines);
 
+
+// Function to prePrcocess the instructions. It removes the comments and trims the instruction.
+function preProcess(lines: string[]): string[]{
+    let finalLines:string[] = Array();
+    for(let line of lines){
+        line = line.trim();
+        // If the instruction is not a comment
+        if(line[0]!='#'){
+            finalLines.push(line);
+        }
+    }
+
+    return finalLines;
+}
 for(let line of lines){
     // Using Regex to catch multiple spaces
     let instr = line.split(/[ ]+/);

@@ -263,7 +263,7 @@ function encodeInstruction(line: string, index: number) {
                     if (imm > 2047 || imm < -2048) {
                         throw Error(`Immediate Field Length Now Enough! ${line}`);
                     }
-                    let encodedInstr:string;
+                    let encodedInstr: string;
                     if (imm >= 0) {
                         let immString = parseInt((imm).toString()).toString(2);
                         immString = addZeros(immString, 12);
@@ -286,16 +286,61 @@ function encodeInstruction(line: string, index: number) {
                         // console.log(parseInt(encodedInstr, 2).toString(16))
                     }
                     console.log(`(${mnemonic}||${line}) SB Format: ` + parseInt(encodedInstr, 2).toString(16));
-
                 } else {
                     throw Error(`Label Error Occurred at line: ${line}`);
                 }
-            }else if(format=="U"){
+            } else if (format == "U") {
+                let offset = instr[2];
+                offset = parseInt(offset).toString(2);
+                offset = addZeros(offset, 20);
+                let rd = instr[1].replace(',', '').slice(1);
+                rd = parseInt(rd).toString(2);
+                rd = addZeros(rd, 5);
+                let encodedInstr = offset + rd + opcode;
+                console.log(`${offset}|${rd}|${opcode}`)
+                console.log(`(${mnemonic}||${line}) U Format: ` + parseInt(encodedInstr, 2).toString(16));
+            } else if (format == "UJ") {
+                console.log(instr);
+                let rd = instr[1].replace(',', '').slice(1);
+                rd = parseInt(rd).toString(2);
+                rd = addZeros(rd, 5);
+                let label = instr[2];
+                let labelMeta = labelMap.get(label);
 
-            }else if(format=="UJ"){
-
-            }else{
-                
+                if (labelMeta) {
+                    let imm = (labelMeta.location - index) * 2;
+                    // Checking if the immediate field is enough to store 
+                    // Check the range
+                    // if (imm > 2047 || imm < -2048) {
+                    //     throw Error(`Immediate Field Length Now Enough! ${line}`);
+                    // }
+                    let encodedInstr: string;
+                    if (imm >= 0) {
+                        let immString = parseInt((imm).toString()).toString(2);
+                        immString = addZeros(immString, 20);
+                        let imm1 = immString[9]; // 11
+                        let imm2 = immString.slice(10, 20); // 1-10
+                        let imm3 = immString.slice(1, 9); //12-19
+                        let imm4 = immString[0]; // 20
+                        // console.log(`${imm1}|${imm3}|${rs2}|${rs1}|${func3}|${imm2}|${imm4}|${opcode}`)
+                        encodedInstr = imm4.concat(imm2, imm1, imm3, rd, opcode);
+                    } else {
+                        let immString = (parseInt(imm.toString(), 10) >>> 0).toString(2);
+                        // Reducing the length to 12 from LSB
+                        immString = immString.slice(immString.length - 12);
+                        immString = addZeros(immString, 12);
+                        let imm1 = immString[9]; // 11
+                        let imm2 = immString.slice(10, 20); // 1-10
+                        let imm3 = immString.slice(1, 9); //12-19
+                        let imm4 = immString[0]; // 20
+                        encodedInstr = imm4.concat(imm2, imm1, imm3, rd, opcode);
+                    }
+                    console.log(`(${mnemonic}||${line}) UJ Format: ` + parseInt(encodedInstr, 2).toString(16));
+                } else {
+                    throw Error(`Label Error Occurred at line: ${line}`);
+                }
+            } else {
+                throw Error(`Invalid Statement! ${line}`);
             }
         } else {
             // Raise Error

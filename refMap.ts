@@ -37,8 +37,8 @@ export function loadRefMap(refMap: Map<String, schema.InstructionMetaData>) {
     refMap.set('blt', { format: "SB", opcode: "1100011", func3: "100", immLen: 12});
     // U Type Instructions
     // Here immLen refers to 20 bits from MSB
-    refMap.set('lui', { format: "U", opcode: "0010111", immLen: 20});
-    refMap.set('auipc', { format: "U", opcode: "0110111", immLen: 20});
+    refMap.set('lui', { format: "U", opcode: "0110111", immLen: 20});
+    refMap.set('auipc', { format: "U", opcode: "0010111", immLen: 20});
     // UJ Type Instructions
     refMap.set('jal', { format: "UJ", opcode: "1101111", immLen: 20});
 }

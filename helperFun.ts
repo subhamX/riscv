@@ -19,3 +19,18 @@ export function addZeros(imm:string, length: number):string{
     }
     return imm;
 }
+
+// Function to prePrcocess the instructions. It removes the comments and trims the instruction.
+export function preProcess(lines: string[]): string[] {
+    let finalLines: string[] = Array();
+    for (let line of lines) {
+        line = line.trim();
+        // If the instruction is not a comment
+        if (line && line[0] != '#') {
+            finalLines.push(line);
+        }
+    }
+    return finalLines;
+}
+
+

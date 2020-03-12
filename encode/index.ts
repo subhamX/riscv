@@ -18,7 +18,7 @@ loadRefMap(refMap);
 
 console.log("Reading File test/data.asm");
 // Synchronously reading contents of asm file
-let fileData = fs.readFileSync("test/data.asm", { encoding: 'utf-8' })
+let fileData = fs.readFileSync(__dirname +"/test/data.asm", { encoding: 'utf-8' })
 
 let lines: string[] = fileData.split("\n");
 // preProcessing the file
@@ -401,7 +401,7 @@ function handleDataSegment(lines: string[]) {
 
 console.log("Preparing File To Write");
 codeSegment = codeSegment.map((a, index) => {
-    return `0x${4 * index} 0x${addZeros(a, 8)}`;
+    return `0x${(4 * index).toString(16)} 0x${addZeros(a, 8)}`;
 })
 codeSegment.push('\n');
 // Adding dataMemory
@@ -410,9 +410,9 @@ codeSegment.push(...dataMemory.map((a, index) => {
     return `0x${(268435456 + index).toString(16)} 0x${a}`
 }));
 console.log("Writing Into File: output/data.m");
-fs.writeFileSync("output/data.m", codeSegment.join("\n"));
+fs.writeFileSync(__dirname + "/output/data.m", codeSegment.join("\n"));
 console.log("Success!");
 
 console.log("Writing Debug Info Into File: output/debug.m");
-fs.writeFileSync("output/dataDebug.txt", debugData.join("\n"));
+fs.writeFileSync(__dirname + "/output/dataDebug.txt", debugData.join("\n"));
 console.log("Success!");

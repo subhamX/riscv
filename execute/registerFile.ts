@@ -1,4 +1,4 @@
-class RegisterFile{
+export class RegisterFile{
     reg:number[];
     constructor(){
         this.reg = Array<number>(32);
@@ -23,5 +23,3 @@ class RegisterFile{
         }
     }
 }
-
-

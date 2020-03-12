@@ -1,24 +1,33 @@
 import * as fs from 'fs';
+import { addZeros } from '../encode/helperFun';
+import { RegisterFile } from './registerFile';
 
-
-let pc: number, instr_reg: string;
+let pc: number, instrReg: string, pcTemp: number, regFile:RegisterFile;
 let selectLineB, selectLineY0, selectLineY1;
 let instructionMap: Map<number, string> = new Map<number, string>();
+
 function init(): void {
     let data = fs.readFileSync(__dirname + "/test/data.m", { encoding: "utf-8" });
     let dataArr = data.split('\n');
     let i = 0;
-    // Loading all instructions into instructionMap
+    // Loading all instructions of program into instructionMap
     while (dataArr[i]) {
         let key = parseInt(dataArr[i].split(" ")[0], 16);
         let value = dataArr[i].split(" ")[1];
         instructionMap.set(key, value);
         i++;
     }
-    // Setting pc and instr_reg
+    // Initializing Register File
+    regFile = new RegisterFile();
+    // Setting pc and instrReg
     pc = 0;
-    // instr_reg = instructionMap.get(0);
+    // instrReg = instructionMap.get(0);
     // console.log(instructionMap.get(4));
+    while (1) {
+        fetch();
+        decode();
+    }
+
 }
 
 init();
@@ -45,17 +54,42 @@ function determineSelectLines(opcode: string) {
     }
 }
 
-
+// program counter pc register which holds the address of the current instruction
 function fetch() {
     // Fetching the current Instruction
-    instr_reg = instructionMap.get(pc);
+    let temp = instructionMap.get(pc);
+    // Terminating Condition 
+    if (!temp) {
+        // TODO: Write Data Memory
+        process.exit(0);
+    }
+    temp = parseInt(temp, 16).toString(2);
+    temp = addZeros(temp, 32).split('').reverse().join('');
+    instrReg = temp;
+    pcTemp = pc;
+    // TODO: Updating PC
+    pc += 4;
+    // TODO: constructing immediate value and passing to MuxB
+    // TODO: constructing immediate value and passing to MuxINC for Branch Instructions
 
 }
 
-interface generateIAPayloadInterface {selectLineINC0, imm, selectLinePC0, returnAddress};
+
+function decode() {
+    let opcode = instrReg.slice(0, 7);
+    // let rd = 
+    let rs1 = instrReg.slice(22, 27);
+    rs1 = rs1.split('').reverse().join('');
+    let rs2 = instrReg.slice(27, 32);
+    rs2 = rs2.split('').reverse().join('');
+    console.log(rs1, rs2);
+}
+
+
+interface generateIAPayloadInterface { selectLineINC0, imm, selectLinePC0, returnAddress };
 
 // Function updates Program Counter
-function generateInstructionAddress(generateIAPayload:generateIAPayloadInterface) {
+function generateInstructionAddress(generateIAPayload: generateIAPayloadInterface) {
     let selectLineINC0 = generateIAPayload.selectLineINC0;
     let imm = generateIAPayload.imm;
     let selectLinePC0 = generateIAPayload.selectLinePC0;
@@ -72,3 +106,12 @@ function generateInstructionAddress(generateIAPayload:generateIAPayloadInterface
         }
     }
 }
+
+
+
+
+
+
+
+
+

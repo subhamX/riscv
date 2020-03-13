@@ -271,7 +271,7 @@ function encodeInstruction(line: string, index: number) {
                 let offset = instr[2];
                 let imm = parseInt(offset);
                 // Checking if the immediate field is enough to store 
-                if (imm <0 || imm > 1048575) {
+                if (imm < 0 || imm > 1048575) {
                     throw Error(`Immediate Field Length not Enough! ${line}`);
                 }
                 offset = getImmString(imm, 20);
@@ -344,71 +344,85 @@ function getImmString(imm: number, len: number) {
 
 // Handles Data Segment
 function handleDataSegment(lines: string[]) {
-    for (let line of lines) {
-        // Using Regex to catch multiple spaces
-        let instr = line.split(/[ ]+/);
-        let name: string = instr[0];
-        let type: string = instr[1];
-        let data: string = instr[2];
+    try {
 
-        // Processing type
-        if (type[0] != '.') {
-            // Error
-        } else {
-            type = type.slice(1);
-        }
+        for (let line of lines) {
+            // Using Regex to catch multiple spaces
+            console.log(line);
+            let instr = line.split(/[ ]+/);
+            let name: string = instr[0];
+            let type: string = instr[1];
+            let data: string = instr[2];
+            let totalNums = line.match(/((0[xX][0-9a-fA-F]+|[\d]+)[ ]*,[ ]*)*(0[xX][0-9a-fA-F]+|[\d]+)[ ]*$/)[0].split(/[ ]|[,]/).filter((e) => e);
+            console.log(totalNums);
 
-        // Processing name
-        if (name[name.length - 1] != ':') {
-            // Error
-        } else {
-            name = name.slice(0, name.length);
-        }
+            // Processing type
+            if (type[0] != '.') {
+                // Error
+            } else {
+                type = type.slice(1);
+            }
 
-        // Processing data
-        let hexstring = parseInt(data).toString(16);
-        // debugData.push("Hex", hexstring.length);
+            // Processing name
+            if (name[name.length - 1] != ':') {
+                // Error
+            } else {
+                name = name.slice(0, name.length);
+            }
 
-        // Half Bytes means 4;
-        let numberOfHalfBytes: number;
-        switch (type) {
-            case 'word': {
-                numberOfHalfBytes = 8;
-                break;
+            // Half Bytes means 4;
+            let numberOfHalfBytes: number;
+            switch (type) {
+                case 'word': {
+                    numberOfHalfBytes = 8;
+                    break;
+                }
+                case 'byte': {
+                    numberOfHalfBytes = 2;
+                    break;
+                }
+                case 'dword': {
+                    numberOfHalfBytes = 16;
+                    break;
+                }
+                case 'half': {
+                    numberOfHalfBytes = 4;
+                    break;
+                }
             }
-            case 'byte': {
-                numberOfHalfBytes = 2;
-                break;
+            if (dataSegmentMap.get(name)) {
+                throw Error(`${name} variable already exists!`)
             }
-            case 'dword': {
-                numberOfHalfBytes = 16;
-                break;
-            }
-            case 'half': {
-                numberOfHalfBytes = 4;
-                break;
-            }
+            // Inserting to dataSegmentMap
+            dataSegmentMap.set(name, { "length": numberOfHalfBytes, "type": type, "startIndex": dataMemory.length })
+            totalNums.forEach((e) => {
+                // Processing data
+                let hexstring = parseInt(e).toString(16);
+                // Finding number of zeros to be inserted
+                let zerosSize = numberOfHalfBytes - hexstring.length;
+                // Inserting Zeroes
+                while (zerosSize > 0) {
+                    hexstring = "0" + hexstring;
+                    zerosSize--;
+                }
+                // hexstring is now >=numberOfHalfBytes
+                let index = hexstring.length - 1;
+                for (let i = 0; i < numberOfHalfBytes; i += 2) {
+                    let foo = hexstring.slice(index - 1, index + 1);
+                    dataMemory.push(foo);
+                    index -= 2;
+                }
+            })
         }
-        // Inserting to dataSegmentMap
-        dataSegmentMap.set(name, { "length": numberOfHalfBytes, "type": type, "startIndex": dataMemory.length })
-        // Finding number of zeros to be inserted
-        let zerosSize = numberOfHalfBytes - hexstring.length;
-        // Inserting Zeroes
-        while (zerosSize > 0) {
-            hexstring = "0" + hexstring;
-            zerosSize--;
-        }
-        // hexstring is now >=numberOfHalfBytes
-        let index = hexstring.length - 1;
-        for (let i = 0; i < numberOfHalfBytes; i += 2) {
-            let foo = hexstring.slice(index - 1, index + 1);
-            dataMemory.push(foo);
-            index -= 2;
-        }
+    } catch (err) {
+        console.log(err);
+        process.exit(1);
     }
+
 }
 
-
+console.log(dataSegmentMap);
+console.log(dataMemory);
 console.log("Preparing File To Write");
 codeSegment = codeSegment.map((a, index) => {
     return `0x${(4 * index).toString(16)} 0x${addZeros(a, 8)}`;

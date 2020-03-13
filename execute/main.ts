@@ -102,39 +102,70 @@ function fetch() {
 
 
 function decode() {
+    // extracting opcode of current instruction
     let opcode = IR.slice(25, 32);
+    // instruction type of current instruction
     let type = opcodeMap.get(opcode);
+
     if(type == 'R'){
+        let rd = IR.slice(20, 25);
+        regFile.setRD(rd);
+
         let rs1 = IR.slice(12, 17);
         regFile.setRS1(rs1);
+
         let rs2 = IR.slice(7 ,12)
         regFile.setRS2(rs2);
         console.log(regFile.getRS2());
     }
     else if(type == 'I'){
+        let rd = IR.slice(20, 25);
+        regFile.setRD(rd);
 
+        let rs1 = IR.slice(12, 17);
+        regFile.setRS1(rs1);
+
+        let imm = IR.slice(0, 12);
+        console.log(imm);
     }
     else if(type == 'S'){
+        let rs1 = IR.slice(12, 17);
+        regFile.setRS1(rs1);
+
+        let rs2 = IR.slice(7 ,12)
+        regFile.setRS2(rs2);
+
+        let imm4_0 = IR.slice(20, 25);
+        let imm11_5 = IR.slice(0, 7);
+        let imm = imm11_5 + imm4_0;
         
     }
     else if(type == 'SB'){
+        let rs1 = IR.slice(12, 17);
+        regFile.setRS1(rs1);
+
+        let rs2 = IR.slice(7 ,12)
+        regFile.setRS2(rs2);
+
+        let imm = IR.slice(0) + IR.slice(25) + IR.slice(1, 7) + IR.slice(20, 24);
 
     }
     else if(type == 'U'){
+        let rd = IR.slice(20, 25);
+        regFile.setRD(rd);
 
+        let imm31_12 = IR.slice(0, 20);
     }
     else if(type == 'UJ'){
+        let rd = IR.slice(20, 25);
+        regFile.setRD(rd);
+
+        let imm = IR.slice(0) + IR.slice(1, 9) + IR.slice(9) + IR.slice(10, 20);
 
     }
     else{
         console.error('Not a valid instruction!(invalid Opcode)');
     }
-    // let rd = 
-    let rs1 = IR.slice(22, 27);
-    rs1 = rs1.split('').reverse().join('');
-    let rs2 = IR.slice(27, 32);
-    rs2 = rs2.split('').reverse().join('');
-    // console.log(rs1, rs2);
 }
 
 

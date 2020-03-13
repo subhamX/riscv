@@ -18,7 +18,7 @@ loadRefMap(refMap);
 
 console.log("Reading File test/data.asm");
 // Synchronously reading contents of asm file
-let fileData = fs.readFileSync(__dirname +"/test/data.asm", { encoding: 'utf-8' })
+let fileData = fs.readFileSync(__dirname + "/test/data.asm", { encoding: 'utf-8' })
 
 let lines: string[] = fileData.split("\n");
 // preProcessing the file
@@ -178,27 +178,40 @@ function encodeInstruction(line: string, index: number) {
                     rd = parseInt(rd).toString(2);
                     rd = addZeros(rd, 5);
                     let arg2 = instr[2];
-                    let rs1 = arg2.match(/(x[\d]+)/)[0].slice(1);
+                    let rs1 = arg2.match(/([(]x[\d]+)/)[0].slice(2);
                     rs1 = parseInt(rs1).toString(2);
                     rs1 = addZeros(rs1, 5);
-                    let offset = arg2.match(/[\d]+/)[0];
-                    offset = parseInt(offset).toString(2);
-                    offset = addZeros(offset, metadata.immLen);
+                    let offset = arg2.match(/[-]?(0[xX][0-9a-fA-F]+|[\d]+)/)[0];
+                    console.log(offset);
+                    let imm = parseInt(offset);
+                    // Checking if the immediate field is enough to store 
+                    if (imm > 2047 || imm < -2048) {
+                        throw Error(`Immediate Field Length not Enough! ${line}`);
+                    }
+                    offset = getImmString(imm, 12);
                     let encodedInstr = offset.concat(rs1, func3, rd, opcode);
                     codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-
                     debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
                 } else {
                     let rd = instr[1].replace(',', '').slice(1);
                     rd = parseInt(rd).toString(2);
                     let rs1 = instr[2].replace(',', '').slice(1);
                     rs1 = parseInt(rs1).toString(2);
-                    let imm = instr[3].replace(',', '');
-                    imm = parseInt(imm).toString(2);
-                    imm = addZeros(imm, metadata.immLen);
+                    let immString = instr[3].replace(',', '');
+                    let imm = parseInt(immString);
+                    console.log(imm)
+                    // Checking if the immediate field is enough to store 
+                    if (imm > 2047 || imm < -2048) {
+                        throw Error(`Immediate Field Length not Enough! ${line}`);
+                    }
+                    immString = getImmString(imm, 12);
+                    console.log(immString)
+                    // imm = (parseInt(imm) >>> 0).toString(2);
+                    // imm = addZeros(imm, metadata.immLen);
                     rs1 = addRegZeros(rs1);
                     rd = addRegZeros(rd);
-                    let encodedInstr = imm + rs1 + func3 + rd + opcode;
+
+                    let encodedInstr = immString + rs1 + func3 + rd + opcode;
                     codeSegment.push(parseInt(encodedInstr, 2).toString(16));
                     debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
                 }
@@ -207,12 +220,18 @@ function encodeInstruction(line: string, index: number) {
                 rs2 = parseInt(rs2).toString(2);
                 rs2 = addZeros(rs2, 5);
                 let arg2 = instr[2];
-                let offset = arg2.match(/[\d]+/)[0];
-                let rs1 = arg2.match(/(x[\d]+)/)[0].slice(1);
+                let rs1 = arg2.match(/([(]x[\d]+)/)[0].slice(2);
                 rs1 = parseInt(rs1).toString(2);
                 rs1 = addZeros(rs1, 5);
-                offset = parseInt(offset).toString(2);
-                offset = addZeros(offset, metadata.immLen);
+                let offset = arg2.match(/[-]?(0[xX][0-9a-fA-F]+|[\d]+)/)[0];
+                console.log(offset);
+                let imm = parseInt(offset);
+                console.log(imm);
+                // Checking if the immediate field is enough to store 
+                if (imm > 2047 || imm < -2048) {
+                    throw Error(`Immediate Field Length not Enough! ${line}`);
+                }
+                offset = getImmString(imm, 12);
                 let imm1 = offset.slice(7);
                 let imm2 = offset.slice(0, 7);
                 let encodedInstr = imm2.concat(rs2, rs1, func3, imm1, opcode);
@@ -233,28 +252,15 @@ function encodeInstruction(line: string, index: number) {
                     let imm = (labelMeta.location - index) * 2;
                     // Checking if the immediate field is enough to store 
                     if (imm > 2047 || imm < -2048) {
-                        throw Error(`Immediate Field Length Now Enough! ${line}`);
+                        throw Error(`Immediate Field Length not Enough! ${line}`);
                     }
                     let encodedInstr: string;
-                    if (imm >= 0) {
-                        let immString = parseInt((imm).toString()).toString(2);
-                        immString = addZeros(immString, 12);
-                        let imm1 = immString[1];
-                        let imm2 = immString.slice(8, 12);
-                        let imm3 = immString.slice(2, 8);
-                        let imm4 = immString[0];
-                        encodedInstr = imm1.concat(imm3, rs2, rs1, func3, imm2, imm4, opcode);
-                    } else {
-                        let immString = (parseInt(imm.toString(), 10) >>> 0).toString(2);
-                        // Reducing the length to 12 from LSB
-                        immString = immString.slice(immString.length - 12);
-                        immString = addZeros(immString, 12);
-                        let imm1 = immString[1];
-                        let imm2 = immString.slice(8, 12);
-                        let imm3 = immString.slice(2, 8);
-                        let imm4 = immString[0];
-                        encodedInstr = imm1.concat(imm3, rs2, rs1, func3, imm2, imm4, opcode);
-                    }
+                    let immString = getImmString(imm, 12);
+                    let imm1 = immString[1];
+                    let imm2 = immString.slice(8, 12);
+                    let imm3 = immString.slice(2, 8);
+                    let imm4 = immString[0];
+                    encodedInstr = imm1.concat(imm3, rs2, rs1, func3, imm2, imm4, opcode);
                     codeSegment.push(parseInt(encodedInstr, 2).toString(16));
 
                     debugData.push(`(${mnemonic}||${line}) SB Format: ` + parseInt(encodedInstr, 2).toString(16));
@@ -263,8 +269,12 @@ function encodeInstruction(line: string, index: number) {
                 }
             } else if (format == "U") {
                 let offset = instr[2];
-                offset = parseInt(offset).toString(2);
-                offset = addZeros(offset, 20);
+                let imm = parseInt(offset);
+                // Checking if the immediate field is enough to store 
+                if (imm <0 || imm > 1048575) {
+                    throw Error(`Immediate Field Length not Enough! ${line}`);
+                }
+                offset = getImmString(imm, 20);
                 let rd = instr[1].replace(',', '').slice(1);
                 rd = parseInt(rd).toString(2);
                 rd = addZeros(rd, 5);
@@ -284,28 +294,15 @@ function encodeInstruction(line: string, index: number) {
                     // Checking if the immediate field is enough to store 
                     // Check the range
                     // TODO: if (imm > 2047 || imm < -2048) {
-                    //     throw Error(`Immediate Field Length Now Enough! ${line}`);
+                    //     throw Error(`Immediate Field Length not Enough! ${line}`);
                     // }
                     let encodedInstr: string;
-                    if (imm >= 0) {
-                        let immString = parseInt((imm).toString()).toString(2);
-                        immString = addZeros(immString, 20);
-                        let imm1 = immString[9]; // 11
-                        let imm2 = immString.slice(10, 20); // 1-10
-                        let imm3 = immString.slice(1, 9); //12-19
-                        let imm4 = immString[0]; // 20
-                        encodedInstr = imm4.concat(imm2, imm1, imm3, rd, opcode);
-                    } else {
-                        let immString = (parseInt(imm.toString(), 10) >>> 0).toString(2);
-                        // Reducing the length to 12 from LSB
-                        immString = immString.slice(immString.length - 12);
-                        immString = addZeros(immString, 12);
-                        let imm1 = immString[9]; // 11
-                        let imm2 = immString.slice(10, 20); // 1-10
-                        let imm3 = immString.slice(1, 9); //12-19
-                        let imm4 = immString[0]; // 20
-                        encodedInstr = imm4.concat(imm2, imm1, imm3, rd, opcode);
-                    }
+                    let immString = getImmString(imm, 20);
+                    let imm1 = immString[9]; // 11
+                    let imm2 = immString.slice(10, 20); // 1-10
+                    let imm3 = immString.slice(1, 9); //12-19
+                    let imm4 = immString[0]; // 20
+                    encodedInstr = imm4.concat(imm2, imm1, imm3, rd, opcode);
                     codeSegment.push(parseInt(encodedInstr, 2).toString(16));
 
                     debugData.push(`(${mnemonic}||${line}) UJ Format: ` + parseInt(encodedInstr, 2).toString(16));
@@ -331,6 +328,19 @@ function handleTextSegment(lines: string[]) {
     }
 }
 
+
+function getImmString(imm: number, len: number) {
+    let immString;
+    if (imm >= 0) {
+        immString = parseInt((imm).toString()).toString(2);
+        immString = addZeros(immString, len);
+    } else {
+        immString = (parseInt(imm.toString(), 10) >>> 0).toString(2);
+        // Reducing the length to len from LSB
+        immString = immString.slice(immString.length - len);
+    }
+    return immString;
+}
 
 // Handles Data Segment
 function handleDataSegment(lines: string[]) {

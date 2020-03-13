@@ -19,12 +19,13 @@ export function loadRefMap(refMap: Map<String, schema.InstructionMetaData>) {
     // I Type Instructions
     refMap.set('addi', { format: "I", opcode: "0010011", func3: "000", immLen: 12});
     refMap.set('andi', { format: "I", opcode: "0010011", func3: "111", immLen: 12});
-    refMap.set('ori', { format: "I", opcode: "0010011", func3: "110", immLen: 12});
+    refMap.set('ori', { format: "I", opcode: "0010011", func3:  "110", immLen: 12});
+    refMap.set('jalr', { format: "I", opcode: "1100111", func3: "000", immLen: 12});
+
     refMap.set('lb', { format: "I", opcode: "0000011", func3: "000", immLen: 12});
     refMap.set('ld', { format: "I", opcode: "0000011", func3: "011", immLen: 12});
     refMap.set('lh', { format: "I", opcode: "0000011", func3: "001", immLen: 12});
     refMap.set('lw', { format: "I", opcode: "0000011", func3: "010", immLen: 12});
-    refMap.set('jalr', { format: "I", opcode: "1100111", func3: "000", immLen: 12});
     // S Type Instructions
     refMap.set('sb', { format: "S", opcode: "0100011", func3: "000", immLen: 12});
     refMap.set('sw', { format: "S", opcode: "0100011", func3: "010", immLen: 12});

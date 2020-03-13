@@ -27,6 +27,7 @@ export function preProcess(lines: string[]): string[] {
         line = line.trim();
         // If the instruction is not a comment
         if (line && line[0] != '#') {
+            line = line.split("sp").join('x2');
             finalLines.push(line);
         }
     }

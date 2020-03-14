@@ -1,34 +1,36 @@
 import * as fs from 'fs';
-import { addZeros } from './helperFun';
 import {RegisterFile} from './RegisterFileClass';
-import {opcodeMap, operationMap} from './mapPhase2';
-import {MemoryFile, addOnesZeros} from './MemoryFileClass'
+import {opcodeMapfunc, operationMapfunc} from './mapPhase2';
+import {MemoryFile, addOnesZeros, addZeros} from './MemoryFileClass'
 
 // PC->Program Counter, IR->Instruction Register
 let PC: number, IR: string, pcTemp: number, regFile:RegisterFile, memFile:MemoryFile;
+
+let CLOCK:number=0;
+
+// Holds return address
 let returnAddr;
+
 // intermediate Registers
-let RA, RB, RZ, RY, RM=null, MAR, MDR;
+let RA, RB, RZ, RM, RY, MAR, MDR;
 
 // instruction Type, operation Code, immediate Value
 let type, operCode, immVal;
 
 // select line for muxB, muxY
-let selectLineB, selectLineY0=1, selectLineY1=0, selectLineY3=0;
+let selectLineB, selectLineY=1;
 
 let instructionMap: Map<number, string> = new Map<number, string>();
-let opMap: Map<string, string> = new Map<string, string>();
-let operMap : Map<string, string> = new Map<string, string>();
-opcodeMap(opMap);
-operationMap(operMap);
+let opcodeMap: Map<string, string> = new Map<string, string>();
+let operationMap : Map<string, string> = new Map<string, string>();
+opcodeMapfunc(opcodeMap);
+operationMapfunc(operationMap);
 
 function init(): void {
     // let data = fs.readFileSync(__dirname + "/test/data.m", { encoding: "utf-8" });
     let data = fs.readFileSync('test/test.mc', {encoding: 'utf-8'});
     let dataArr = data.split('\n');
     let i = 0;
-    opcodeMap(opMap);
-    operationMap(operMap);
     
     // Loading all instructions of program into instructionMap
     while (dataArr[i]) {
@@ -41,22 +43,54 @@ function init(): void {
     }
     // Initializing Register File
     regFile = new RegisterFile();
+    memFile = new MemoryFile();
     // Setting pc and instrReg
     PC = 0;
-    // instrReg = instructionMap.get(0);
-    // console.log(instructionMap.get(4));
+    CLOCK = 0;
     while (1) {
-        selectLineB = 1;
+        console.log("------------********----------");;
         Fetch();
         Decode();
         Execute(type, operCode, immVal);
         MemoryOperations();
         WriteBack();
     }
-
 }
 
 init();
+
+
+function determineSelectLines(type: string) {
+    // If the instruction is R type then selectLineB = 0
+    if (type == ('R'||'SB')) {
+        selectLineB = 0;
+        selectLineY = 0;
+    }
+    else{
+        // for instr. types I, S, U, UJ imm val is passed to inB
+        selectLineB = 1;
+    }
+
+    if(type == ('I')){
+        // if inst. is load then selectLineY = 1 , get value from MDR
+        if(operationMap.get(operCode)[0]=='l'){
+            selectLineY = 1;
+        }
+        else{
+            selectLineY = 0;
+        }
+    }
+    if(type == 'U'){
+        selectLineY = 0;
+    }
+    if(type == 'UJ'){
+        selectLineY = 2;
+    }
+    // for store instructions memory address(calculated by alu) will be passed on to RY using selectLineY=0
+    if(type == 'S'){
+        selectLineY = 1;
+    }
+}
 
 // Stage 1
 // program counter pc register which holds the address of the current instruction
@@ -70,15 +104,10 @@ function Fetch() {
     }
     temp = parseInt(temp, 16).toString(2);
     temp = addZeros(temp, 32);
-    // console.log(temp);
-    // console.log("try");
     IR = temp;
     pcTemp = PC;
-    // TODO: Updating PC
     PC += 4;
-    // TODO: constructing immediate value and passing to MuxB
-    // TODO: constructing immediate value and passing to MuxINC for Branch Instructions
-
+    CLOCK +=1;
 }
 
 // Stage - 2
@@ -86,7 +115,7 @@ function Decode() {
     // extracting opcode of current instruction
     let opcode = IR.slice(25, 32);
     // instruction type of current instruction
-    let type = opMap.get(opcode);
+    type = opcodeMap.get(opcode);
     immVal = "0";
     if(type == 'R'){
         // operation code
@@ -96,25 +125,35 @@ function Decode() {
         regFile.setRD(parseInt(rd, 2));
 
         let rs1 = IR.slice(12, 17);
+        // console.log("rs1",);
         regFile.setRS1(parseInt(rs1, 2));
 
         let rs2 = IR.slice(7 ,12)
         regFile.setRS2(parseInt(rs2, 2));
-        selectLineB = 0;
+        
+        // updating RA and RB
+        RA = regFile.getRS1();
+        RB = regFile.getRS2();
     }
     else if(type == 'I'){
         // operation code
         operCode = opcode + IR.slice(17, 20);
 
         let rd = IR.slice(20, 25);
+        console.log('rd', parseInt(rd, 2));
         regFile.setRD(parseInt(rd, 2));
 
         let rs1 = IR.slice(12, 17);
         regFile.setRS1(parseInt(rs1, 2));
 
-        // rs2 has the second operand
+        // as RS2 does not have any value
+        regFile.setRS2(null);
+
+        RA = regFile.getRS1();
+        RB = regFile.getRS2();
 
         immVal = IR.slice(0, 12);
+        // console.log('immVal', immVal);
     }
     else if(type == 'S'){
         // operation code
@@ -130,8 +169,9 @@ function Decode() {
         let imm11_5 = IR.slice(0, 7);
         immVal = imm11_5 + imm4_0;
 
-        // rs2 has the base address
-        selectLineB = 0
+        RA = regFile.getRS1();
+        RB = regFile.getRS2();
+        // RA has the base address
     }
     else if(type == 'SB'){
         // operation code
@@ -145,8 +185,8 @@ function Decode() {
 
         immVal = IR.slice(0) + IR.slice(25) + IR.slice(1, 7) + IR.slice(20, 24);
         
-        // rs2 has the base address
-        selectLineB = 0
+        RA = regFile.getRS1();
+        RB = regFile.getRS2();
     }
     else if(type == 'U'){
         // operation code
@@ -169,6 +209,9 @@ function Decode() {
     else{
         console.error('Not a valid instruction!(invalid Opcode)');
     }
+    // console.log("value in RA => " + RA);
+    // console.log("value in RB => " + RB);
+    CLOCK+=1
 }
 
 //  updates PC
@@ -191,23 +234,25 @@ function UpdatePC(PC_Select: number, inpImm?:number) : void{
 // evaluate Immediate values
 function evaluateImm(imVal : string) : number{
     imVal = addOnesZeros(imVal);
-    return parseInt(imVal, 2);
+    return parseInt(imVal, 2)>>0;
 }
 
 // Stage - 3
 function Execute(instType : string, operCode : string, immVal : string){
+    determineSelectLines(type);
     let inA :number = regFile.getRS1();
     let inB :number;
-    if(selectLineB){
+    if(selectLineB==1){
         inB = evaluateImm(immVal);
     }
     else{
         inB = regFile.getRS2()
     }
+    console.log('inB inA', inB, inA);
     // finding operation to be performed
-    let ALU_op = operMap.get(operCode);
+    let ALU_op = operationMap.get(operCode);
 
-    if(ALU_op == ('add' || 'addi' || 'ld' || 'lb' || 'lh' || 'lw')){
+    if(ALU_op == 'add' || ALU_op == 'addi' || ALU_op == 'ld' || ALU_op == 'lb' || ALU_op == 'lh' || ALU_op == 'lw'){
         RZ = inA + inB;
     }
     else if(ALU_op == 'sub'){
@@ -222,10 +267,10 @@ function Execute(instType : string, operCode : string, immVal : string){
     else if(ALU_op == 'mul'){
         RZ = inA*inB;
     }
-    else if(ALU_op == ('andi' || 'and)')){
+    else if(ALU_op == 'andi' || ALU_op == 'and)'){
         RZ = inA&inB;
     }
-    else if(ALU_op == ('ori' || 'or')){
+    else if(ALU_op == 'ori' || ALU_op == 'or'){
         RZ = inA|inB;
     }
     else if(ALU_op == 'xor'){
@@ -266,53 +311,63 @@ function Execute(instType : string, operCode : string, immVal : string){
     }
     else if(ALU_op == 'jalr'){
         PC = returnAddr;
-        
+        RZ = inA + inB;
     }
-    else if(ALU_op == ('sb' || 'sw' || 'sd' || 'sh')){
-        RZ = inA + immVal;
-        RM = inB;
+    else if(ALU_op == 'sb' || ALU_op == 'sw' || ALU_op == 'sd' || ALU_op == 'sh'){
+        RZ = inA + evaluateImm(immVal);
+        RM = RB;
+        console.log('RM', RM);
     }
     else if(ALU_op == 'lui'){
         RZ = inB << 12;
     }
     else if(ALU_op == 'auipc'){
-        // TODO:auipc
+        inA = PC - 4;
+        RZ = inA + (inB << 12)
     }
     else if(ALU_op == 'jal'){
         returnAddr = PC;
         UpdatePC(evaluateImm(immVal), 1);
         // TODO:jal
     }
+    console.log('rz',RZ);
+    CLOCK+=1;
 }
 
 // Stage - 4
 function MemoryOperations(){
+    let opr = operationMap.get(operCode);
     if(type == 'S'){
-        selectLineY0 = 0;
-        selectLineY1 = 0;
-        memFile.MEM_WRITE(RZ, RM, operMap.get(operCode).slice(1));
+        MDR = RM;
+        memFile.MEM_WRITE(RZ, RM, opr.slice(1));
     }
-    else if(operMap.get(operCode) == ('ld'||'lw'||'lh'||'lb')){
-        selectLineY0 = 0;
-        selectLineY1 = 1;
-        MDR = memFile.MEM_READ(RZ, operMap.get(operCode).slice(1));
+    else if(opr == 'ld'|| opr == 'lw'|| opr == 'lh'|| opr == 'lb'){
+        MDR = memFile.MEM_READ(RZ, opr.slice(1));
     }
-}
 
-// Stage - 5
-function WriteBack(){
-    if(selectLineY0){
+    // Updating RY
+    if(selectLineY==0){
         RY = RZ;
     }
-    else if(selectLineY1){
+    else if(selectLineY==1){
         RY = MDR;
     }
-    else if(selectLineY3){
+    else if(selectLineY==2){
         RY = returnAddr;
     }
     else{
         console.error("Something's Wrong with the select line for muxY");
         return;
     }
+    CLOCK+=1;
+}
 
+// Stage - 5
+function WriteBack(){
+    console.log('type', type);
+    if(type == 'R'|| type == 'I' || type == 'U' || type == 'UJ'){
+        regFile.setRegVal(regFile.getRD(), RY);
+    }
+    console.log("RY",RY);
+    CLOCK+=1;
 }

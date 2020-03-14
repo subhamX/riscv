@@ -1,0 +1,113 @@
+@font-face {
+  font-family: "Lato-Regular";
+  src: url("./Lato-Regular.ttf");
+}
+
+body:not(#editor){
+  padding: 0;
+  margin: 0;
+  font-family: "Lato-Regular";
+}
+
+#editor {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 90vh;
+}
+
+.navbar {
+  height: 10vh;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-items: center;
+  border-bottom: 1px solid black;
+}
+
+.logo {
+  width: 25%;
+  padding-left: 5%;
+  text-align: left;
+  font-size: 25px;
+  text-decoration: none;
+  color: black;
+}
+
+header{
+  height: 10vh;
+  padding: 0;
+  margin: 0;
+}
+.toggle-wrapper {
+  width: 70%;
+  list-style-type: none;
+  display: flex;
+  justify-content: center;
+}
+
+.toggle-wrapper a {
+  padding: 15px;
+  margin: 10px;
+  margin-bottom: 0;
+
+  text-decoration: none;
+  border: 2px solid grey;
+}
+
+.toggle-wrapper a:hover {
+  border: 2px solid rgb(107, 107, 107);
+  background-color: #f5f5f5;
+  color: black;
+}
+
+.toggle-btn.active {
+  color: blue;
+  border: 2px solid black;
+}
+.toggle-btn.active:hover {
+  background-color: initial;
+  border: 2px solid black;
+  cursor: default;
+  color: blue;
+}
+.trailing-keys {
+  width: 15%;
+  display: flex;
+  flex-direction: column;
+}
+
+.shortcut {
+  display: flex;
+}
+.shortcut img {
+  width: 35px;
+}
+
+
+/* SIMULATOR */
+
+.simulator{
+  padding-top: 30px;
+}
+
+.code-segment{
+  width: 60vw;
+  border-right: 1px solid black;
+}
+.simulator .heading{
+  font-weight: bold;
+}
+
+.simulator li{
+  display: flex;
+  justify-content: space-evenly;
+  height: 5vh;
+  z-index: 10000;
+}
+
+.instr {
+}

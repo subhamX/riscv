@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Project Heritage</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="##" class='logo'>Project Heritage</a>
+            <div class="toggle-wrapper">
+                <a href="#editor" class="toggle-btn editor-btn">Editor</a>
+                <a href="#simulator" class="toggle-btn simulator-btn">Simulator</a>
+                <a href="#about" class="toggle-btn about-btn">About</a>
+            </div>
+            <div class="trailing-keys">
+                <div class="shortcut">
+                    <img src="./assets/img/ctrl-key.png" alt="" srcset="">
+                    <span>+</span>
+                    <img src="./assets/img/shift-key.png" alt="" srcset="">
+                    <span>+</span>
+                    <img src="./assets/img/s-key.png" alt="" srcset="">
+                </div>
+            </div>
+        </nav>
+    </header>
+    <ul class='simulator' style="display: none;">
+        <div class="code-segment">
+            <li class="heading">
+                <span class="pc">PC</span>
+                <span class="machine-code">Machine Code</span>
+                <span class="original-code">Original Code</span>
+            </li>
+            <li class="instr">
+                <span class="pc">0x1000</span>
+                <span class="machine-code">0x10101010</span>
+                <span class="original-code">addi x10, x10, 100</span>
+            </li>
+        </div>
+
+        <div class="data-segment">
+
+        </div>
+    </ul>
+    <div id="editor"></div>
+    <script src="./assets/js/main.ts"></script>
+</body>
+
+</html>

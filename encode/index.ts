@@ -101,8 +101,9 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                     let resultSBformat: boolean = patterns.formatSBPattern.test(line);
                     let resultUformat: boolean = patterns.formatUPattern.test(line);
                     let resultUJformat: boolean = patterns.formatUJPattern.test(line);
+                    let resultLoadFromDataformat: boolean = patterns.formatLoadFromDataPattern.test(line);
                     // debugData.push({ "Instr": line, "R Format": resultRformat, "I Format": resultIformat, "S Format": resultSformat, "SB Format": resultSBformat, "U Format": resultUformat, "UJ Format": resultUJformat })
-                    if (resultIformat || resultRformat || resultSformat || resultSBformat || resultUJformat || resultUformat || resultLoadformat) {
+                    if (resultIformat || resultRformat || resultSformat || resultSBformat || resultUJformat || resultUformat || resultLoadformat || resultLoadFromDataformat) {
                         // The line is a valid instruction
                         if (segmentFlag == 2) {
                             // If the current segment is text segment
@@ -145,7 +146,9 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
 
 
 // Function performs encoding of instructions to binary
-function encodeInstruction(line: string, index: number) {
+function encodeInstruction(params: { line: string, index: number }) {
+    let line = params.line;
+    let index = params.index;
     try {
         let instr = line.split(/[ ]+|[,]/).filter((a) => a);
         let mnemonic = instr[0];
@@ -174,24 +177,48 @@ function encodeInstruction(line: string, index: number) {
             } else if (format == "I") {
                 if (mnemonic[0] == "l") {
                     // Instruction is ld, lh, lw, lb
-                    let rd = instr[1].replace(',', '').slice(1);
-                    rd = parseInt(rd).toString(2);
-                    rd = addZeros(rd, 5);
-                    let arg2 = instr[2];
-                    let rs1 = arg2.match(/([(]x[\d]+)/)[0].slice(2);
-                    rs1 = parseInt(rs1).toString(2);
-                    rs1 = addZeros(rs1, 5);
-                    let offset = arg2.match(/[-]?(0[xX][0-9a-fA-F]+|[\d]+)/)[0];
-                    console.log(offset);
-                    let imm = parseInt(offset);
-                    // Checking if the immediate field is enough to store 
-                    if (imm > 2047 || imm < -2048) {
-                        throw Error(`Immediate Field Length not Enough! ${line}`);
+                    let resultLoadformat: boolean = patterns.formatLoadPattern.test(line);
+                    if (!resultLoadformat) {
+                        let label = instr[2];
+                        console.log(label);
+                        let meta = dataSegmentMap.get(label);
+                        let imm = meta.startIndex - index * 4;
+                        console.log(imm);
+                        let rd = instr[1].replace(',', '').slice(1);
+                        rd = parseInt(rd).toString(2);
+                        rd = addZeros(rd, 5);
+                        let rs1 = rd;
+                        // 268435479 is auipc x0, 0x10000000
+                        codeSegment.push((268435479 + (parseInt(rs1, 2) << 7)).toString(16));
+                        if (imm > 2047 || imm < -2048) {
+                            throw Error(`Immediate Field Length not Enough! ${line}`);
+                        }
+                        let offset = getImmString(imm, 12);
+                        let encodedInstr = offset.concat(rs1, func3, rd, opcode);
+                        codeSegment.push(parseInt(encodedInstr, 2).toString(16));
+                        debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
+                        console.log(`Incrementing: params.index | prev ${params.index} | new ${params.index + 1}`)
+                        params.index++;
+                    } else {
+                        let rd = instr[1].replace(',', '').slice(1);
+                        rd = parseInt(rd).toString(2);
+                        rd = addZeros(rd, 5);
+                        let arg2 = instr[2];
+                        let rs1 = arg2.match(/([(]x[\d]+)/)[0].slice(2);
+                        rs1 = parseInt(rs1).toString(2);
+                        rs1 = addZeros(rs1, 5);
+                        let offset = arg2.match(/[-]?(0[xX][0-9a-fA-F]+|[\d]+)/)[0];
+                        console.log(offset);
+                        let imm = parseInt(offset);
+                        // Checking if the immediate field is enough to store 
+                        if (imm > 2047 || imm < -2048) {
+                            throw Error(`Immediate Field Length not Enough! ${line}`);
+                        }
+                        offset = getImmString(imm, 12);
+                        let encodedInstr = offset.concat(rs1, func3, rd, opcode);
+                        codeSegment.push(parseInt(encodedInstr, 2).toString(16));
+                        debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
                     }
-                    offset = getImmString(imm, 12);
-                    let encodedInstr = offset.concat(rs1, func3, rd, opcode);
-                    codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                    debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
                 } else {
                     let rd = instr[1].replace(',', '').slice(1);
                     rd = parseInt(rd).toString(2);
@@ -292,8 +319,8 @@ function encodeInstruction(line: string, index: number) {
                 if (labelMeta) {
                     let imm = (labelMeta.location - index) * 2;
                     // Checking if the immediate field is enough to store 
-                    // Check the range
-                    // TODO: if (imm > 2047 || imm < -2048) {
+                    // TODO: Check the range for jal
+                    // if (imm > 2047 || imm < -2048) {
                     //     throw Error(`Immediate Field Length not Enough! ${line}`);
                     // }
                     let encodedInstr: string;
@@ -323,8 +350,14 @@ function encodeInstruction(line: string, index: number) {
 }
 // Handles Text Segment
 function handleTextSegment(lines: string[]) {
-    for (let index in lines) {
-        encodeInstruction(lines[index], parseInt(index));
+    let params = { 'line': null, 'index': 0 };
+    for(let i=0; i<lines.length; i++){
+        params.line = lines[i];
+        // TODO: Remove temp
+        let temp = params.index;
+        encodeInstruction(params);
+        params.index++;
+        console.log(`Instr: ${lines[i]} | Prev Index: ${temp} | New Index: ${params.index}`)
     }
 }
 
@@ -350,9 +383,8 @@ function handleDataSegment(lines: string[]) {
             // Using Regex to catch multiple spaces
             console.log(line);
             let instr = line.split(/[ ]+/);
-            let name: string = instr[0];
+            let name: string = instr[0].replace(':', '');
             let type: string = instr[1];
-            let data: string = instr[2];
             let totalNums = line.match(/((0[xX][0-9a-fA-F]+|[\d]+)[ ]*,[ ]*)*(0[xX][0-9a-fA-F]+|[\d]+)[ ]*$/)[0].split(/[ ]|[,]/).filter((e) => e);
             console.log(totalNums);
 

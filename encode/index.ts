@@ -197,6 +197,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                         let encodedInstr = offset.concat(rs1, func3, rd, opcode);
                         codeSegment.push(parseInt(encodedInstr, 2).toString(16));
                         debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
+                        // Incrementing Index as an additional auipc is added
                         console.log(`Incrementing: params.index | prev ${params.index} | new ${params.index + 1}`)
                         params.index++;
                     } else {
@@ -359,6 +360,7 @@ function handleTextSegment(lines: string[]) {
         params.index++;
         console.log(`Instr: ${lines[i]} | Prev Index: ${temp} | New Index: ${params.index}`)
     }
+    codeSegment.push('ffffffff');
 }
 
 
@@ -459,7 +461,7 @@ console.log("Preparing File To Write");
 codeSegment = codeSegment.map((a, index) => {
     return `0x${(4 * index).toString(16)} 0x${addZeros(a, 8)}`;
 })
-codeSegment.push('\n');
+codeSegment.push('');
 // Adding dataMemory
 console.log("Writing Data Segment");
 codeSegment.push(...dataMemory.map((a, index) => {

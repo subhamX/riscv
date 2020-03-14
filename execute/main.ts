@@ -67,18 +67,28 @@ function initOperatorMap() {
         let value = dataArr[i].split(" ")[1];
         instructionMap.set(key, value);
         i++;
+        // If the instruction is end of code segment
+        if (((parseInt(value) >> 0) == -1)) {
+            break;
+        }
     }
     // Initializing Register File
     regFile = new RegisterFile();
     memFile = new MemoryFile();
-    // let index = parseInt("0x10000005") - parseInt('0x10000000');
-    // console.log(memFile.writeValue(index, '0x7FFFFFF0', 6));
+    i++;
+    while (dataArr[i]) {
+        console.log(dataArr[i].split(' '));
+        let temp = dataArr[i].split(' ');
+        let key = temp[0];
+        let value = temp[1];
+        if (parseInt(value)) {
+            memFile.writeSingleValue(key, value)
+        }
+        i++;
+    }
     // Setting pc and instrReg
     pc = 0;
-    // instrReg = instructionMap.get(0);
-    // console.log(instructionMap.get(4));
     askQue();
-
 })();
 
 function askQue() {
@@ -142,8 +152,9 @@ function fetch() {
     // Fetching the current Instruction
     let temp = instructionMap.get(pc);
     // Terminating Condition 
-    if (!temp) {
+    if (!temp || ((parseInt(temp) >> 0) == -1)) {
         // TODO: Write Data Memory
+        memFile.writeToDataMemory();
         process.exit(0);
     }
     temp = parseInt(temp, 16).toString(2);
@@ -464,9 +475,14 @@ function evalMuxB() {
 
 function showState() {
     console.log(`Current PC: ${pc}`);
+    console.log("REGISTER");
+    let tempReg = [];
     for (let i = 0; i < 32; i++) {
-        console.log(`${i} ${(regFile.readValue(i) >>> 0).toString(16)}`);
+        tempReg.push({ i: (regFile.readValue(i) >>> 0).toString(16) });
     }
+    console.table(tempReg);
+    console.log("MEMORY");
+    memFile.display();
     // let index = parseInt("0x10000064") - parseInt('0x10000000');
     // console.log(memFile.readValue(index, 100));
 }

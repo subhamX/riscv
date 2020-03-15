@@ -1,60 +1,54 @@
 export class RegisterFile{
     // Registers hold the register values
-    private Registers: Array<string> = Array<string>();
-
+    private Registers: Array<number> = Array<number>();
     // rs1, rs2, rd holds the address of the current instruction's source and destination register
-    private RS1: string;
-    private RS2: string;
-    private RD: string;
+    private RS2: number;
+    private RD: number;
+    private RS1: number;
 
     constructor(){
         //initializing every registor with zero
-        this.RS1 = "0x00000000";
-        this.RS2 = "0x00000000";
-        this.RD = "0x00000000";
-        this.Registers = "0x00000000 ".repeat(32).split(" ");
-        this.Registers.pop();
-        
+        this.RS1 = 0;
+        this.RS2 = 0;
+        this.RD = 0;
+        for(let i=0;i<32;i++){
+            this.Registers[i]=0;
+        }        
         // initializing sp (x2), gp (x3)
-        this.Registers[2] = "0x7FFFFFF0";
-        this.Registers[3] = "0x10000000";
+        this.Registers[2] = parseInt("0x7FFFFFF0", 16);
+        this.Registers[3] = parseInt("0x10000000", 16);
     }
     // RS1
-    setRS1(rs1Addr: string){
+    setRS1(rs1Addr: number){
         this.RS1 = rs1Addr;
     }
     getRS1(){
-        return this.RS1;
+        return this.getRegVal(this.RS1);
     }
     // RS2
-    setRS2(rs2Addr: string){
+    setRS2(rs2Addr: number){
         this.RS2 = rs2Addr;
     }
     getRS2(){
-        return this.RS2;
+        return this.getRegVal(this.RS2);
     }
     // RD
-    setRD(rdAddr: string){
+    setRD(rdAddr: number){
         this.RD = rdAddr;
     }
     getRD(){
         return this.RD;
     }
     // REgisters
-    setRegVal(regAddr: string, value : string){
-        let regIdx = parseInt(regAddr).toString(10);
-        this.Registers[regIdx] = value;
+    setRegVal(regAddr: number, value : number){
+        this.Registers[regAddr] = value;
     }
-    getRegVal(all: boolean, regAddr: string){
-        if(all){
-            return this.Registers;
-        }
-        let regIdx = parseInt(regAddr).toString(10);
-        let value : string = this.Registers[regIdx];
-        return value;
+    getRegVal(regAddr: number) :number {
+        return this.Registers[regAddr];
     }
 }
 
 // let RegFile : RegisterFile = new RegisterFile();
 // RegFile.setRS1("0x01245780");
-// console.log(RegFile.getRegVal(false, "0x00000003"));
+// console.log(RegFile.getRegVal(false, "0x00000002"));
+

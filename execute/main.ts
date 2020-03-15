@@ -200,7 +200,7 @@ function Decode() {
         regFile.setRD(parseInt(rd, 2));
 
         // shifting by 12 bits;
-        immVal = IR.slice(0, 20) + "0".repeat(12);
+        immVal = IR.slice(0, 20)
     }
     else if(type == 'UJ'){
         // operation code
@@ -251,6 +251,7 @@ function Execute(instType : string, operCode : string, immVal : string){
     let inB :number;
     if(selectLineB==1){
         // console.log("Buzzinga");
+        console.log(immVal);
         inB = evaluateImm(immVal);
     }
     else{

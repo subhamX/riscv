@@ -42,13 +42,9 @@ export class RegisterFile{
     // REgisters
     setRegVal(regAddr: number, value : number){
         this.Registers[regAddr] = value;
+        console.table(this.Registers);
     }
     getRegVal(regAddr: number) :number {
         return this.Registers[regAddr];
     }
 }
-
-// let RegFile : RegisterFile = new RegisterFile();
-// RegFile.setRS1("0x01245780");
-// console.log(RegFile.getRegVal(false, "0x00000002"));
-

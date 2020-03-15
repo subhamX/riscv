@@ -388,7 +388,9 @@ function handleDataSegment(lines: string[]) {
             let type: string = instr[1];
             type = type.slice(1);
             name = name.slice(0, name.length);
-
+            if (dataSegmentMap.get(name)) {
+                throw Error(`[Data Segment]: ${name} Label already Exist`);
+            }
             if (type == 'asciiz') {
                 let data: string = instr[2].split('"').join('');
                 // Parsing Escape Sequences
@@ -403,7 +405,7 @@ function handleDataSegment(lines: string[]) {
                 data = data.split('\\f').join('\f');
                 data = data.split('\\v').join('\v');
                 data = data.split('\\0').join('\0');
-                dataSegmentMap.set(name, { "type": type, "startIndex": dataMemory.length, length: data.length+1});
+                dataSegmentMap.set(name, { "type": type, "startIndex": dataMemory.length, length: data.length + 1 });
                 data.split('').forEach((e) => {
                     let t1 = e.charCodeAt(0).toString(16)
                     t1 = addZeros(t1, 2);
@@ -411,10 +413,9 @@ function handleDataSegment(lines: string[]) {
                 })
                 dataMemory.push('00');
             } else {
-
                 let totalNums = line.match(/((0[xX][0-9a-fA-F]+|[\d]+)[ ]*,[ ]*)*(0[xX][0-9a-fA-F]+|[\d]+)[ ]*$/)[0].split(/[ ]|[,]/).filter((e) => e);
                 console.log(totalNums);
-                // Half Bytes means 4;
+                // Half Bytes means 4 bits;
                 let numberOfHalfBytes: number;
                 switch (type) {
                     case 'word': {
@@ -440,16 +441,11 @@ function handleDataSegment(lines: string[]) {
                 // Inserting to dataSegmentMap
                 dataSegmentMap.set(name, { "length": numberOfHalfBytes, "type": type, "startIndex": dataMemory.length })
                 totalNums.forEach((e) => {
-                    // Processing data
+                    if (parseInt(e) > Number.MAX_SAFE_INTEGER) {
+                        throw Error(`MAX_SAFE_INTEGER VALUE REACHED!`);
+                    }
                     let hexstring = parseInt(e).toString(16);
-                    // Finding number of zeros to be inserted
                     hexstring = addZeros(hexstring, numberOfHalfBytes);
-                    // let zerosSize = numberOfHalfBytes - hexstring.length;
-                    // // Inserting Zeroes
-                    // while (zerosSize > 0) {
-                    //     hexstring = "0" + hexstring;
-                    //     zerosSize--;
-                    // }
                     // hexstring is now >=numberOfHalfBytes
                     let index = hexstring.length - 1;
                     for (let i = 0; i < numberOfHalfBytes; i += 2) {

@@ -1,4 +1,4 @@
-import { addZeros } from "../encode/helperFun";
+import { addZeros } from "./utility";
 import * as fs from 'fs';
 
 export class RegisterFile {
@@ -40,7 +40,7 @@ export class MemoryFile {
     }
     // address contains the effective address, MEM_write and MEM_read are control signals for write and read respectively
     // rM is the data/payload in binary
-    process(memoryAddress: string, MEM_read: boolean, MEM_write: boolean, rM: string, type): { memoryData?: number } {
+    process(memoryAddress: string, MEM_read: boolean, MEM_write: boolean, rM: string, type:any): { memoryData?: number } {
         if (!MEM_write && !MEM_read) {
             return;
         }
@@ -48,7 +48,7 @@ export class MemoryFile {
         console.log(rM);
         rM = addZeros(rM, 8);
         let index = parseInt(memoryAddress, 2) - parseInt(this.BASEADDR);
-        let len;
+        let len:number;
         if (type == 'b') {
             len = 1;
         } else if (type == 'w') {
@@ -90,8 +90,9 @@ export class MemoryFile {
         console.log("VALindex", index);
         let tempIndex = index;
         console.log("VALn", n);
+        console.log("len", len);
         // while len is true and i>=0
-        for (let i = n - 2; i >= 0 && len--; i -= 2) {
+        for (let i = n - 2; (i >= 0) && len--; i -= 2) {
             console.log(index.toString(16), val.slice(i, i + 2))
             this.MEM.set(tempIndex++, val.slice(i, i + 2));
         }

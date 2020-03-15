@@ -1,19 +1,38 @@
 import * as fs from 'fs';
-import { addZeros } from '../encode/helperFun';
-import { RegisterFile, MemoryFile } from './registerFile';
+import { addZeros } from "./utility";
+import { RegisterFile, MemoryFile } from './storage';
+import * as readline from 'readline';
 
-let pc: number, instrReg: string, pcTemp: number, regFile: RegisterFile, memFile: MemoryFile, imm, opcode, instrType, rA, rB, rd, inB, inA, func3, func7, rZ, rM;
-let RF_write: boolean;
-let selectLineB0, selectLineY0, selectLineY1;
-let instructionMap: Map<number, string> = new Map<number, string>();
-let operatorMap: Map<any, any> = new Map<any, any>();
-// all address are in binary and values are in decimal
-let addrA, addrB, addrD;
-let opcodeMap: Map<string, string> = new Map<string, string>();
 
-let MEM_read, MEM_write, type;
-// rY and muxYop1 stores in decimal
-let rY, muxYop1;
+// Defining readline interface
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+/**
+ * DEFINING VARIABLES
+ * 
+ * rY and muxYop1 stores in decimal
+ *
+ */
+
+let
+    pc: number, pcTemp: number,
+    instrReg: string,
+    regFile: RegisterFile, memFile: MemoryFile,
+    imm: any, opcode: any, func3: any, func7: any, instrType: any, type: string,
+    rA: any, rB: any, inB: any, inA: any, rZ: any, rM: any, rY: any,
+    RF_write: boolean, MEM_read: boolean, MEM_write: boolean,
+    selectLineB0: number, selectLineY0: number, selectLineY1: number, muxYop1: any,
+    instructionMap: Map<number, string> = new Map<number, string>(),
+    operatorMap: Map<any, any> = new Map<any, any>(),
+    // all address are in binary and values are in decimal
+    addrA: any, addrB: any, addrD: any,
+    opcodeMap: Map<string, string> = new Map<string, string>(),
+    CLOCK: number = 0;
+
+
 
 (function refMapForOpcode() {
     // R type
@@ -33,11 +52,7 @@ let rY, muxYop1;
     opcodeMap.set('1101111', 'UJ');
 })();
 
-const readline = require("readline");
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
+
 
 
 function initOperatorMap() {
@@ -56,6 +71,13 @@ function initOperatorMap() {
     operatorMap.set("1100000001", { method: 'rem', });
 }
 
+/**
+ * 
+ * Function:
+ *  Loads the program into instruction map and data into memFile
+ *  Initializes Program Counter
+ * 
+ */
 (function init(): void {
     initOperatorMap();
     let data = fs.readFileSync(__dirname + "/test/data.m", { encoding: "utf-8" });
@@ -93,11 +115,12 @@ function initOperatorMap() {
 })();
 
 function askQue() {
-    rl.question(`(Nxt Instruction pc: 0x${pc.toString(16)})Run Another Step Y/N?\n`, function (flag) {
+    rl.question(`(Nxt Instruction pc: 0x${pc.toString(16)}) Run Another Step Y/N?\n`, function (flag) {
         if (flag == 'N') {
             rl.close();
         } else {
             oneStep();
+            showState();
             askQue();
         }
     })
@@ -108,16 +131,21 @@ rl.on("close", function () {
     process.exit(0);
 });
 
+// Wrapper function to run one step and increment clock
 function oneStep() {
     fetch();
     decode();
     execute();
     mem();
     write_back();
-    showState();
+    CLOCK++;
 }
 
-// 
+/**
+ * Function:
+ *  Evaluates control and select lines based on instructions type and other params
+ * 
+ */
 function evalControlLines() {
     // If the instruction is R or SB type then selectLineB0 = 0
     if (instrType == 'R' || instrType == 'SB') {
@@ -155,13 +183,17 @@ function evalControlLines() {
     }
 }
 
-// program counter pc register which holds the address of the current instruction
+/**
+ * 
+ * Stage 1 => Fetch
+ *  Perform the Fetch functionality. Loads the instruction into IR and increments PC
+ * 
+ */
 function fetch() {
     // Fetching the current Instruction
     let temp = instructionMap.get(pc);
     // Terminating Condition 
     if (!temp || ((parseInt(temp) >> 0) == -1)) {
-        // TODO: Write Data Memory
         memFile.writeToDataMemory();
         process.exit(0);
     }
@@ -173,8 +205,7 @@ function fetch() {
     instrReg = temp;
     opcode = instrReg.slice(25);
     instrType = opcodeMap.get(opcode).split("_")[0];
-    // constructing immediate value
-    // TODO: constructing immediate value and passing to MuxINC for Branch Instructions
+    // Constructing immediate value
     constructImm();
     // Determining Select Lines For Various Multiplexer
     evalControlLines();
@@ -182,62 +213,15 @@ function fetch() {
     console.log(instrType)
     pcTemp = pc;
     pc += 4;
-    console.log("FETCH COmplete");
-}
-// Function to Update PC when branch condition is true
-function updatePC() {
-    // Updating PC using pcTemp
-    let u = pc;
-    pc = pcTemp + convertBinaryToDecimal(imm);
-    pcTemp = u;
-    console.log("Branch Instruction or jal Encountered with condition True; NEW PC-", pc, "OLD PC-", pcTemp);
-}
-
-// Helper Function to AddOnes in Beginning
-function addOnes(imm: string, len: number) {
-    let n = len - imm.length;
-    while (n--) {
-        imm = '1' + imm;
-    }
-    return imm;
-}
-
-// Function to re-construct the immediate field from the encoded 32 bit binary instruction
-function constructImm() {
-    if (instrType == 'I') {
-        imm = instrReg.slice(0, 12);
-    } else if (instrType == 'SB') {
-        let temp = instrReg.split('').reverse().join('');
-        imm = temp.slice(8, 12) + temp.slice(25, 31) + temp[7] + temp[31];
-        imm = imm.split('').reverse().join('');
-        imm = imm + '0';
-    } else if (instrType == 'S') {
-        let temp = instrReg.split('').reverse().join('');
-        imm = temp.slice(7, 12) + temp.slice(25);
-        imm = imm.split('').reverse().join('');
-    } else if (instrType == 'U') {
-        imm = instrReg.slice(0, 20);
-    } else if (instrType == 'UJ') {
-        imm = instrReg.slice(1, 11).split('').reverse().join('') + instrReg[11] + instrReg.slice(12, 19).split('').reverse().join('') + instrReg[0];
-        imm = imm.split('').reverse().join('');
-        imm = imm + '0';
-        console.log(imm);
-    } else {
-        console.error("Instruction is R Type. No imm calculation required");
-        return;
-    }
-    // If the MSB is 1 then adding 1's to create a 32 length imm
-    if (imm[0] == '1') {
-        // imm value is negative
-        imm = addOnes(imm, 32);
-        imm = ((parseInt(imm, 2) >> 0)).toString(2)
-    } else {
-        // imm value is positive
-        imm = addZeros(imm, 32);
-    }
 }
 
 
+/**
+ * 
+ * Stage 2 => Decode
+ *  Decodes the opcode, destination register, func3 etc from the IR.
+ * 
+ */
 function decode() {
     if (instrType == 'R') {
         // for R type instructions ( func7 | rs2 | rs1 | func3 | rd | opcode )
@@ -250,7 +234,6 @@ function decode() {
         // Reading values from Register File
         rB = regFile.readValue(parseInt(addrB, 2)).toString(2);
         rA = regFile.readValue(parseInt(addrA, 2)).toString(2);
-        // ! rM = rB;
         console.log(parseInt(rA, 2), parseInt(rB, 2), parseInt(func3, 2));
     } else if (instrType == 'I') {
         // for I type instructions ( imm | rs1 | func3 | rd | opcode )
@@ -293,16 +276,7 @@ function decode() {
 
 }
 
-// Helper function to convert binary to decimal
-function convertBinaryToDecimal(value: string): number {
-    return parseInt(value, 2) >> 0;
-}
 
-// Helper function to convert decimal to binary
-function convertDecimalToBinary(value: number) {
-    if (value)
-        return (value >>> 0).toString(2);
-}
 
 /**
  * 
@@ -446,6 +420,28 @@ function write_back() {
     }
 }
 
+
+
+
+// Helper function to evaluate the type
+function evalType() {
+    // if instructions is load or store setting type flag
+    if (opcode == '0100011' || opcode == '0000011') {
+        if (func3 == "000") {
+            type = 'b';
+        } else if (func3 == '010') {
+            type = 'w';
+        } else if (func3 == '011') {
+            type = 'd';
+        } else if (func3 == '001') {
+            type = 'h';
+        }
+    } else {
+        type = '';
+    }
+}
+
+// Replicates the functionality of MuxY : [Refer README.md]
 function evalMuxY() {
     let temp = selectLineY1 * 2 + selectLineY0;
     switch (temp) {
@@ -472,25 +468,7 @@ function evalMuxY() {
 }
 
 
-function evalType() {
-    // if instructions is load or store setting type flag
-    if (opcode == '0100011' || opcode == '0000011') {
-        if (func3 == "000") {
-            type = 'b';
-        } else if (func3 == '010') {
-            type = 'w';
-        } else if (func3 == '011') {
-            type = 'd';
-        } else if (func3 == '001') {
-            type = 'h';
-        }
-    } else {
-        type = '';
-    }
-}
-
-
-// Implements Functionality Of MuxB
+// Replicates the functionality of MuxB : [Refer README.md]
 function evalMuxB() {
     if (selectLineB0) {
         inB = imm;
@@ -501,6 +479,17 @@ function evalMuxB() {
     }
 }
 
+// Replicates the functionality of MuxMA : [Refer README.md]
+function evalMuxMA() {
+    if (instrType == 'I') {
+        // jalr
+        if (opcode == '1100111') {
+            pcTemp = pc;
+            console.log("DEBUG: ", rZ);
+            pc = parseInt(rZ, 2);
+        }
+    }
+}
 
 
 // Helper Function To Display Current State Of RegisterFile And MemoryFile
@@ -514,18 +503,70 @@ function showState() {
     console.table(tempReg);
     console.log("MEMORY");
     memFile.display();
-    // let index = parseInt("0x10000064") - parseInt('0x10000000');
-    // console.log(memFile.readValue(index, 100));
 }
 
-// Implements Functionality Of MuxMA
-function evalMuxMA() {
+
+// Helper function to convert binary to decimal
+function convertBinaryToDecimal(value: string): number {
+    return parseInt(value, 2) >> 0;
+}
+
+// Helper function to convert decimal to binary
+function convertDecimalToBinary(value: number) {
+    if (value)
+        return (value >>> 0).toString(2);
+}
+
+
+// Function to Update PC while branching
+function updatePC() {
+    // Updating PC using pcTemp
+    let temp = pc;
+    pc = pcTemp + convertBinaryToDecimal(imm);
+    pcTemp = temp;
+    console.log("Branching: NEW PC-", pc, "OLD PC-", pcTemp);
+}
+
+// Helper Function to AddOnes in Beginning
+function addOnes(imm: string, len: number) {
+    let n = len - imm.length;
+    while (n--) {
+        imm = '1' + imm;
+    }
+    return imm;
+}
+
+// Function to re-construct the immediate field from the encoded 32 bit binary instruction
+function constructImm() {
     if (instrType == 'I') {
-        // jalr
-        if (opcode == '1100111') {
-            pcTemp = pc;
-            console.log("DEBUG: ", rZ);
-            pc = parseInt(rZ, 2);
-        }
+        imm = instrReg.slice(0, 12);
+    } else if (instrType == 'SB') {
+        let temp = instrReg.split('').reverse().join('');
+        imm = temp.slice(8, 12) + temp.slice(25, 31) + temp[7] + temp[31];
+        imm = imm.split('').reverse().join('');
+        imm = imm + '0';
+    } else if (instrType == 'S') {
+        let temp = instrReg.split('').reverse().join('');
+        imm = temp.slice(7, 12) + temp.slice(25);
+        imm = imm.split('').reverse().join('');
+    } else if (instrType == 'U') {
+        imm = instrReg.slice(0, 20);
+    } else if (instrType == 'UJ') {
+        imm = instrReg.slice(1, 11).split('').reverse().join('') + instrReg[11] + instrReg.slice(12, 19).split('').reverse().join('') + instrReg[0];
+        imm = imm.split('').reverse().join('');
+        imm = imm + '0';
+        console.log(imm);
+    } else {
+        console.error("Instruction is R Type. No imm calculation required");
+        return;
+    }
+    // If the MSB is 1 then adding 1's to create a 32 length imm
+    if (imm[0] == '1') {
+        // imm value is negative
+        imm = addOnes(imm, 32);
+        imm = ((parseInt(imm, 2) >> 0)).toString(2)
+    } else {
+        // imm value is positive
+        imm = addZeros(imm, 32);
     }
 }

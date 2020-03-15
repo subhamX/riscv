@@ -49,7 +49,6 @@ function init(): void {
     PC = 0;
     CLOCK = 0;
     
-    runProgram();
     while (1) {
         console.log("------------********----------");
         console.log('PC', PC);
@@ -62,22 +61,7 @@ function init(): void {
     }
 }
 
-let rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-  
-
 init();
-
-function runProgram(select:number) : void{
-    if(select == 1){
-
-    }
-    else{
-
-    }
-}
 
 
 function determineSelectLines(type: string) {

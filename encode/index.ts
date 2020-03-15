@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as schema from './schema/schema';
 import { loadRefMap } from './refMap'
-import { addZeros, addRegZeros, preProcess } from './helperFun';
+import { addZeros, addRegZeros, preProcess } from './utility';
 import * as patterns from './regexPatterns';
 
 // refMap maps mnemonic to its metadata
@@ -12,7 +12,7 @@ let labelMap: Map<string, schema.LabelInterface> = new Map<string, schema.LabelI
 let dataSegmentMap: Map<string, schema.DataLabelInterface> = new Map();
 // dataMemory contains the data of dataMemory or [.data]
 let dataMemory: Array<string> = Array<string>();
-let debugData: Array<any> = Array<any>()
+
 // Loading the Reference Map
 loadRefMap(refMap);
 
@@ -26,20 +26,20 @@ console.log("Preprocess all lines");
 lines = preProcess(lines);
 console.log("Checking For Errors");
 let { dataSegment, textSegment } = check(lines);
-debugData.push("<-----------------------Data Segment----------------------->")
-debugData.push(dataSegment.join("\n"));
-debugData.push("<-----------------------Text Segment----------------------->")
-debugData.push(textSegment.join("\n"));
-debugData.push("<-----------------------Label Map----------------------->")
+console.log("<-----------------------Data Segment----------------------->")
+console.log(dataSegment.join("\n"));
+console.log("<-----------------------Text Segment----------------------->")
+console.log(textSegment.join("\n"));
+console.log("<-----------------------Label Map----------------------->")
 labelMap.forEach((a, key) => {
-    debugData.push(`${key} ${a.location} ${a.scope}`);
+    console.log(`${key} ${a.location} ${a.scope}`);
 });
 
 let codeSegment: Array<string> = Array<string>();
 console.log("Executing Data Segment");
 handleDataSegment(dataSegment);
 console.log("Executing Text Segment");
-debugData.push("<-----------------------Executing Text Segment----------------------->")
+console.log("<-----------------------Executing Text Segment----------------------->")
 handleTextSegment(textSegment);
 
 /**
@@ -78,8 +78,8 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                         }
                     }
                     let result = patterns.dataSegPattern.test(line);
-
-                    if (result) {
+                    let resultAsciiz = patterns.dataSegAsciizPattern.test(line);
+                    if (result || resultAsciiz) {
                         dataSegment.push(line);
                     } else {
                         // Check if it belongs to voidSegment
@@ -102,7 +102,7 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                     let resultUformat: boolean = patterns.formatUPattern.test(line);
                     let resultUJformat: boolean = patterns.formatUJPattern.test(line);
                     let resultLoadFromDataformat: boolean = patterns.formatLoadFromDataPattern.test(line);
-                    // debugData.push({ "Instr": line, "R Format": resultRformat, "I Format": resultIformat, "S Format": resultSformat, "SB Format": resultSBformat, "U Format": resultUformat, "UJ Format": resultUJformat })
+                    // console.log({ "Instr": line, "R Format": resultRformat, "I Format": resultIformat, "S Format": resultSformat, "SB Format": resultSBformat, "U Format": resultUformat, "UJ Format": resultUJformat })
                     if (resultIformat || resultRformat || resultSformat || resultSBformat || resultUJformat || resultUformat || resultLoadformat || resultLoadFromDataformat) {
                         // The line is a valid instruction
                         if (segmentFlag == 2) {
@@ -173,7 +173,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                 // Expecting rd, rs1, rs2 lengths to be exactly 5
                 let encodedInstr = func7 + rs2 + rs1 + func3 + rd + opcode;
                 codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                debugData.push(`(${mnemonic}||${line}) R Format: ` + parseInt(encodedInstr, 2).toString(16));
+                console.log(`(${mnemonic}||${line}) R Format: ` + parseInt(encodedInstr, 2).toString(16));
             } else if (format == "I") {
                 if (mnemonic[0] == "l") {
                     // Instruction is ld, lh, lw, lb
@@ -196,7 +196,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                         let offset = getImmString(imm, 12);
                         let encodedInstr = offset.concat(rs1, func3, rd, opcode);
                         codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                        debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
+                        console.log(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
                         // Incrementing Index as an additional auipc is added
                         console.log(`Incrementing: params.index | prev ${params.index} | new ${params.index + 1}`)
                         params.index++;
@@ -218,7 +218,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                         offset = getImmString(imm, 12);
                         let encodedInstr = offset.concat(rs1, func3, rd, opcode);
                         codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                        debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
+                        console.log(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
                     }
                 } else {
                     let rd = instr[1].replace(',', '').slice(1);
@@ -241,7 +241,7 @@ function encodeInstruction(params: { line: string, index: number }) {
 
                     let encodedInstr = immString + rs1 + func3 + rd + opcode;
                     codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                    debugData.push(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
+                    console.log(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
                 }
             } else if (format == "S") {
                 let rs2 = instr[1].replace(',', '').slice(1);
@@ -265,7 +265,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                 let encodedInstr = imm2.concat(rs2, rs1, func3, imm1, opcode);
                 codeSegment.push(parseInt(encodedInstr, 2).toString(16));
 
-                debugData.push(`(${mnemonic}||${line}) S Format: ` + parseInt(encodedInstr, 2).toString(16));
+                console.log(`(${mnemonic}||${line}) S Format: ` + parseInt(encodedInstr, 2).toString(16));
             } else if (format == "SB") {
                 // beq, bne, bge, blt
                 let rs1 = instr[1].replace(',', '').slice(1);
@@ -291,7 +291,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                     encodedInstr = imm1.concat(imm3, rs2, rs1, func3, imm2, imm4, opcode);
                     codeSegment.push(parseInt(encodedInstr, 2).toString(16));
 
-                    debugData.push(`(${mnemonic}||${line}) SB Format: ` + parseInt(encodedInstr, 2).toString(16));
+                    console.log(`(${mnemonic}||${line}) SB Format: ` + parseInt(encodedInstr, 2).toString(16));
                 } else {
                     throw Error(`Label Error Occurred at line: ${line}`);
                 }
@@ -309,7 +309,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                 let encodedInstr = offset + rd + opcode;
                 codeSegment.push(parseInt(encodedInstr, 2).toString(16));
 
-                debugData.push(`(${mnemonic}||${line}) U Format: ` + parseInt(encodedInstr, 2).toString(16));
+                console.log(`(${mnemonic}||${line}) U Format: ` + parseInt(encodedInstr, 2).toString(16));
             } else if (format == "UJ") {
                 let rd = instr[1].replace(',', '').slice(1);
                 rd = parseInt(rd).toString(2);
@@ -333,7 +333,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                     encodedInstr = imm4.concat(imm2, imm1, imm3, rd, opcode);
                     codeSegment.push(parseInt(encodedInstr, 2).toString(16));
 
-                    debugData.push(`(${mnemonic}||${line}) UJ Format: ` + parseInt(encodedInstr, 2).toString(16));
+                    console.log(`(${mnemonic}||${line}) UJ Format: ` + parseInt(encodedInstr, 2).toString(16));
                 } else {
                     throw Error(`Label Error Occurred at line: ${line}`);
                 }
@@ -352,7 +352,7 @@ function encodeInstruction(params: { line: string, index: number }) {
 // Handles Text Segment
 function handleTextSegment(lines: string[]) {
     let params = { 'line': null, 'index': 0 };
-    for(let i=0; i<lines.length; i++){
+    for (let i = 0; i < lines.length; i++) {
         params.line = lines[i];
         // TODO: Remove temp
         let temp = params.index;
@@ -380,73 +380,86 @@ function getImmString(imm: number, len: number) {
 // Handles Data Segment
 function handleDataSegment(lines: string[]) {
     try {
-
         for (let line of lines) {
             // Using Regex to catch multiple spaces
             console.log(line);
             let instr = line.split(/[ ]+/);
             let name: string = instr[0].replace(':', '');
             let type: string = instr[1];
-            let totalNums = line.match(/((0[xX][0-9a-fA-F]+|[\d]+)[ ]*,[ ]*)*(0[xX][0-9a-fA-F]+|[\d]+)[ ]*$/)[0].split(/[ ]|[,]/).filter((e) => e);
-            console.log(totalNums);
+            type = type.slice(1);
+            name = name.slice(0, name.length);
 
-            // Processing type
-            if (type[0] != '.') {
-                // Error
+            if (type == 'asciiz') {
+                let data: string = instr[2].split('"').join('');
+                // Parsing Escape Sequences
+                data = data.split('\\b').join('\b');
+                data = data.split('\\\\').join('\\');
+                data = data.split('\\xFF').join('\xFF');
+                data = data.split('\\"').join('\"');
+                data = data.split("\\'").join("\"");
+                data = data.split('\\n').join('\n');
+                data = data.split('\\r').join('\r');
+                data = data.split('\\t').join('\t');
+                data = data.split('\\f').join('\f');
+                data = data.split('\\v').join('\v');
+                data = data.split('\\0').join('\0');
+                dataSegmentMap.set(name, { "type": type, "startIndex": dataMemory.length, length: data.length+1});
+                data.split('').forEach((e) => {
+                    let t1 = e.charCodeAt(0).toString(16)
+                    t1 = addZeros(t1, 2);
+                    dataMemory.push(t1);
+                })
+                dataMemory.push('00');
             } else {
-                type = type.slice(1);
+
+                let totalNums = line.match(/((0[xX][0-9a-fA-F]+|[\d]+)[ ]*,[ ]*)*(0[xX][0-9a-fA-F]+|[\d]+)[ ]*$/)[0].split(/[ ]|[,]/).filter((e) => e);
+                console.log(totalNums);
+                // Half Bytes means 4;
+                let numberOfHalfBytes: number;
+                switch (type) {
+                    case 'word': {
+                        numberOfHalfBytes = 8;
+                        break;
+                    }
+                    case 'byte': {
+                        numberOfHalfBytes = 2;
+                        break;
+                    }
+                    case 'dword': {
+                        numberOfHalfBytes = 16;
+                        break;
+                    }
+                    case 'half': {
+                        numberOfHalfBytes = 4;
+                        break;
+                    }
+                }
+                if (dataSegmentMap.get(name)) {
+                    throw Error(`${name} variable already exists!`)
+                }
+                // Inserting to dataSegmentMap
+                dataSegmentMap.set(name, { "length": numberOfHalfBytes, "type": type, "startIndex": dataMemory.length })
+                totalNums.forEach((e) => {
+                    // Processing data
+                    let hexstring = parseInt(e).toString(16);
+                    // Finding number of zeros to be inserted
+                    hexstring = addZeros(hexstring, numberOfHalfBytes);
+                    // let zerosSize = numberOfHalfBytes - hexstring.length;
+                    // // Inserting Zeroes
+                    // while (zerosSize > 0) {
+                    //     hexstring = "0" + hexstring;
+                    //     zerosSize--;
+                    // }
+                    // hexstring is now >=numberOfHalfBytes
+                    let index = hexstring.length - 1;
+                    for (let i = 0; i < numberOfHalfBytes; i += 2) {
+                        let foo = hexstring.slice(index - 1, index + 1);
+                        dataMemory.push(foo);
+                        index -= 2;
+                    }
+                })
             }
 
-            // Processing name
-            if (name[name.length - 1] != ':') {
-                // Error
-            } else {
-                name = name.slice(0, name.length);
-            }
-
-            // Half Bytes means 4;
-            let numberOfHalfBytes: number;
-            switch (type) {
-                case 'word': {
-                    numberOfHalfBytes = 8;
-                    break;
-                }
-                case 'byte': {
-                    numberOfHalfBytes = 2;
-                    break;
-                }
-                case 'dword': {
-                    numberOfHalfBytes = 16;
-                    break;
-                }
-                case 'half': {
-                    numberOfHalfBytes = 4;
-                    break;
-                }
-            }
-            if (dataSegmentMap.get(name)) {
-                throw Error(`${name} variable already exists!`)
-            }
-            // Inserting to dataSegmentMap
-            dataSegmentMap.set(name, { "length": numberOfHalfBytes, "type": type, "startIndex": dataMemory.length })
-            totalNums.forEach((e) => {
-                // Processing data
-                let hexstring = parseInt(e).toString(16);
-                // Finding number of zeros to be inserted
-                let zerosSize = numberOfHalfBytes - hexstring.length;
-                // Inserting Zeroes
-                while (zerosSize > 0) {
-                    hexstring = "0" + hexstring;
-                    zerosSize--;
-                }
-                // hexstring is now >=numberOfHalfBytes
-                let index = hexstring.length - 1;
-                for (let i = 0; i < numberOfHalfBytes; i += 2) {
-                    let foo = hexstring.slice(index - 1, index + 1);
-                    dataMemory.push(foo);
-                    index -= 2;
-                }
-            })
         }
     } catch (err) {
         console.log(err);
@@ -469,8 +482,4 @@ codeSegment.push(...dataMemory.map((a, index) => {
 }));
 console.log("Writing Into File: output/data.m");
 fs.writeFileSync(__dirname + "/output/data.m", codeSegment.join("\n"));
-console.log("Success!");
-
-console.log("Writing Debug Info Into File: output/debug.m");
-fs.writeFileSync(__dirname + "/output/dataDebug.txt", debugData.join("\n"));
 console.log("Success!");

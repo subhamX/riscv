@@ -88,11 +88,12 @@ function initOperatorMap() {
     }
     // Setting pc and instrReg
     pc = 0;
+    console.log(instructionMap);
     askQue();
 })();
 
 function askQue() {
-    rl.question(`(pc: ${pc})Run Another Step Y/N?\n`, function (flag) {
+    rl.question(`(Nxt Instruction pc: 0x${pc.toString(16)})Run Another Step Y/N?\n`, function (flag) {
         if (flag == 'N') {
             rl.close();
         } else {
@@ -144,7 +145,29 @@ function evalControlLines() {
     } else {
         selectLineY0 = 0;
     }
-    // if()
+    // Setting MEM_write and MEM_read control
+    if (instrType == 'S') {
+        MEM_write = true;
+    } else if (instrType == 'I') {
+        if (opcodeMap.get(opcode) == 'I_L') {
+            // Load Instructions
+            MEM_read = true;
+        }
+    }
+    // if instructions is load or store setting type flag
+    if (opcode == '0100011' || opcode == '0000011') {
+        if (func3 == "000") {
+            type = 'b';
+        } else if (func3 == '010') {
+            type = 'w';
+        } else if (func3 == '011') {
+            type = 'd';
+        } else if (func3 == '001') {
+            type = 'h';
+        }
+    } else {
+        type = '';
+    }
 }
 
 // program counter pc register which holds the address of the current instruction
@@ -171,12 +194,14 @@ function fetch() {
     console.log(instrType)
     pcTemp = pc;
     pc += 4;
+    console.log("FETCH COmplete");
 }
 // Function to Update PC when branch condition is true
 function updatePC() {
     // Updating PC using pcTemp
-    pcTemp = pc;
+    let u = pc;
     pc = pcTemp + convertBinaryToDecimal(imm);
+    pcTemp = u;
     console.log("Branch Instruction or jal Encountered with condition True; NEW PC-", pc, "OLD PC-", pcTemp);
 }
 
@@ -227,68 +252,84 @@ function constructImm() {
 
 function decode() {
     if (instrType == 'R') {
-        // rs1 = rA and rs2 = rB
+        // for R type instructions ( func7 | rs2 | rs1 | func3 | rd | opcode )
+        // Passing => rA = rs1 and rB = rs2
         func3 = instrReg.slice(17, 20);
         func7 = instrReg.slice(0, 7);
         addrA = instrReg.slice(12, 17);
         addrB = instrReg.slice(7, 12);
-        rB = (regFile.readValue(parseInt(addrB, 2)) >>> 0).toString(2);
-        rA = (regFile.readValue(parseInt(addrA, 2)) >>> 0).toString(2);
-        rM = rB;
         addrD = instrReg.slice(20, 25);
+        // Reading values from Register File
+        rB = regFile.readValue(parseInt(addrB, 2)).toString(2);
+        rA = regFile.readValue(parseInt(addrA, 2)).toString(2);
+        // ! rM = rB;
         console.log(parseInt(rA, 2), parseInt(rB, 2), parseInt(func3, 2));
     } else if (instrType == 'I') {
+        // for I type instructions ( imm | rs1 | func3 | rd | opcode )
+        // Passing => rA = rs1
         func3 = instrReg.slice(17, 20);
         addrD = instrReg.slice(20, 25);
         addrA = instrReg.slice(12, 17);
-        rA = (regFile.readValue(parseInt(addrA, 2)) >>> 0).toString(2);
-        console.log(parseInt(addrA, 2), parseInt(addrD, 2), rA, "CHEcK");
+        // Reading values from Register File
+        rA = regFile.readValue(parseInt(addrA, 2)).toString(2);
+        console.log(parseInt(addrA, 2), parseInt(addrD, 2), rA);
     } else if (instrType == 'SB') {
-        // rs1 = rA and rs2 = rB
+        // for SB type instructions ( imm | rs2 | rs1 | func3 | imm | opcode )
+        // Passing => rA = rs1 and rB = rs2
         func3 = instrReg.slice(17, 20);
         addrA = instrReg.slice(12, 17);
         addrB = instrReg.slice(7, 12);
-        rB = (regFile.readValue(parseInt(addrB, 2)) >>> 0).toString(2);
-        rA = (regFile.readValue(parseInt(addrA, 2)) >>> 0).toString(2);
-        // rM = rB;
-        // addrD = instrReg.slice(20, 25);
+        rB = regFile.readValue(parseInt(addrB, 2)).toString(2);
+        rA = regFile.readValue(parseInt(addrA, 2)).toString(2);
         console.log(parseInt(addrA, 2), parseInt(addrB, 2), parseInt(func3, 2));
     } else if (instrType == 'S') {
+        // for S type instructions ( imm | rs2 | rs1 | func3 | imm | opcode )
         func3 = instrReg.slice(17, 20);
         addrD = instrReg.slice(20, 25);
         addrA = instrReg.slice(12, 17);
         addrB = instrReg.slice(7, 12);
-        rB = (regFile.readValue(parseInt(addrB, 2)) >>> 0).toString(2);
-        rA = (regFile.readValue(parseInt(addrA, 2)) >>> 0).toString(2);
+        rB = regFile.readValue(parseInt(addrB, 2)).toString(2);
+        rA = regFile.readValue(parseInt(addrA, 2)).toString(2);
         console.log(parseInt(addrA, 2), parseInt(addrB, 2), parseInt(func3, 2));
     } else if (instrType == 'U') {
+        // for U type instructions ( imm | rd | opcode )
         // Fetching destination address
         addrD = instrReg.slice(20, 25);
     } else if (instrType == 'UJ') {
+        // for UJ type instructions ( imm | rd | opcode )
+        addrD = instrReg.slice(20, 25);
         // jal
         // Since this is unconditional jump thus updating the PC in decode step itself
         updatePC();
-        addrD = instrReg.slice(20, 25);
     }
 
 }
 
+// Helper function to convert binary to decimal
 function convertBinaryToDecimal(value: string): number {
     return parseInt(value, 2) >> 0;
 }
 
+// Helper function to convert decimal to binary
 function convertDecimalToBinary(value: number) {
     if (value)
         return (value >>> 0).toString(2);
 }
 
+/**
+ * 
+ * Stage 3 => Execute
+ * 
+ */
 function execute() {
-    evalMuxB();
-    // Passing inA to rA
+    // Passing rA to inA
     inA = rA;
+    // MuxB sets value of inB
+    evalMuxB();
     console.log(`Execute Started! inA = ${parseInt(inA, 2)} || inB = ${parseInt(inB, 2)}`)
-    // If instruction type is SB then comparing and sending control signal to update the PC if the condition is true
     if (instrType == 'SB') {
+        // SB type Instruction 
+        // Sending control signal to update the PC if the condition is true
         if (func3 == '000') {
             // beq
             if (convertBinaryToDecimal(inA) == convertBinaryToDecimal(inB)) {
@@ -297,24 +338,22 @@ function execute() {
         } else if (func3 == '001') {
             // bne
             if (convertBinaryToDecimal(inA) != convertBinaryToDecimal(inB)) {
-
                 updatePC();
             }
         } else if (func3 == '101') {
             // bge
             if (convertBinaryToDecimal(inA) >= convertBinaryToDecimal(inB)) {
-
                 updatePC();
             }
         } else if (func3 == '100') {
             // blt
             if (convertBinaryToDecimal(inA) < convertBinaryToDecimal(inB)) {
-
                 updatePC();
             }
         }
     } else if (instrType == 'R') {
-        console.log(func3, func7);
+        // R type Instruction 
+        // Fetching operator
         let meta = operatorMap.get(func3 + func7);
         console.log(meta);
         if (meta) {
@@ -347,10 +386,10 @@ function execute() {
             }
         }
     } else if (instrType == 'I') {
+        // I type Instruction 
         if (opcodeMap.get(opcode) == 'I_L') {
-            // Instruction is load
+            // Instruction is load ( lw, lb, lh, ld )
             rZ = convertBinaryToDecimal(inA) + convertBinaryToDecimal(inB);
-            // rM = rB;
         } else {
             if (func3 == '000') {
                 // addi and jalr
@@ -366,10 +405,12 @@ function execute() {
         }
 
     } else if (instrType == 'S') {
-        // store instructions
+        // S type Instruction 
         rZ = convertBinaryToDecimal(inA) + convertBinaryToDecimal(inB);
+        // Passing rB data to rM
         rM = rB;
     } else if (instrType == 'U') {
+        // U type Instruction 
         if (opcode == '0010111') {
             // auipc
             inA = pcTemp;
@@ -379,43 +420,41 @@ function execute() {
             rZ = ((convertBinaryToDecimal(inB)) << 12);
         }
     }
+    // converting rZ to binary
     rZ = convertDecimalToBinary(rZ);
-    console.log(`ALU Operation Complete: rZ in binary=${rZ}`);
-
+    console.log(`ALU Operation Complete: rZ in binary=${rZ} | rZ in decimal=${parseInt(rZ, 2)}`);
 }
 
+
+/**
+ * 
+ * Stage 4 => Memory
+ * 
+ */
 function mem() {
-    if (instrType == 'S') {
-        MEM_write = true;
-    } else if (instrType == 'I') {
-        if (opcodeMap.get(opcode) == 'I_L') {
-            // Load Instructions
-            MEM_read = true;
-        }
-    }
-    // if instructions is load or store
-    if (opcode == '0100011' || opcode == '0000011') {
-        if (func3 == "000") {
-            type = 'b';
-        } else if (func3 == '010') {
-            type = 'w';
-        } else if (func3 == '011') {
-            type = 'd';
-        } else if (func3 == '001') {
-            type = 'h';
-        }
-    } else {
-        type = '';
-    }
-    console.log(opcode, func3);
     // Using the memFile Interface to communicate with memory. And storing the option 1 of MuxY in muxYop1
-    console.log(`${rZ} ${rM} ${type}`);
-    // rM will be undefined for load instructions
+    // NOTE: rM will be undefined for load instructions
     let res = memFile.process(rZ, MEM_read, MEM_write, rM, type);
     if (res) {
         muxYop1 = res.memoryData;
     }
+    // sending signal to MuxMA
+    evalMuxMA();
+    // Evaluating MuxY output
     evalMuxY();
+}
+
+
+/**
+ * 
+ * Stage 5 => Write Back
+ * 
+ */
+function write_back() {
+    if (RF_write) {
+        console.log('Writing Back to: ', parseInt(addrD, 2));
+        regFile.writeValue(parseInt(addrD, 2), rY);
+    }
 }
 
 function evalMuxY() {
@@ -441,26 +480,13 @@ function evalMuxY() {
             break;
         }
     }
-    // sending signal to MuxMA
-    evalMuxMA();
-    if (selectLineB0) {
-        inB = imm;
-    } else {
-        inB = rB;
-    }
 }
 
 
 
-function write_back() {
-    if (RF_write) {
-        console.log('Writing Back to: ', parseInt(addrD, 2));
-        // console.log(rY);
-        regFile.writeValue(parseInt(addrD, 2), rY);
-    }
-}
 
 
+// Implements Functionality Of MuxB
 function evalMuxB() {
     if (selectLineB0) {
         inB = imm;
@@ -473,9 +499,9 @@ function evalMuxB() {
 
 
 
-
+// Helper Function To Display Current State Of RegisterFile And MemoryFile
 function showState() {
-    console.log(`Current PC: ${pc}`);
+    console.log(`Current PC: 0x${pc.toString(16)}`);
     console.log("REGISTER");
     let tempReg = [];
     for (let i = 0; i < 32; i++) {
@@ -488,12 +514,13 @@ function showState() {
     // console.log(memFile.readValue(index, 100));
 }
 
+// Implements Functionality Of MuxMA
 function evalMuxMA() {
     if (instrType == 'I') {
         // jalr
         if (opcode == '1100111') {
+            pcTemp = pc;
             pc = rZ;
         }
     }
-
 }

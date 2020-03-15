@@ -520,7 +520,8 @@ function evalMuxMA() {
         // jalr
         if (opcode == '1100111') {
             pcTemp = pc;
-            pc = rZ;
+            console.log("DEBUG: ",rZ );
+            pc = parseInt(rZ, 2);
         }
     }
 }

@@ -1,5 +1,5 @@
 // func to map opcode with corresponding instruction type
-export function opcodeMap(opMap: Map<String, string>){
+export function opcodeMapfunc(opMap: Map<String, string>){
     // R type
     opMap.set('0110011', 'R');
     // I type
@@ -18,7 +18,7 @@ export function opcodeMap(opMap: Map<String, string>){
 }
 
 // function to map opcode + func3 + func7 to operand
-export function operationMap(operMap : Map<string, string>){
+export function operationMapfunc(operMap : Map<string, string>){
     // R type
     operMap.set("0000000000", 'add');
     operMap.set("0000100000", 'sub');

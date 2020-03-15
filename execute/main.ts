@@ -114,9 +114,6 @@ function oneStep() {
     execute();
     mem();
     write_back();
-    // Setting all state to default one
-    RF_write = false;
-    MEM_read = MEM_write = false;
     showState();
 }
 
@@ -147,26 +144,14 @@ function evalControlLines() {
     }
     // Setting MEM_write and MEM_read control
     if (instrType == 'S') {
+        console.log("Setting MEM_write as true");
         MEM_write = true;
     } else if (instrType == 'I') {
         if (opcodeMap.get(opcode) == 'I_L') {
             // Load Instructions
+            console.log("Setting MEM_read as true");
             MEM_read = true;
         }
-    }
-    // if instructions is load or store setting type flag
-    if (opcode == '0100011' || opcode == '0000011') {
-        if (func3 == "000") {
-            type = 'b';
-        } else if (func3 == '010') {
-            type = 'w';
-        } else if (func3 == '011') {
-            type = 'd';
-        } else if (func3 == '001') {
-            type = 'h';
-        }
-    } else {
-        type = '';
     }
 }
 
@@ -180,6 +165,9 @@ function fetch() {
         memFile.writeToDataMemory();
         process.exit(0);
     }
+    // Setting all state to default one
+    RF_write = false;
+    MEM_read = MEM_write = false;
     temp = parseInt(temp, 16).toString(2);
     temp = addZeros(temp, 32);
     instrReg = temp;
@@ -434,6 +422,7 @@ function execute() {
 function mem() {
     // Using the memFile Interface to communicate with memory. And storing the option 1 of MuxY in muxYop1
     // NOTE: rM will be undefined for load instructions
+    evalType();
     let res = memFile.process(rZ, MEM_read, MEM_write, rM, type);
     if (res) {
         muxYop1 = res.memoryData;
@@ -483,7 +472,22 @@ function evalMuxY() {
 }
 
 
-
+function evalType() {
+    // if instructions is load or store setting type flag
+    if (opcode == '0100011' || opcode == '0000011') {
+        if (func3 == "000") {
+            type = 'b';
+        } else if (func3 == '010') {
+            type = 'w';
+        } else if (func3 == '011') {
+            type = 'd';
+        } else if (func3 == '001') {
+            type = 'h';
+        }
+    } else {
+        type = '';
+    }
+}
 
 
 // Implements Functionality Of MuxB
@@ -520,7 +524,7 @@ function evalMuxMA() {
         // jalr
         if (opcode == '1100111') {
             pcTemp = pc;
-            console.log("DEBUG: ",rZ );
+            console.log("DEBUG: ", rZ);
             pc = parseInt(rZ, 2);
         }
     }

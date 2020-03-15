@@ -175,6 +175,7 @@ function fetch() {
 // Function to Update PC when branch condition is true
 function updatePC() {
     // Updating PC using pcTemp
+    pcTemp = pc;
     pc = pcTemp + convertBinaryToDecimal(imm);
     console.log("Branch Instruction or jal Encountered with condition True; NEW PC-", pc, "OLD PC-", pcTemp);
 }
@@ -371,7 +372,7 @@ function execute() {
     } else if (instrType == 'U') {
         if (opcode == '0010111') {
             // auipc
-            inA = pcTemp - 4;
+            inA = pcTemp;
             rZ = ((convertBinaryToDecimal(inB)) << 12) + inA;
         } else if (opcode == '0110111') {
             // lui
@@ -431,7 +432,7 @@ function evalMuxY() {
             break;
         }
         case 2: {
-            rY = pcTemp + 4;
+            rY = pcTemp;
             console.log("EVALMUXY: (rY = pcTemp) finalVal=>", parseInt(rY, 2));
             break;
         }

@@ -1,17 +1,8 @@
 export class MemoryFile{
-    private memory : Array<number>;
+    private memory : Map<number, number>;
     private UpAddr : number;
-    // stackStart: number = parseInt('0x7FFFFFEC', 16);
-    // heapStart: number = parseInt('0x10008000', 16);
-    // dataStart: number = parseInt('0x10000000', 16);
-    // textStart: number = 0;
-
     constructor(){
-        this.memory = Array<number>(2000000);
-        this.UpAddr = 2000000;
-        for(let i=0;i<2000000;i++){
-            this.memory[i]=0;
-        }
+        this.memory = new Map<number, number>();
     }
 
     MEM_READ(addr: number, dtype: string): number{
@@ -21,17 +12,20 @@ export class MemoryFile{
         else if(dtype == 'h'){len = 2;}
         else if(dtype == 'w'){len = 4;}
         else if(dtype == 'd'){len = 8;}
-        if(addr<(this.UpAddr+len) && addr>=0){
-            for(let i=0;i<len;i++){
-                // TODO: check for byte and word i.e. length of tostring output
-                temp = (this.memory[addr+i]).toString(2) + temp;
-                // console.log((this.memory[addr+i]).toString(2));
+        let temp1, val;
+        for(let i=0;i<len;i++){
+            val = this.memory.get(addr+i);
+            if(this.memory.get(addr+i)>=0){
+                temp1 = addZeros((val).toString(2), 8);
             }
-            return parseInt(addOnesZeros(temp), 2)>>0;
+            else{
+                temp1 = ( val >>> 0).toString(2).slice(val.length-8, val.length);
+            }
+            temp = temp1+ temp;
+            console.log((this.memory.get(addr+i).toString(2)));
         }
-        else{
-            console.error("Memory Address is out of range");
-        }
+        console.log(temp);
+        return parseInt(addOnesZeros(temp), 2)>>0;
     }
 
     MEM_WRITE(addr: number, value:number, dtype:string){
@@ -40,29 +34,28 @@ export class MemoryFile{
         else if(dtype == 'h'){len = 2;}
         else if(dtype == 'w'){len = 4;}
         else if(dtype == 'd'){len = 8;}
-        if(addr>=0 && addr < this.UpAddr){
-            let valString : string, tempStr : string;
-            if(value>=0){
-                valString = addZeros(value.toString(2), 8*len);
-            }
-            else{
-                valString = (value >>> 0).toString(2);
-            }
-            // console.log(valString);
-            for(let i=0;i<len;i++){
-                tempStr = valString.slice((len-i-1)*8+1, (len-i)*8);
-                this.memory[addr + i] = parseInt(tempStr, 2);
-            }
+        let valString : string, tempStr : string;
+        if(value>=0){
+            valString = addZeros(value.toString(2), 8*len);
         }
         else{
-            console.error("Memory Address out of range");
+            valString = (value >>> 0).toString(2);
         }
+        // console.log(valString);
+        for(let i=0;i<len;i++){
+            tempStr = valString.slice((len-i-1)*8+1, (len-i)*8);
+            this.memory.set((addr + i), parseInt(tempStr, 2));
+        }
+        console.table(this.memory);
     }
 }
 
 // padding of zeros or ones to end up with a 32 bit value
-export function addOnesZeros(value: string) :string {
+export function addOnesZeros(value: string, len?:number) :string {
     let pad:string;
+    if(!len){
+        len = 32
+    }
     if(value[0]=='1'){
         pad = "1".repeat(32-value.length);
     }

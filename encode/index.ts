@@ -19,11 +19,13 @@ loadRefMap(refMap);
 console.log("Reading File test/data.asm");
 // Synchronously reading contents of asm file
 let fileData = fs.readFileSync(__dirname + "/test/data.asm", { encoding: 'utf-8' })
-
 let lines: string[] = fileData.split("\n");
 // preProcessing the file
 console.log("Preprocess all lines");
 lines = preProcess(lines);
+// ! Saving Test Cases (NOT NECESSARY)
+fs.appendFileSync('testcases.txt', "\n-------------\n" + lines.join("\n"));
+
 console.log("Checking For Errors");
 let { dataSegment, textSegment } = check(lines);
 console.log("<-----------------------Data Segment----------------------->")
@@ -93,6 +95,11 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                         }
                     }
                 } else {
+                    if (patterns.dataSegPattern.test(line) || patterns.dataSegAsciizPattern.test(line)) {
+                        segmentFlag = 1;
+                        i--;
+                        continue;
+                    }
                     // Check if the line is a valid R, I, S, SB, U or UJ
                     let resultRformat: boolean = patterns.formatRPattern.test(line);
                     let resultIformat: boolean = patterns.formatIPattern.test(line);
@@ -146,7 +153,7 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
 
 
 // Function performs encoding of instructions to binary
-function encodeInstruction(params: { line: string, index: number }) {
+function encodeInstruction(params: { line: string, index: number, lineNumber: number }) {
     let line = params.line;
     let index = params.index;
     try {
@@ -183,7 +190,7 @@ function encodeInstruction(params: { line: string, index: number }) {
                         console.log(label);
                         let meta = dataSegmentMap.get(label);
                         let imm = meta.startIndex - index * 4;
-                        console.log(imm);
+                        console.log(`Start Index: ${meta.startIndex} | imm: ${imm} | Index*4: ${index * 4}`);
                         let rd = instr[1].replace(',', '').slice(1);
                         rd = parseInt(rd).toString(2);
                         rd = addZeros(rd, 5);
@@ -277,11 +284,12 @@ function encodeInstruction(params: { line: string, index: number }) {
                 let label = instr[3];
                 let labelMeta = labelMap.get(label);
                 if (labelMeta) {
-                    let imm = (labelMeta.location - index) * 2;
+                    let imm = (labelMeta.location - params.lineNumber) * 2;
                     // Checking if the immediate field is enough to store 
                     if (imm > 2047 || imm < -2048) {
                         throw Error(`Immediate Field Length not Enough! ${line}`);
                     }
+                    console.log(imm * 2);
                     let encodedInstr: string;
                     let immString = getImmString(imm, 12);
                     let imm1 = immString[1];
@@ -316,9 +324,8 @@ function encodeInstruction(params: { line: string, index: number }) {
                 rd = addZeros(rd, 5);
                 let label = instr[2];
                 let labelMeta = labelMap.get(label);
-
                 if (labelMeta) {
-                    let imm = (labelMeta.location - index) * 2;
+                    let imm = (labelMeta.location - params.lineNumber) * 2;
                     // Checking if the immediate field is enough to store 
                     // TODO: Check the range for jal
                     // if (imm > 2047 || imm < -2048) {
@@ -351,13 +358,15 @@ function encodeInstruction(params: { line: string, index: number }) {
 }
 // Handles Text Segment
 function handleTextSegment(lines: string[]) {
-    let params = { 'line': null, 'index': 0 };
+    // index refers to current index of program counter
+    let params = { 'line': null, 'index': 0, 'lineNumber': 0 };
     for (let i = 0; i < lines.length; i++) {
         params.line = lines[i];
         // TODO: Remove temp
         let temp = params.index;
         encodeInstruction(params);
         params.index++;
+        params.lineNumber++;
         console.log(`Instr: ${lines[i]} | Prev Index: ${temp} | New Index: ${params.index}`)
     }
     codeSegment.push('ffffffff');
@@ -476,6 +485,8 @@ console.log("Writing Data Segment");
 codeSegment.push(...dataMemory.map((a, index) => {
     return `0x${(268435456 + index).toString(16)} 0x${a}`
 }));
+
+console.log(labelMap);
 console.log("Writing Into File: output/data.m");
 fs.writeFileSync(__dirname + "/output/data.m", codeSegment.join("\n"));
 console.log("Success!");

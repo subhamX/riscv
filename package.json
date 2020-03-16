@@ -15,7 +15,7 @@
     "typescript": "^3.8.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "encode": "node encode/index.js && node encode/test.js"
   },
   "keywords": [],
   "author": "",

@@ -12,19 +12,17 @@ let labelMap: Map<string, schema.LabelInterface> = new Map<string, schema.LabelI
 let dataSegmentMap: Map<string, schema.DataLabelInterface> = new Map();
 // dataMemory contains the data of dataMemory or [.data]
 let dataMemory: Array<string> = Array<string>();
-
+let BASE_DATA_SEG = 65536;
 // Loading the Reference Map
 loadRefMap(refMap);
 
-console.log("Reading File test/data.asm");
+console.log("Reading File src/input/input.asm");
 // Synchronously reading contents of asm file
-let fileData = fs.readFileSync(__dirname + "/test/data.asm", { encoding: 'utf-8' })
+let fileData = fs.readFileSync(__dirname + "/src/in/input.asm", { encoding: 'utf-8' })
 let lines: string[] = fileData.split("\n");
 // preProcessing the file
 console.log("Preprocess all lines");
 lines = preProcess(lines);
-// ! Saving Test Cases (NOT NECESSARY)
-fs.appendFileSync('testcases.txt', "\n-------------\n" + lines.join("\n"));
 
 console.log("Checking For Errors");
 let { dataSegment, textSegment } = check(lines);
@@ -42,7 +40,12 @@ console.log("Executing Data Segment");
 handleDataSegment(dataSegment);
 console.log("Executing Text Segment");
 console.log("<-----------------------Executing Text Segment----------------------->")
+console.log(textSegment);
+// textSegment = preProcessTextSegment(textSegment);
+console.log(textSegment);
+console.log("<-----------------------END Text Segment----------------------->")
 handleTextSegment(textSegment);
+
 
 /**
  * Parses the file and checks for any errors
@@ -112,6 +115,19 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                     // console.log({ "Instr": line, "R Format": resultRformat, "I Format": resultIformat, "S Format": resultSformat, "SB Format": resultSBformat, "U Format": resultUformat, "UJ Format": resultUJformat })
                     if (resultIformat || resultRformat || resultSformat || resultSBformat || resultUJformat || resultUformat || resultLoadformat || resultLoadFromDataformat) {
                         // The line is a valid instruction
+                        let instr = line.split(/[ ]+|[,]/).filter((a) => a);
+                        let mnemonic = instr[0];
+                        // If instruction is loading using registers to load or not a load instruction
+                        if (mnemonic[0] != 'l' || resultLoadformat) {
+                            textSegment.push(line);
+                            continue;
+                        }
+                        // If instruction is loading from labels in data segment
+                        let rd = instr[1].replace(',', '').slice(1);
+                        rd = parseInt(rd).toString();
+                        // Pusing auipc statement
+                        textSegment.push(`auipc x${rd} ${BASE_DATA_SEG}`);
+                        
                         if (segmentFlag == 2) {
                             // If the current segment is text segment
                             textSegment.push(line);
@@ -119,7 +135,7 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                             // If the current segment is void segment
                             if (resultSBformat) {
                                 // If the instruction is using branch then ERROR
-                                throw Error(`(Branch Instructions Not Allowed In Void Segement) ErrorC Encountered at line: ${i} (${line})`);
+                                throw Error(`(Branch Instructions Not Allowed In Void Segement)|| Only jal is allowed ErrorC Encountered at line: ${i} (${line})`);
                             }
                             textSegment.push(line);
                         }
@@ -189,14 +205,15 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                         let label = instr[2];
                         console.log(label);
                         let meta = dataSegmentMap.get(label);
-                        let imm = meta.startIndex - index * 4;
+                        // ! What if no label?
+                        let imm = meta.startIndex - (index-1) * 4;
                         console.log(`Start Index: ${meta.startIndex} | imm: ${imm} | Index*4: ${index * 4}`);
                         let rd = instr[1].replace(',', '').slice(1);
                         rd = parseInt(rd).toString(2);
                         rd = addZeros(rd, 5);
                         let rs1 = rd;
                         // 268435479 is auipc x0, 0x10000000
-                        codeSegment.push((268435479 + (parseInt(rs1, 2) << 7)).toString(16));
+                        // codeSegment.push((268435479 + (parseInt(rs1, 2) << 7)).toString(16));
                         if (imm > 2047 || imm < -2048) {
                             throw Error(`Immediate Field Length not Enough! ${line}`);
                         }
@@ -205,8 +222,15 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                         codeSegment.push(parseInt(encodedInstr, 2).toString(16));
                         console.log(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
                         // Incrementing Index as an additional auipc is added
-                        console.log(`Incrementing: params.index | prev ${params.index} | new ${params.index + 1}`)
-                        params.index++;
+                        // console.log(`Incrementing: params.index | prev ${params.index} | new ${params.index + 1}`)
+                        // Incrementing Labels below this line
+                        // labelMap.forEach((e) => {
+                        //     if (e.location > params.index) {
+                        //         e.location++;
+                        //     }
+                        // })
+                        // params.index++;
+
                     } else {
                         let rd = instr[1].replace(',', '').slice(1);
                         rd = parseInt(rd).toString(2);
@@ -284,7 +308,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                 let label = instr[3];
                 let labelMeta = labelMap.get(label);
                 if (labelMeta) {
-                    let imm = (labelMeta.location - params.lineNumber) * 2;
+                    let imm = (labelMeta.location - params.index) * 2;
                     // Checking if the immediate field is enough to store 
                     if (imm > 2047 || imm < -2048) {
                         throw Error(`Immediate Field Length not Enough! ${line}`);
@@ -325,7 +349,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                 let label = instr[2];
                 let labelMeta = labelMap.get(label);
                 if (labelMeta) {
-                    let imm = (labelMeta.location - params.lineNumber) * 2;
+                    let imm = (labelMeta.location - params.index) * 2;
                     // Checking if the immediate field is enough to store 
                     // TODO: Check the range for jal
                     // if (imm > 2047 || imm < -2048) {
@@ -339,7 +363,9 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                     let imm4 = immString[0]; // 20
                     encodedInstr = imm4.concat(imm2, imm1, imm3, rd, opcode);
                     codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-
+                    console.log(labelMeta.location);
+                    console.log(params.lineNumber);
+                    console.log(imm * 2);
                     console.log(`(${mnemonic}||${line}) UJ Format: ` + parseInt(encodedInstr, 2).toString(16));
                 } else {
                     throw Error(`Label Error Occurred at line: ${line}`);
@@ -485,8 +511,9 @@ console.log("Writing Data Segment");
 codeSegment.push(...dataMemory.map((a, index) => {
     return `0x${(268435456 + index).toString(16)} 0x${a}`
 }));
-
+console.table(textSegment);
 console.log(labelMap);
-console.log("Writing Into File: output/data.m");
-fs.writeFileSync(__dirname + "/output/data.m", codeSegment.join("\n"));
+
+console.log("Writing Into File: /src/out/myOutput.m");
+fs.writeFileSync(__dirname + "/src/out/myOutput.m", codeSegment.join("\n"));
 console.log("Success!");

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { addZeros } from "./utility";
 import { RegisterFile, MemoryFile } from './storage';
 import * as readline from 'readline';
-
+import * as path from 'path';
 
 // Defining readline interface
 const rl = readline.createInterface({
@@ -80,7 +80,7 @@ function initOperatorMap() {
  */
 (function init(): void {
     initOperatorMap();
-    let data = fs.readFileSync(__dirname + "/test/data.m", { encoding: "utf-8" });
+    let data = fs.readFileSync(path.join(__dirname, "..", "src", "out", "myOutput.m"), { encoding: "utf-8" });
     let dataArr = data.split('\n');
     let i = 0;
     // Loading all instructions of program into instructionMap

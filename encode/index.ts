@@ -3,6 +3,7 @@ import * as schema from './schema/schema';
 import { loadRefMap } from './refMap'
 import { addZeros, addRegZeros, preProcess } from './utility';
 import * as patterns from './regexPatterns';
+import * as path from 'path';
 
 // refMap maps mnemonic to its metadata
 let refMap: Map<string, schema.InstructionMetaData> = new Map<string, schema.InstructionMetaData>();
@@ -18,7 +19,7 @@ loadRefMap(refMap);
 
 console.log("Reading File src/input/input.asm");
 // Synchronously reading contents of asm file
-let fileData = fs.readFileSync(__dirname + "/src/in/input.asm", { encoding: 'utf-8' })
+let fileData = fs.readFileSync(path.join(__dirname, "..", "src", "in", "input.asm"), { encoding: 'utf-8' })
 let lines: string[] = fileData.split("\n");
 // preProcessing the file
 console.log("Preprocess all lines");
@@ -515,5 +516,5 @@ console.table(textSegment);
 console.log(labelMap);
 
 console.log("Writing Into File: /src/out/myOutput.m");
-fs.writeFileSync(__dirname + "/src/out/myOutput.m", codeSegment.join("\n"));
+fs.writeFileSync(path.join(__dirname, "..", "src", "out", "myOutput.m"), codeSegment.join("\n"));
 console.log("Success!");

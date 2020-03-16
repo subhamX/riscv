@@ -1,9 +1,11 @@
 import * as fs from 'fs';
+import * as path from 'path';
+
 
 console.log("<----- TESTING OUTPUT ----->")
 
-let myFile = fs.readFileSync(__dirname + '/src/out/myOutput.m', {encoding: 'utf-8'})
-let output = fs.readFileSync(__dirname + '/src/out/venusOutput.m', {encoding: 'utf-8'})
+let myFile = fs.readFileSync(path.join(__dirname, "..", "src", "out", "myOutput.m")   ,{encoding: 'utf-8'})
+let output = fs.readFileSync(path.join(__dirname, "..", "src", "out", "venusOutput.m"),{encoding: 'utf-8'})
 let myFileLines = myFile.split('\n');
 let outputLines = output.split('\n');
 let flag = false;

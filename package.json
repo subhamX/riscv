@@ -15,7 +15,8 @@
     "typescript": "^3.8.2"
   },
   "scripts": {
-    "encode": "node encode/index.js && node encode/test.js"
+    "encode": "node encode/index.js && node encode/test.js",
+    "execute": "node execute/main.js"
   },
   "keywords": [],
   "author": "",

@@ -148,14 +148,13 @@ header {
 }
 
 .code_segment_wrapper .instructions_wrapper .meta_instructions:hover {
-  background-color: rgb(219, 219, 219);
-  -webkit-box-shadow: 3px -1px 7px -2px rgba(0, 0, 0, 0.56);
-  -moz-box-shadow: 3px -1px 7px -2px rgba(0, 0, 0, 0.56);
-  box-shadow: 3px -1px 7px -2px rgba(0, 0, 0, 0.56);
+  background-color: #89e1ff;
+  box-shadow: 0 4px 4px -4px black;
   cursor: pointer;
 }
 .code_segment_wrapper .instructions_wrapper .meta_instructions {
   margin-bottom: 10px;
+  border-radius: 20px;
 }
 .code_segment_wrapper .instructions_wrapper .meta_instructions span {
   padding-left: 30px;
@@ -163,7 +162,7 @@ header {
 }
 
 .instructions_wrapper .breakpoint_statement {
-  background-color: red !important;
+  background-color: rgb(250, 119, 119) !important;
 }
 
 .instructions_wrapper .active_statement {

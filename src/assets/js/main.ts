@@ -44,6 +44,15 @@ function createInstrElement(pcVal, machineCodeVal, originalCodeVal) {
     div.appendChild(pc);
     div.appendChild(machineCode);
     div.appendChild(originalCode);
+    div.addEventListener('click', (e) => {
+        let parentElem = e.target["parentElement"];
+        if(parentElem.classList.contains('breakpoint_statement')){
+            e.target["parentElement"].classList.remove('breakpoint_statement');
+        }else{
+            e.target["parentElement"].classList.add('breakpoint_statement');
+        }
+        console.log();
+    })
     return div;
 }
 

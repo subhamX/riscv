@@ -26,25 +26,105 @@
             </div>
         </nav>
     </header>
-    <ul class='simulator' style="display: none;">
-        <div class="code-segment">
-            <li class="heading">
-                <span class="pc">PC</span>
-                <span class="machine-code">Machine Code</span>
-                <span class="original-code">Original Code</span>
-            </li>
-            <li class="instr">
-                <span class="pc">0x1000</span>
-                <span class="machine-code">0x10101010</span>
-                <span class="original-code">addi x10, x10, 100</span>
-            </li>
+    <section class="simulator-wapper" style="display: none;">
+        <div class="simulator">
+            <div class="simulate_btns_wrapper">
+                <div class="assemble_btn">
+                    Assemble And Simulate
+                </div>
+                <div class="cancel_btn">
+                    Cancel
+                </div>
+            </div>
+            <div class="simulate1_btns_wrapper" style="display: none;">
+                <div class="run_btn">
+                    Run
+                </div>
+                <div class="step_btn">
+                    Step
+                </div>
+                <div class="dump_btn">
+                    Dump
+                </div>
+                <div class="cancel_btn">
+                    Cancel
+                </div>
+            </div>
+            <div class='code_segment_wrapper'>
+                <div class="heading">
+                    <span class="pc">PC</span>
+                    <span class="machine-code">Machine Code</span>
+                    <span class="original-code">Original Code</span>
+                </div>
+                <div class="instructions_wrapper">
+                    <!-- <div class="meta_instructions breakpoint_statement">
+                        <span class="pc">0x1000</span>
+                        <span class="machine-code">0x10101010</span>
+                        <span class="original-code">addi x10, x10, 100</span>
+                    </div>
+                    <div class="meta_instructions active_statement">
+                        <span class="pc">0x1000</span>
+                        <span class="machine-code">0x10101010</span>
+                        <span class="original-code">addi x10, x10, 100</span>
+                    </div>
+                    <div class="meta_instructions">
+                        <span class="pc">0x1000</span>
+                        <span class="machine-code">0x10101010</span>
+                        <span class="original-code">addi x10, x10, 100</span>
+                    </div> -->
+                </div>
+
+            </div>
+        </div>
+        <div class="memory_pane">
+            <div class="mem_buttons_wrapper">
+                <div class="register_btn active_btn">
+                    Registers
+                </div>
+                <div class="memory_btn">
+                    Memory
+                </div>
+            </div>
+            <div class="register_pane">
+                <div class="registers_wrapper"></div>
+                <div class="mem_data_wrapper" style="display: none;">
+                    <div class="memory_wrapper">
+                        <div class="memory_head">
+                            <span>Address</span>
+                            <span>Value</span>
+                        </div>
+                        <!-- <div class="memory_data">
+                            <span class="mem_label">x0</span>
+                            <span class="mem_data">0x1000000</span>
+                        </div> -->
+                    </div>
+                    <div class="go_to_mem_block">
+                        <label for="">Search Address: </label>
+                        <input type="text" id='mem_addr_val'>
+                    </div>
+
+                </div>
+                <div class="reg_display_settings">
+                    <span class="text_display">Register Display Settings</span>
+                    <span class="options">
+                        <input type="radio" id="hex" name="gender" value="hex">
+                        <label for="hex">Hex</label><br>
+                        <input type="radio" id="decimal" name="gender" value="decimal">
+                        <label for="decimal">Decimal</label><br>
+                        <input type="radio" id="ascii" name="gender" value="ascii">
+                        <label for="ascii">ASCII</label><br>
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <div class="data-segment">
+    </section>
+    <div id="editor">
+        addi x1, x0, 100
+        add x2 , x0, x1
+        add x5, x8, x10
 
-        </div>
-    </ul>
-    <div id="editor"></div>
+    </div>
     <script src="./assets/js/main.ts"></script>
 </body>
 

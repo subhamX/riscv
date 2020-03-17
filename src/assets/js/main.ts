@@ -1,5 +1,5 @@
 import ace from 'ace-builds/src-min-noconflict/ace';
-import { encodeTextFromUser } from './encode/index';
+import { main } from './encode/index';
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
 var editor;
 
@@ -31,43 +31,20 @@ function setupEditor() {
     });
 }
 
-
-let assembledCode = `0x0 0x3e850513
-0x4 0x10000097
-0x8 0x00c0a083
-0xc 0x10000097
-0x10 0x0080a083
-0x14 0x10000097
-0x18 0x0080a083
-0x1c 0x10000097
-0x20 0xfe409083
-0x24 0x10000097
-0x28 0xff008083
-0x2c 0x3e850513
-0x30 0xffffffff
-
-0x10000000 0xef
-0x10000001 0x0e
-0x10000002 0x00
-0x10000003 0x00
-0x10000004 0xbf
-0x10000005 0x0b`;
-
-
-
-
-function createLiElement(pcVal, machineCodeVal, originalCodeVal) {
+// Helper Function to create an instruction element for DOM
+function createInstrElement(pcVal, machineCodeVal, originalCodeVal) {
     let pc = document.createElement('span');
     let machineCode = document.createElement('span');
     let originalCode = document.createElement('span');
     pc.innerText = pcVal;
     originalCode.innerText = originalCodeVal;
     machineCode.innerText = machineCodeVal;
-    let li = document.createElement('li');
-    li.appendChild(pc);
-    li.appendChild(machineCode);
-    li.appendChild(originalCode);
-    return li;
+    let div = document.createElement('div');
+    div.classList.add('meta_instructions');
+    div.appendChild(pc);
+    div.appendChild(machineCode);
+    div.appendChild(originalCode);
+    return div;
 }
 
 let navbarBtns: NodeListOf<Element>, activeElem = 0;
@@ -83,15 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (prevActive == 1) {
                 disableSimulator();
             } else if (prevActive == 2) {
-
             }
             if (index == 0) {
                 activateEditor();
             } else if (index == 1) {
-                let errorFlag = activateSimulator();
-                if (errorFlag) {
-                    return;
-                }
+                activateSimulator();
             } else if (index == 2) {
 
             }
@@ -102,53 +75,172 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 })
 
+// Wrapper function to disable editor
 function disableEditor() {
     document.getElementById("editor").style.display = 'none';
 }
 
+// Wrapper function to activate editor
 function activateEditor() {
     document.getElementById("editor").style.display = 'block';
 }
 
-function activateSimulator(): boolean {
+
+
+// Function to handle the event Assemble And Simulate
+document.querySelector('.assemble_btn').addEventListener('click', handleAssembleAndSimulate);
+function handleAssembleAndSimulate() {
     let fileData = editor.getValue();
     console.log(fileData);
     if (!fileData) {
         document.querySelector('.simulator')["style"].display = 'block';
-
         return false;
     }
-    let response = encodeTextFromUser(fileData);
+    let response = main(fileData);
     if (response.error) {
-        alert("Error Occurred at line: " + response.firstOccurance);
+        alert("Error Occurred at line: " + response.error);
         // sending error flag as true
         return true;
     }
     console.log(response);
-    let assembledCode = response.data;
-    let q1 = assembledCode.split(/[\n]{2}/);
-    let instrData = q1[0].split("\n");
-    let dataSeg = q1[1].split("\n");
-    let instrElem = document.querySelector('.code-segment');
-    instrData.forEach((e) => {
+    let assembledCode = response.codeSegment;
+    assembledCode.forEach((e) => {
         let instr = e.split(" ");
         let pc = instr[0];
         let machineCode = instr[1];
+        let originalCode = instr.slice(2).join(" ");
+        console.log(pc);
+        console.log(machineCode);
+        console.log(originalCode);
+        let instrWrapper = document.querySelector('.instructions_wrapper');
         if (machineCode == '0xffffffff') {
             return;
         }
-        let elem = createLiElement(pc, machineCode, 'add, x10,x10, 1');
-        instrElem.appendChild(elem);
+        let elem = createInstrElement(pc, machineCode, originalCode);
         elem.addEventListener("click", (e) => {
-            console.log(e.target)
+            console.log(e.target);
         })
+        instrWrapper.appendChild(elem);
     });
-    document.querySelector('.simulator')["style"].display = 'block';
-    // sending error flag as false
+    // TODO: Implement Error Flag
     return false;
-
 }
 
+// Wrapper function to activate simulator
+function activateSimulator() {
+    document.getElementsByClassName('simulator-wapper')[0]["style"].display = "grid";
+}
+
+// Wrapper function to disable simulator
 function disableSimulator() {
-    document.querySelector('.simulator')['style'].display = 'none';
+    document.querySelector('.simulator-wapper')['style'].display = 'none';
 }
+
+
+// Toggling Memory And Register In Data Pane
+// Handling click event of memory btn on memory pane
+document.querySelector(".memory_btn").addEventListener("click", () => {
+    let memButton = document.querySelector(".memory_btn");
+    let regButton = document.querySelector(".register_btn");
+    let regWrapper = document.querySelector(".registers_wrapper");
+    let memWrapper = document.querySelector(".mem_data_wrapper");
+    memButton.classList.add("active_btn");
+    regButton.classList.remove("active_btn");
+    memWrapper["style"].display = 'block';
+    regWrapper["style"].display = 'none';
+})
+
+// Handling click event of register btn on memory pane
+document.querySelector(".register_btn").addEventListener("click", () => {
+    let memButton = document.querySelector(".memory_btn");
+    let regButton = document.querySelector(".register_btn");
+    let regWrapper = document.querySelector(".registers_wrapper");
+    let memWrapper = document.querySelector(".mem_data_wrapper");
+    memButton.classList.remove("active_btn");
+    regButton.classList.add("active_btn");
+    memWrapper["style"].display = 'none';
+    regWrapper["style"].display = 'block';
+})
+
+// Handling click event of Assemble Btn
+document.querySelector('.assemble_btn').addEventListener('click', (e) => {
+    document.querySelector('.simulate_btns_wrapper')['style'].display = 'none'
+    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'flex';
+})
+
+// Handling click event of Cancel Button before Assemble
+document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('click', ()=> {
+    (<HTMLElement>document.querySelector('.editor-btn')).click();
+})
+
+// Handling click event of Cancel Button After Assemble
+document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', ()=> {
+    document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
+    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
+})
+
+
+
+// Helper function to create register element
+function createRegisterElem(regNumber, data) {
+    let div = document.createElement('div');
+    div.classList.add('register_data');
+    div.classList.add(`register${regNumber}`);
+    let spanLabel = document.createElement('span');
+    spanLabel.classList.add('reg_label');
+    spanLabel.innerText = `x${regNumber}`;
+    let spanData = document.createElement('span');
+    spanData.classList.add('reg_data');
+    spanData.innerText = data;
+    div.appendChild(spanLabel);
+    div.appendChild(spanData);
+    return div;
+}
+
+// Helper function to create memory element
+function createMemoryElem(address, data) {
+    let div = document.createElement('div');
+    div.classList.add('memory_data');
+    div.classList.add(`memory${address}`);
+    let spanLabel = document.createElement('span');
+    spanLabel.classList.add('mem_label');
+    spanLabel.innerText = `0x${parseInt(address).toString(16)}`;
+    let spanData = document.createElement('span');
+    spanData.classList.add('mem_data');
+    spanData.innerText = data;
+    div.appendChild(spanLabel);
+    div.appendChild(spanData);
+    return div;
+}
+
+// Helper function to write data into register
+function writeRegisters() {
+    for (let i = 0; i < 32; i++) {
+        let div;
+        if(i!=2){
+            div = createRegisterElem(i, `0x00000000`);
+        }else{
+            div = createRegisterElem(i, `0x7FFFFFF0`);
+        }
+        document.getElementsByClassName('registers_wrapper')[0].appendChild(div);
+    }
+}
+let BASE_ADDR = "0x100000"
+function writeMemory() {
+    let MEM = new Map<number, string>();
+    MEM.set(0, "0x00");
+    MEM.set(1, "0x00");
+    MEM.set(2, "0x00");
+    MEM.set(3, "0x00");
+    MEM.set(4, "0x00");
+    MEM.forEach((e, index) => {
+        let div = createMemoryElem(parseInt(BASE_ADDR) + index, e);
+        document.getElementsByClassName('memory_wrapper')[0].appendChild(div);
+    })
+}
+
+
+writeRegisters();
+writeMemory();
+
+// TODO: Search Feature

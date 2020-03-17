@@ -1,7 +1,7 @@
 import * as schema from './schema/schema';
 
 
-// loadRefMap creates a map between mnemonic and its metadata 
+// loadRefMap creates a map between mnemonic of instruction and its metadata 
 export function loadRefMap(refMap: Map<String, schema.InstructionMetaData>) {
     // R Type Instructions
     refMap.set('add', { format: "R", opcode: "0110011", func3: "000", func7: "0000000"});

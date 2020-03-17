@@ -3,7 +3,7 @@
   src: url("./Lato-Regular.ttf");
 }
 
-body:not(#editor){
+body:not(#editor) {
   padding: 0;
   margin: 0;
   font-family: "Lato-Regular";
@@ -37,10 +37,9 @@ body:not(#editor){
   color: black;
 }
 
-header{
+header {
   height: 10vh;
   padding: 0;
-  margin: 0;
 }
 .toggle-wrapper {
   width: 70%;
@@ -87,9 +86,215 @@ header{
   width: 35px;
 }
 
-
 /* SIMULATOR */
+.simulator-wapper {
+  display: grid;
+  grid-template-columns: 6fr 4fr;
+}
 
+.simulator {
+  border-right: 1px solid black;
+}
+
+.simulate_btns_wrapper {
+  display: flex;
+  justify-content: center;
+  height: 10vh;
+}
+
+.simulator-wapper .simulate_btns_wrapper div {
+  border: 1px solid black;
+  margin: 10px;
+  padding: 10px;
+  height: fit-content;
+  cursor: pointer;
+  width: fit-content;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.assemble_btn {
+  background-color: #ffbf00;
+}
+
+.assemble_btn:hover {
+  background-color: #ecb613;
+}
+
+.cancel_btn:hover {
+  background-color: black;
+  color: white;
+}
+
+.instructions_wrapper {
+  height: 70vh;
+  overflow-y: scroll;
+}
+
+.code_segment_wrapper .heading {
+  font-weight: bold;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.instructions_wrapper div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.code_segment_wrapper .heading span {
+  padding-left: 30px;
+}
+
+.code_segment_wrapper .instructions_wrapper .meta_instructions:hover {
+  background-color: rgb(219, 219, 219);
+  -webkit-box-shadow: 3px -1px 7px -2px rgba(0, 0, 0, 0.56);
+  -moz-box-shadow: 3px -1px 7px -2px rgba(0, 0, 0, 0.56);
+  box-shadow: 3px -1px 7px -2px rgba(0, 0, 0, 0.56);
+  cursor: pointer;
+}
+.code_segment_wrapper .instructions_wrapper .meta_instructions {
+  margin-bottom: 10px;
+}
+.code_segment_wrapper .instructions_wrapper .meta_instructions span {
+  padding-left: 30px;
+  padding: 5px 5px 5px 30px;
+}
+
+.instructions_wrapper .breakpoint_statement {
+  background-color: red !important;
+}
+
+.instructions_wrapper .active_statement {
+  background-color: rgb(107, 216, 107) !important;
+}
+
+/* Memory Pane */
+
+.mem_buttons_wrapper {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  height: 10vh;
+}
+
+.register_btn,
+.memory_btn {
+  cursor: pointer;
+  padding: 13px;
+  width: fit-content;
+  margin: 10px;
+  border: 1px solid black;
+  border-radius: 20px;
+  height: fit-content;
+}
+
+.register_btn:hover,
+.memory_btn:hover {
+  border-radius: 0;
+}
+
+.mem_buttons_wrapper .active_btn {
+  background-color: black;
+  color: white;
+  border-radius: 20px;
+  cursor: default;
+}
+
+/* Registers */
+
+.reg_mem_pane{
+  height: 75vh;
+}
+
+.registers_wrapper{
+  height: 65vh;
+  overflow-y: scroll;
+}
+.register_data{
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  justify-items: center;
+  margin-bottom: 10px;
+}
+
+.register_data .reg_label{
+  font-weight: bold;
+}
+
+.reg_display_settings{
+  display: grid;
+  border-top: 1px solid black;
+  height: 10vh;
+  justify-content: center;
+  padding-top: 1vh;
+  grid-template-columns: 1fr 1fr;
+}
+.reg_display_settings .text_display{
+  text-align: center;
+  font-weight: bold;
+}
+
+.memory_wrapper{
+  height: 60vh;
+  overflow-y: scroll;
+}
+
+.memory_head{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: center;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.memory_data{
+  display: grid;
+  margin-bottom: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+.memory_data .mem_addr{
+  padding-left: 30px;
+}
+
+.go_to_mem_block{
+  height: 5vh;
+}
+.memory_data span:not(.mem_addr){
+  text-align: center;
+}
+
+.go_to_mem_block{
+  height: 5vh;
+  padding-left: 10px;
+}
+#mem_addr_val{
+  width: 40%;
+}
+
+.simulate1_btns_wrapper{
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+.simulate1_btns_wrapper div{
+  border: 1px solid black;
+  margin: 10px;
+  padding: 10px;
+  height: fit-content;
+  cursor: pointer;
+  width: fit-content;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.simulate1_btns_wrapper div:hover {
+  background-color: black;
+  color: white;
+}
+
+/* 
 .simulator{
   padding-top: 30px;
 }
@@ -110,4 +315,4 @@ header{
 }
 
 .instr {
-}
+} */

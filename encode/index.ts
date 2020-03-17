@@ -1,51 +1,74 @@
-import * as fs from 'fs';
 import * as schema from './schema/schema';
 import { loadRefMap } from './refMap'
 import { addZeros, addRegZeros, preProcess } from './utility';
 import * as patterns from './regexPatterns';
-import * as path from 'path';
 
 // refMap maps mnemonic to its metadata
 let refMap: Map<string, schema.InstructionMetaData> = new Map<string, schema.InstructionMetaData>();
 // labelMap maps labels to its metadata
-let labelMap: Map<string, schema.LabelInterface> = new Map<string, schema.LabelInterface>();
+let labelMap: Map<string, schema.LabelInterface>;
 // dataSegmentMap maps variable names to its metadata
-let dataSegmentMap: Map<string, schema.DataLabelInterface> = new Map();
+let dataSegmentMap: Map<string, schema.DataLabelInterface>;
 // dataMemory contains the data of dataMemory or [.data]
-let dataMemory: Array<string> = Array<string>();
+let dataMemory: Array<string>;
+let firstErrorLineIndex = -1;
+let errorMessage: string;
 let BASE_DATA_SEG = 65536;
+
 // Loading the Reference Map
 loadRefMap(refMap);
 
-console.log("Reading File src/input/input.asm");
-// Synchronously reading contents of asm file
-let fileData = fs.readFileSync(path.join(__dirname, "..", "src", "in", "input.asm"), { encoding: 'utf-8' })
-let lines: string[] = fileData.split("\n");
-// preProcessing the file
-console.log("Preprocess all lines");
-lines = preProcess(lines);
+function sendErrorResponse() {
+    console.log(`RETURNING ERROR RESPONSE`);
+    return { "firstErrorLineIndex": firstErrorLineIndex, "error": true };
+}
 
-console.log("Checking For Errors");
-let { dataSegment, textSegment } = check(lines);
-console.log("<-----------------------Data Segment----------------------->")
-console.log(dataSegment.join("\n"));
-console.log("<-----------------------Text Segment----------------------->")
-console.log(textSegment.join("\n"));
-console.log("<-----------------------Label Map----------------------->")
-labelMap.forEach((a, key) => {
-    console.log(`${key} ${a.location} ${a.scope}`);
-});
 
-let codeSegment: Array<string> = Array<string>();
-console.log("Executing Data Segment");
-handleDataSegment(dataSegment);
-console.log("Executing Text Segment");
-console.log("<-----------------------Executing Text Segment----------------------->")
-console.log(textSegment);
-// textSegment = preProcessTextSegment(textSegment);
-console.log(textSegment);
-console.log("<-----------------------END Text Segment----------------------->")
-handleTextSegment(textSegment);
+function main(fileData:string) {
+    dataMemory = Array<string>();
+    dataSegmentMap = new Map();
+    labelMap = new Map<string, schema.LabelInterface>()
+    console.log("Reading File src/input/input.asm");
+    // Synchronously reading contents of asm file
+    let lines: string[] = fileData.split("\n");
+    // preProcessing the file
+    console.log("Preprocess all lines");
+    lines = preProcess(lines);
+
+    console.log("Checking For Errors");
+    let response = check(lines);
+    if (firstErrorLineIndex != -1) {
+        return sendErrorResponse();
+    }
+    console.log("Handling Data Segment");
+    let dataSegment = response.dataSegment;
+    let textSegment = response.textSegment;
+    let codeSegment: Array<string> = Array<string>();
+    handleDataSegment(dataSegment);
+    if (firstErrorLineIndex != -1) {
+        return sendErrorResponse();
+    }
+    console.log("Handling Text Segment");
+    handleTextSegment(textSegment, codeSegment);
+    if (firstErrorLineIndex != -1) {
+        return sendErrorResponse();
+    }
+    console.log("Writing Code Segment");
+    codeSegment = codeSegment.map((a, index) => {
+        let temp = a.split(' ');
+        let instructionCode = temp[0];
+        let originalCode = temp.slice(1).join(" ");
+        return `0x${(4 * index).toString(16)} 0x${addZeros(instructionCode, 8)} ${originalCode}`;
+    })
+    codeSegment.push('');
+    // Adding dataMemory
+    codeSegment.push(...dataMemory.map((a, index) => {
+        return `0x${(268435456 + index).toString(16)} 0x${a}`
+    }));
+    console.log("Success!");
+    return codeSegment;
+}
+
 
 
 /**
@@ -59,8 +82,9 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
     let textSegment: string[] = Array();
     // Segment Flag || 0 => void | 1 => data | 2 => text
     let segmentFlag: number = 2;
+    let i = 0;
     try {
-        for (let i = 0; i < lines.length; i++) {
+        for (i = 0; i < lines.length; i++) {
             let line = lines[i];
             if (line[0] == ".") {
                 if (line == ".data") {
@@ -113,7 +137,6 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                     let resultUformat: boolean = patterns.formatUPattern.test(line);
                     let resultUJformat: boolean = patterns.formatUJPattern.test(line);
                     let resultLoadFromDataformat: boolean = patterns.formatLoadFromDataPattern.test(line);
-                    // console.log({ "Instr": line, "R Format": resultRformat, "I Format": resultIformat, "S Format": resultSformat, "SB Format": resultSBformat, "U Format": resultUformat, "UJ Format": resultUJformat })
                     if (resultIformat || resultRformat || resultSformat || resultSBformat || resultUJformat || resultUformat || resultLoadformat || resultLoadFromDataformat) {
                         // The line is a valid instruction
                         let instr = line.split(/[ ]+|[,]/).filter((a) => a);
@@ -128,7 +151,7 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                         rd = parseInt(rd).toString();
                         // Pusing auipc statement
                         textSegment.push(`auipc x${rd} ${BASE_DATA_SEG}`);
-                        
+
                         if (segmentFlag == 2) {
                             // If the current segment is text segment
                             textSegment.push(line);
@@ -163,14 +186,16 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
         return { dataSegment, textSegment };
     } catch (err) {
         console.log(err);
-        console.log('Exiting Code');
-        process.exit(1);
+        console.log('Exiting Code From Check');
+        errorMessage = err;
+        firstErrorLineIndex = i;
+        return;
     }
 }
 
 
 // Function performs encoding of instructions to binary
-function encodeInstruction(params: { line: string, index: number, lineNumber: number }) {
+function encodeInstruction(params: { line: string, index: number, lineNumber: number }, codeSegment: string[]) {
     let line = params.line;
     let index = params.index;
     try {
@@ -196,23 +221,23 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                 rd = addRegZeros(rd);
                 // Expecting rd, rs1, rs2 lengths to be exactly 5
                 let encodedInstr = func7 + rs2 + rs1 + func3 + rd + opcode;
-                codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                console.log(`(${mnemonic}||${line}) R Format: ` + parseInt(encodedInstr, 2).toString(16));
+                codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${line.replace(",", "")}`);
             } else if (format == "I") {
                 if (mnemonic[0] == "l") {
                     // Instruction is ld, lh, lw, lb
                     let resultLoadformat: boolean = patterns.formatLoadPattern.test(line);
                     if (!resultLoadformat) {
                         let label = instr[2];
-                        console.log(label);
                         let meta = dataSegmentMap.get(label);
-                        // ! What if no label?
-                        let imm = meta.startIndex - (index-1) * 4;
-                        console.log(`Start Index: ${meta.startIndex} | imm: ${imm} | Index*4: ${index * 4}`);
+                        if(!meta){
+                            throw Error("Label Error Occurred!");
+                        }
+                        let imm = meta.startIndex - (index - 1) * 4;
                         let rd = instr[1].replace(',', '').slice(1);
                         rd = parseInt(rd).toString(2);
                         rd = addZeros(rd, 5);
                         let rs1 = rd;
+                        instr[2] = `${imm}(x${parseInt(rd, 2)})`;
                         // 268435479 is auipc x0, 0x10000000
                         // codeSegment.push((268435479 + (parseInt(rs1, 2) << 7)).toString(16));
                         if (imm > 2047 || imm < -2048) {
@@ -220,18 +245,11 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                         }
                         let offset = getImmString(imm, 12);
                         let encodedInstr = offset.concat(rs1, func3, rd, opcode);
-                        codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                        console.log(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
-                        // Incrementing Index as an additional auipc is added
-                        // console.log(`Incrementing: params.index | prev ${params.index} | new ${params.index + 1}`)
-                        // Incrementing Labels below this line
-                        // labelMap.forEach((e) => {
-                        //     if (e.location > params.index) {
-                        //         e.location++;
-                        //     }
-                        // })
-                        // params.index++;
-
+                        // Converting auipc statement to load one
+                        let lastInstr = codeSegment[codeSegment.length-1];
+                        codeSegment[codeSegment.length-1] = `${lastInstr.split(' ')[0]} ${instr.join(' ')}`;
+                        // Pushing the current statement 
+                        codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${instr.join(" ")}`);
                     } else {
                         let rd = instr[1].replace(',', '').slice(1);
                         rd = parseInt(rd).toString(2);
@@ -241,7 +259,6 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                         rs1 = parseInt(rs1).toString(2);
                         rs1 = addZeros(rs1, 5);
                         let offset = arg2.match(/[-]?(0[xX][0-9a-fA-F]+|[\d]+)/)[0];
-                        console.log(offset);
                         let imm = parseInt(offset);
                         // Checking if the immediate field is enough to store 
                         if (imm > 2047 || imm < -2048) {
@@ -249,8 +266,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                         }
                         offset = getImmString(imm, 12);
                         let encodedInstr = offset.concat(rs1, func3, rd, opcode);
-                        codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                        console.log(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
+                        codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${line.replace(",", "")}`);
                     }
                 } else {
                     let rd = instr[1].replace(',', '').slice(1);
@@ -259,21 +275,16 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                     rs1 = parseInt(rs1).toString(2);
                     let immString = instr[3].replace(',', '');
                     let imm = parseInt(immString);
-                    console.log(imm)
                     // Checking if the immediate field is enough to store 
                     if (imm > 2047 || imm < -2048) {
                         throw Error(`Immediate Field Length not Enough! ${line}`);
                     }
                     immString = getImmString(imm, 12);
-                    console.log(immString)
-                    // imm = (parseInt(imm) >>> 0).toString(2);
-                    // imm = addZeros(imm, metadata.immLen);
                     rs1 = addRegZeros(rs1);
                     rd = addRegZeros(rd);
 
                     let encodedInstr = immString + rs1 + func3 + rd + opcode;
-                    codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                    console.log(`(${mnemonic}||${line}) I Format: ` + parseInt(encodedInstr, 2).toString(16));
+                    codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${line.replace(",", "")}`);
                 }
             } else if (format == "S") {
                 let rs2 = instr[1].replace(',', '').slice(1);
@@ -284,9 +295,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                 rs1 = parseInt(rs1).toString(2);
                 rs1 = addZeros(rs1, 5);
                 let offset = arg2.match(/[-]?(0[xX][0-9a-fA-F]+|[\d]+)/)[0];
-                console.log(offset);
                 let imm = parseInt(offset);
-                console.log(imm);
                 // Checking if the immediate field is enough to store 
                 if (imm > 2047 || imm < -2048) {
                     throw Error(`Immediate Field Length not Enough! ${line}`);
@@ -295,9 +304,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                 let imm1 = offset.slice(7);
                 let imm2 = offset.slice(0, 7);
                 let encodedInstr = imm2.concat(rs2, rs1, func3, imm1, opcode);
-                codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-
-                console.log(`(${mnemonic}||${line}) S Format: ` + parseInt(encodedInstr, 2).toString(16));
+                codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${line.replace(",", "")}`);
             } else if (format == "SB") {
                 // beq, bne, bge, blt
                 let rs1 = instr[1].replace(',', '').slice(1);
@@ -314,7 +321,6 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                     if (imm > 2047 || imm < -2048) {
                         throw Error(`Immediate Field Length not Enough! ${line}`);
                     }
-                    console.log(imm * 2);
                     let encodedInstr: string;
                     let immString = getImmString(imm, 12);
                     let imm1 = immString[1];
@@ -322,9 +328,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                     let imm3 = immString.slice(2, 8);
                     let imm4 = immString[0];
                     encodedInstr = imm1.concat(imm3, rs2, rs1, func3, imm2, imm4, opcode);
-                    codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-
-                    console.log(`(${mnemonic}||${line}) SB Format: ` + parseInt(encodedInstr, 2).toString(16));
+                    codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${line.replace(",", "")}`);
                 } else {
                     throw Error(`Label Error Occurred at line: ${line}`);
                 }
@@ -340,9 +344,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                 rd = parseInt(rd).toString(2);
                 rd = addZeros(rd, 5);
                 let encodedInstr = offset + rd + opcode;
-                codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-
-                console.log(`(${mnemonic}||${line}) U Format: ` + parseInt(encodedInstr, 2).toString(16));
+                codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${line.replace(",", "")}`);
             } else if (format == "UJ") {
                 let rd = instr[1].replace(',', '').slice(1);
                 rd = parseInt(rd).toString(2);
@@ -353,9 +355,6 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                     let imm = (labelMeta.location - params.index) * 2;
                     // Checking if the immediate field is enough to store 
                     // TODO: Check the range for jal
-                    // if (imm > 2047 || imm < -2048) {
-                    //     throw Error(`Immediate Field Length not Enough! ${line}`);
-                    // }
                     let encodedInstr: string;
                     let immString = getImmString(imm, 20);
                     let imm1 = immString[9]; // 11
@@ -363,11 +362,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                     let imm3 = immString.slice(1, 9); //12-19
                     let imm4 = immString[0]; // 20
                     encodedInstr = imm4.concat(imm2, imm1, imm3, rd, opcode);
-                    codeSegment.push(parseInt(encodedInstr, 2).toString(16));
-                    console.log(labelMeta.location);
-                    console.log(params.lineNumber);
-                    console.log(imm * 2);
-                    console.log(`(${mnemonic}||${line}) UJ Format: ` + parseInt(encodedInstr, 2).toString(16));
+                    codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${line.replace(",", "")}`);
                 } else {
                     throw Error(`Label Error Occurred at line: ${line}`);
                 }
@@ -380,23 +375,22 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
         }
     } catch (err) {
         console.log(err);
-        process.exit(1);
+        errorMessage = err;
+        firstErrorLineIndex = params.index;
+        return;
     }
 }
 // Handles Text Segment
-function handleTextSegment(lines: string[]) {
+function handleTextSegment(lines: string[], codeSegment: string[]) {
     // index refers to current index of program counter
     let params = { 'line': null, 'index': 0, 'lineNumber': 0 };
     for (let i = 0; i < lines.length; i++) {
         params.line = lines[i];
-        // TODO: Remove temp
-        let temp = params.index;
-        encodeInstruction(params);
+        encodeInstruction(params, codeSegment);
         params.index++;
         params.lineNumber++;
-        console.log(`Instr: ${lines[i]} | Prev Index: ${temp} | New Index: ${params.index}`)
     }
-    codeSegment.push('ffffffff');
+    codeSegment.push('ffffffff END CODE');
 }
 
 
@@ -415,10 +409,11 @@ function getImmString(imm: number, len: number) {
 
 // Handles Data Segment
 function handleDataSegment(lines: string[]) {
+    let index;
     try {
-        for (let line of lines) {
+        for (let index in lines) {
             // Using Regex to catch multiple spaces
-            console.log(line);
+            let line = lines[index];
             let instr = line.split(/[ ]+/);
             let name: string = instr[0].replace(':', '');
             let type: string = instr[1];
@@ -450,7 +445,6 @@ function handleDataSegment(lines: string[]) {
                 dataMemory.push('00');
             } else {
                 let totalNums = line.match(/((0[xX][0-9a-fA-F]+|[\d]+)[ ]*,[ ]*)*(0[xX][0-9a-fA-F]+|[\d]+)[ ]*$/)[0].split(/[ ]|[,]/).filter((e) => e);
-                console.log(totalNums);
                 // Half Bytes means 4 bits;
                 let numberOfHalfBytes: number;
                 switch (type) {
@@ -495,26 +489,9 @@ function handleDataSegment(lines: string[]) {
         }
     } catch (err) {
         console.log(err);
-        process.exit(1);
+        errorMessage = err;
+        firstErrorLineIndex = index;
+        return;
     }
 
 }
-
-console.log(dataSegmentMap);
-console.log(dataMemory);
-console.log("Preparing File To Write");
-codeSegment = codeSegment.map((a, index) => {
-    return `0x${(4 * index).toString(16)} 0x${addZeros(a, 8)}`;
-})
-codeSegment.push('');
-// Adding dataMemory
-console.log("Writing Data Segment");
-codeSegment.push(...dataMemory.map((a, index) => {
-    return `0x${(268435456 + index).toString(16)} 0x${a}`
-}));
-console.table(textSegment);
-console.log(labelMap);
-
-console.log("Writing Into File: /src/out/myOutput.m");
-fs.writeFileSync(path.join(__dirname, "..", "src", "out", "myOutput.m"), codeSegment.join("\n"));
-console.log("Success!");

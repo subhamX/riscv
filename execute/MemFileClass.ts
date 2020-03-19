@@ -57,7 +57,10 @@ export class MemoryFile{
         console.table(this.memory);
     }
     WriteData(addr: number, value: string){
-        this.memory.set(addr, parseInt(value, 16));
+        let paddedVal = addZeros(parseInt(value, 16).toString(2), 8);
+        paddedVal = addOnesZeros(paddedVal);
+        this.memory.set(addr, parseInt(paddedVal, 2)>>0);
+        console.log(addr, parseInt(paddedVal, 2)>>0);
     }
 }
 
@@ -68,10 +71,10 @@ export function addOnesZeros(value: string, len?:number) :string {
         len = 32
     }
     if(value[0]=='1'){
-        pad = "1".repeat(32-value.length);
+        pad = "1".repeat(len-value.length);
     }
     else{
-        pad = "0".repeat(32-value.length);
+        pad = "0".repeat(len-value.length);
     }
     return pad+value;
 }

@@ -4,8 +4,9 @@ import {Decode} from './Decode';
 import {Execute} from './ALU';
 import {RegisterFile} from './RegFileClass';
 import {opcodeMapfunc, operationMapfunc} from './mapPhase2';
-import {MemoryFile, addOnesZeros, addZeros} from './MemFileClass'
+import {MemoryFile, addZeros} from './MemFileClass'
 import {MemoryOperations, WriteBack} from './MA_MWB';
+
 export class GlobalVar{
     // PC->Program Counter, IR->Instruction Register
     static PC: number;
@@ -59,7 +60,10 @@ function getClocl() : number{
     return GlobalVar.CLOCK;
 }
 
-(function init(): void {
+function init(): void {
+    // Setting pc and clock
+    GlobalVar.PC = 0;
+    GlobalVar.CLOCK = 0;
     // let data = fs.readFileSync('./test/test.mc', {encoding: 'utf-8'});
     let data = fs.readFileSync('test/test.mc', {encoding: 'utf-8'});
     let dataArr = data.split('\n');
@@ -75,27 +79,29 @@ function getClocl() : number{
             break;
         }
     }
+    
     opcodeMapfunc(GlobalVar.opcodeMap);
     operationMapfunc(GlobalVar.operationMap);
 
     // Initializing Register File
     GlobalVar.memFile = new MemoryFile();
     GlobalVar.regFile = new RegisterFile();
-    // Setting pc and instrReg
-    GlobalVar.PC = 0;
-    GlobalVar.CLOCK = 0;
 
-    // while(dataArr[i]){
-    //     console.log(dataArr[i].split(' '));
-    //     let temp = dataArr[i].split(' ');
-    //     let key = temp[0];
-    //     let value = temp[1];
-    //     if(parseInt(value)){
-    //         GlobalVar.memFile.set(key, value);
-    //     }
-    // }
+    i++;
+    while (dataArr[i]) {
+        console.log(dataArr[i].split(' '));
+        let temp = dataArr[i].split(' ');
+        let key = temp[0];
+        let value = temp[1];
+        if (parseInt(value)) {
+            GlobalVar.memFile.WriteData(parseInt(key, 16), value);
+        }
+        i++;
+    }
     askQue();
-})();
+}
+
+init();
 
 function askQue(){
     readL.question(
@@ -116,13 +122,13 @@ function askQue(){
             if(GlobalVar.invalid){
                 console.error("Invalid instruction");
             }
-            showState();
+            showState(true);
             readL.close();
         }
     });
 }
 
-function showState() {
+function showState(atEndAll?: boolean) {
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     console.log("REGISTER");
     let tempReg = [];
@@ -130,9 +136,9 @@ function showState() {
         tempReg.push({ i: (GlobalVar.regFile.getRegVal(i) >>> 0).toString(16) });
     }
     console.table(tempReg);
-    if(GlobalVar.type == GlobalVar.opcodeMap.get('1100011')){
+    if(GlobalVar.type == GlobalVar.opcodeMap.get('1100011') || atEndAll){
         console.log("MEMORY");
-        console.log(GlobalVar.memFile.getMemory());
+        console.table(GlobalVar.memFile.getMemory());
     };
 }
 
@@ -142,6 +148,8 @@ readL.on("close", function(){
 });
 
 function singleINS(){
+    console.log('-----------**********------------')
+    console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     Fetch();
     Decode();
     Execute(GlobalVar.operCode, GlobalVar.immVal);
@@ -151,8 +159,12 @@ function singleINS(){
 }
 
 function allINS(){
+    let no_inst : boolean = false;
     while(1){
-        Fetch();
+        no_inst = Fetch();
+        if(no_inst){
+            return;
+        }
         Decode();
         if(GlobalVar.invalid){
             break;
@@ -164,19 +176,20 @@ function allINS(){
     }
 }
 
-function Fetch() {
+function Fetch() :boolean {
     // Fetching the current Instruction
     let temp = GlobalVar.instructionMap.get(GlobalVar.PC);
     // Terminating Condition 
     if (!temp) {
-        // TODO: Write Data Memory
-        process.exit(0);
+        return true;
+        // process.exit(0);
     }
     temp = parseInt(temp, 16).toString(2);
     temp = addZeros(temp, 32);
     GlobalVar.IR = temp;
     GlobalVar.pcTemp = GlobalVar.PC;
     GlobalVar.PC += 4;
+    return false;
 }
 
 export function UpdatePC(PC_Select: number, inpImm?:number) : void{

@@ -20,8 +20,11 @@ export class MemoryFile{
         let temp1, val;
         for(let i=0;i<len;i++){
             val = this.memory.get(addr+i);
-            if(!val){
+            console.log('val', val);
+            if(val==null){
+                console.log('set', )
                 this.memory.set(addr+i, 0);
+                val = this.memory.get(addr+i);
             }
             if(val>=0){
                 temp1 = addZeros((val).toString(2), 8);
@@ -30,9 +33,7 @@ export class MemoryFile{
                 temp1 = ( val >>> 0).toString(2).slice(val.length-8, val.length);
             }
             temp = temp1+ temp;
-            console.log(val.toString(2));
         }
-        console.log(temp);
         return parseInt(addOnesZeros(temp), 2)>>0;
     }
 
@@ -49,12 +50,14 @@ export class MemoryFile{
         else{
             valString = (value >>> 0).toString(2);
         }
-        // console.log(valString);
         for(let i=0;i<len;i++){
             tempStr = valString.slice((len-i-1)*8+1, (len-i)*8);
             this.memory.set((addr + i), parseInt(tempStr, 2));
         }
         console.table(this.memory);
+    }
+    WriteData(addr: number, value: string){
+        this.memory.set(addr, parseInt(value, 16));
     }
 }
 

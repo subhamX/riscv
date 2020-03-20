@@ -110,6 +110,7 @@ function askQue(){
             singleINS();
             if(GlobalVar.invalid){
                 console.error("Invalid instruction");
+                readL.close();
             }
             showState();
             if(!GlobalVar.instructionMap.get(GlobalVar.PC)){
@@ -121,6 +122,7 @@ function askQue(){
             allINS();
             if(GlobalVar.invalid){
                 console.error("Invalid instruction");
+                readL.close();
             }
             showState(true);
             readL.close();
@@ -152,6 +154,9 @@ function singleINS(){
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     Fetch();
     Decode();
+    if(GlobalVar.invalid){
+        return;
+    }
     Execute(GlobalVar.operCode, GlobalVar.immVal);
     MemoryOperations();
     WriteBack();
@@ -161,6 +166,8 @@ function singleINS(){
 function allINS(){
     let no_inst : boolean = false;
     while(1){
+        console.log('-----------**********------------')
+        console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
         no_inst = Fetch();
         if(no_inst){
             return;
@@ -180,7 +187,7 @@ function Fetch() :boolean {
     // Fetching the current Instruction
     let temp = GlobalVar.instructionMap.get(GlobalVar.PC);
     // Terminating Condition 
-    if (!temp) {
+    if (!temp || (parseInt(temp) >> 0) == -1){
         return true;
         // process.exit(0);
     }

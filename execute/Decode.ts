@@ -1,7 +1,6 @@
 import {GlobalVar} from './Main';
 
 export function Decode() {
-    console.log("Hello");
     // extracting opcode of current instruction
     let opcode = GlobalVar.IR.slice(25, 32);
     // instruction type of current instruction
@@ -30,6 +29,7 @@ export function Decode() {
         GlobalVar.operCode = opcode + GlobalVar.IR.slice(17, 20);
 
         if(GlobalVar.operationMap.get(GlobalVar.operCode)=='ld'){
+            console.error('`InstructionNotSupportedError: LD is not supported by 32 bit systems!');
             GlobalVar.invalid = true;
             return;
         }
@@ -54,6 +54,7 @@ export function Decode() {
         GlobalVar.operCode = opcode + GlobalVar.IR.slice(17, 20);
 
         if(GlobalVar.operationMap.get(GlobalVar.operCode)=='sd'){
+            console.error('`InstructionNotSupportedError: sd is not supported on 64 bit systems!');
             GlobalVar.invalid = true;
             return;
         }
@@ -113,6 +114,8 @@ export function Decode() {
     }
     else{
         console.error('Not a valid instruction!(invalid Opcode)');
+        GlobalVar.invalid = true;
+        return;
     }
     // console.log("value in GlobalVar.RA => " + GlobalVar.RA);
     // console.log("value in GlobalVar.RB => " + GlobalVar.RB);

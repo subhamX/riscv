@@ -17,6 +17,7 @@ export function Execute(operCode : string, immVal : string){
     console.log('inB inA', inB, inA);
     // finding operation to be performed
     let ALU_op = GlobalVar.operationMap.get(operCode);
+    console.log("operation", ALU_op);
     if(ALU_op == 'add' || ALU_op == 'addi' || ALU_op == 'ld' || ALU_op == 'lb' || ALU_op == 'lh' || ALU_op == 'lw'){
         GlobalVar.RZ = inA + inB;
     }
@@ -58,7 +59,8 @@ export function Execute(operCode : string, immVal : string){
     }
     else if(ALU_op == 'blt'){
         if(inA < inB){
-            UpdatePC(evaluateImm(immVal));
+            UpdatePC(1, evaluateImm(immVal));
+            console.log('evim', evaluateImm(immVal));
         }
     }
     else if(ALU_op == 'sll'){

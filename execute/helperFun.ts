@@ -18,6 +18,9 @@ export function determineSelectLines(t: string) {
         if(GlobalVar.operationMap.get(GlobalVar.operCode)[0]=='l'){
             GlobalVar.selectLineY = 1;
         }
+        else if(GlobalVar.operationMap.get(GlobalVar.operCode)=='jalr'){
+            GlobalVar.selectLineY = 2;
+        }
         else{
             GlobalVar.selectLineY = 0;
         }

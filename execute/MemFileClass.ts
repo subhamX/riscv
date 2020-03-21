@@ -38,6 +38,7 @@ export class MemoryFile{
     }
 
     MEM_WRITE(addr: number, value:number, dtype:string){
+        // len contains number of bytes
         let len : number;
         if(dtype == 'b'){len = 1;}
         else if(dtype == 'h'){len = 2;}
@@ -45,14 +46,16 @@ export class MemoryFile{
         else if(dtype == 'd'){len = 8;}
         let valString : string, tempStr : string;
         if(value>=0){
-            valString = addZeros(value.toString(2), 8*len);
+            valString = addZeros(value.toString(16), 8);
         }
         else{
-            valString = (value >>> 0).toString(2);
+            valString = (value >>> 0).toString(16);
         }
-        for(let i=0;i<len;i++){
-            tempStr = valString.slice((len-i-1)*8+1, (len-i)*8);
-            this.memory.set((addr + i), parseInt(tempStr, 2));
+        console.log(valString);
+        for(let i=valString.length-2;len--;i-=2){
+            tempStr = valString.slice(i, i+2);
+            console.log(tempStr);
+            this.memory.set(addr++, parseInt(tempStr, 16));
         }
         console.table(this.memory);
     }

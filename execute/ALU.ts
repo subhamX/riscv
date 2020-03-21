@@ -65,7 +65,10 @@ export function Execute(immVal : string){
         GlobalVar.RZ = inA << inB;
     }
     else if(GlobalVar.ALU_op == 'slt'){
+        console.log(inA, "CHECK");
+        console.log(inB, "CHECK");
         GlobalVar.RZ = (inA < inB) ? 1:0;
+        console.log(GlobalVar.RZ);
     }
     else if(GlobalVar.ALU_op == 'sra'){
         GlobalVar.RZ = inA >> inB;
@@ -93,5 +96,7 @@ export function Execute(immVal : string){
     else if(GlobalVar.ALU_op == 'jal'){
         UpdatePC(1, inB);
     }
+    // Converting any overflowing number to negative 
+    GlobalVar.RZ <<=0;
     console.log('rz',GlobalVar.RZ);
 }

@@ -1,7 +1,7 @@
 import ace from 'ace-builds/src-min-noconflict/ace';
 import { main } from './encode/index';
 import * as execute from './execute/Main';
-import { addZeros } from './encode/utility'
+import { addZeros, addOnes } from './encode/utility'
 
 // Defining theme asset
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
@@ -33,7 +33,6 @@ function setupEditor() {
             let start = range["start"]["row"]
             let end = range["end"]["row"]
             for (let i = start; i <= end; i++) {
-                console.log()
                 if (editor.session.getLine(i)[0] != '#') {
                     editor.session.insert({ "row": i, "column": 0 }, "# ");
                 }
@@ -137,7 +136,6 @@ function handleAssembleAndSimulate() {
     instrWrapper.remove();
     instrWrapper = document.createElement('div');
     instrWrapper.classList.add('instructions_wrapper');
-    console.log(response);
     // For Dumping in future
     dumpSeg = response.codeSegment;
     let assembledCode = response.codeSegment.split('\n');
@@ -148,22 +146,15 @@ function handleAssembleAndSimulate() {
         let pc = instr[0];
         let machineCode = instr[1];
         let originalCode = instr.slice(2).join(" ");
-        console.log(pc);
-        console.log(machineCode);
-        console.log(originalCode);
         if (machineCode == '0xffffffff') {
             codeSegWrapper.appendChild(instrWrapper);
             break;
         }
         let elem = createInstrElement(pc, machineCode, originalCode);
-        elem.addEventListener("click", (e) => {
-            console.log(e.target);
-        })
         instrWrapper.appendChild(elem);
     }
     currPC = 0;
     // Initializing Execute Statement
-    console.log("CHECK", response.codeSegment);
     execute.init(response.codeSegment);
     // Updaing Register and Memory State
     updateRegAndMemState();
@@ -291,24 +282,38 @@ writeRegisters();
 
 
 function getMemValToDisplay(num: number) {
-    let value;
+    let value, temp;
+    if (num < 0) {
+        // Keeping only last 2 values of HexString
+        temp = (num >>> 0).toString(16).slice(6);
+        num = parseInt(temp, 16);
+    }
     if (displaySettings == 0) {
-        value = `0x${addZeros(num.toString(16), 2)}`;
+        value = `0x${addZeros((num >>> 0).toString(16), 2)}`;
     } else if (displaySettings == 1) {
-        value = num.toString();
+        let immNum;
+        if (num > 127) {
+            immNum = (num).toString(2)
+            // If the MSB is 1 then adding 1's to create a 32 length immNum
+            immNum = addOnes(immNum, 32);
+            immNum = ((parseInt(immNum, 2) >> 0))
+        } else {
+            immNum = (num)
+        }
+        value = immNum;
     } else {
         value = `${String.fromCodePoint(num)} [0x${addZeros(num.toString(16), 2)}]`
     }
     return value;
 }
 
-// Helper function to 
+
 function getRegValToDisplay(num: number) {
     let value;
     if (displaySettings == 1) {
-        value = num.toString();
+        value = (num >> 0).toString();
     } else {
-        value = `0x${addZeros(num.toString(16).toUpperCase(), 8)}`;
+        value = `0x${addZeros((num >>> 0).toString(16).toUpperCase(), 8)}`;
     }
     return value;
 }
@@ -326,9 +331,7 @@ function updateRegAndMemState() {
         regData.innerText = getRegValToDisplay(val);
     });
     mem.forEach((val, key) => {
-        console.log(key);
         let div = document.querySelector(`.memory_wrapper .memory${key}`);
-        console.log(div);
         let displayNum = getMemValToDisplay(val);
         if (div) {
             let memData = div.querySelector('.mem_data') as HTMLElement;
@@ -392,15 +395,15 @@ document.getElementById('decimal_btn').addEventListener('click', () => {
 function onSettingsChange(prevDisplaySettings: number) {
     let currRegs = Array.from(document.getElementsByClassName('register_data'));
     currRegs.forEach((e) => {
-        e.children[1].innerHTML = getRegValToDisplay(parseInt(e.children[1].innerHTML));
+        e.children[1].innerHTML = getRegValToDisplay(parseInt(e.children[1].innerHTML) >> 0);
     })
     let currMems = Array.from(document.getElementsByClassName('memory_data'));
     currMems.forEach((e) => {
         if (prevDisplaySettings == 2) {
             let val = e.children[1].innerHTML.match(/\[.+\]/)[0].split(/\[|\]/).join('');
-            e.children[1].innerHTML = getMemValToDisplay(parseInt(val));
+            e.children[1].innerHTML = getMemValToDisplay(parseInt(val) >> 0);
         } else {
-            e.children[1].innerHTML = getMemValToDisplay(parseInt(e.children[1].innerHTML));
+            e.children[1].innerHTML = getMemValToDisplay(parseInt(e.children[1].innerHTML) >> 0);
         }
     })
 }

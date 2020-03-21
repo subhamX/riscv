@@ -34,4 +34,11 @@ export function preProcess(lines: string[]): string[] {
     return finalLines;
 }
 
-
+// Helper Function to AddOnes in Beginning
+export function addOnes(imm: string, len: number) {
+    let n = len - imm.length;
+    while (n--) {
+        imm = '1' + imm;
+    }
+    return imm;
+}

@@ -2,7 +2,7 @@
 import { Decode } from './Decode';
 import { Execute } from './ALU';
 import { RegisterFile } from './RegFileClass';
-import { opcodeMapfunc, operationMapfunc } from './mapPhase2';
+import { opcodeMapfunc, operationMapfunc } from './MapPhase2';
 import { MemoryFile, addZeros } from './MemFileClass'
 import { MemoryOperations, WriteBack } from './MA_MWB';
 

@@ -11,10 +11,10 @@ body:not(#editor) {
 
 #editor {
   position: absolute;
-  right: 0;
   bottom: 0;
   left: 0;
   height: 90vh;
+  width: 100%;
 }
 
 .navbar {
@@ -331,4 +331,20 @@ header {
   .mem_buttons_wrapper{
     font-size: 15px;
   }
+}
+
+@media all and (max-width: 681px){
+  .simulator-wapper{
+    grid-template-columns: 1fr;
+  }
+  .instructions_wrapper{
+    height: 50vh;
+    border-bottom: 1px solid grey;
+  }
+  /* header{
+    height: 20vh;
+  }
+  #editor{
+    height: 80vh;
+  } */
 }

@@ -151,9 +151,15 @@ readL.on("close", function(){
 });
 
 function singleINS(){
+    let no_inst = false;
     console.log('-----------**********------------')
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
-    Fetch();
+    no_inst = Fetch();
+    if(no_inst){
+        GlobalVar.pcTemp = GlobalVar.PC;
+        GlobalVar.PC++;
+        return;
+    }
     Decode();
     if(GlobalVar.invalid){
         return;

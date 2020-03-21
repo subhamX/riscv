@@ -3,12 +3,18 @@ import { main } from './encode/index';
 import * as execute from './execute/Main';
 import { addZeros } from './encode/utility'
 
-
-// 0 => Hex | 1 => Decimal | 2 => ASCII
-let displaySettings = 0;
+// Defining theme asset
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
-var editor;
+
+// flag to store the current display setting (0 => Hex | 1 => Decimal | 2 => ASCII)
+let displaySettings = 0;
+var editor: any;
 let currPC: number;
+// activeElem stores the active element on Navbar
+let activeElem = 0;
+// 
+let dumpSeg: string;
+// Function to setup the editor
 function setupEditor() {
     editor = ace.edit("editor");
     editor.setTheme("ace/theme/monokai");
@@ -37,8 +43,8 @@ function setupEditor() {
     });
 }
 
-// Helper Function to create an instruction element for DOM
-function createInstrElement(pcVal, machineCodeVal, originalCodeVal) {
+// Helper Function to create an instruction element
+function createInstrElement(pcVal: any, machineCodeVal: any, originalCodeVal: any): HTMLDivElement {
     let pc = document.createElement('span');
     let machineCode = document.createElement('span');
     let originalCode = document.createElement('span');
@@ -58,15 +64,13 @@ function createInstrElement(pcVal, machineCodeVal, originalCodeVal) {
         } else {
             e.target["parentElement"].classList.add('breakpoint_statement');
         }
-        console.log();
     })
     return div;
 }
 
-let navbarBtns: NodeListOf<Element>, activeElem = 0;
 document.addEventListener("DOMContentLoaded", () => {
     setupEditor();
-    navbarBtns = document.querySelectorAll(".toggle-wrapper a");
+    let navbarBtns = document.querySelectorAll(".toggle-wrapper a");
     navbarBtns[activeElem].classList.add("active");
     navbarBtns.forEach((e, index) => {
         e.addEventListener('click', () => {
@@ -92,6 +96,13 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 })
 
+// Function to remove all instructions
+function removeAllInstruction() {
+    document.querySelectorAll('.meta_instructions').forEach(e => {
+        e.remove();
+    })
+}
+
 // Wrapper function to disable editor
 function disableEditor() {
     document.getElementById("editor").style.display = 'none';
@@ -101,12 +112,11 @@ function disableEditor() {
 function activateEditor() {
     document.getElementById("editor").style.display = 'block';
     activateAssembleAndSimulateBtn();
-    // Remove all instrcutions
-    document.querySelectorAll('.meta_instructions').forEach(e => {
-        e.remove();
-    })
+    // Remove all instruction
+    removeAllInstruction();
 }
-let dumpSeg: string;
+
+
 // Function to handle the event Assemble And Simulate Btn
 document.querySelector('.assemble_btn').addEventListener('click', handleAssembleAndSimulate);
 function handleAssembleAndSimulate() {
@@ -122,7 +132,6 @@ function handleAssembleAndSimulate() {
         alert("Error Occurred! " + response.errorMessage);
         return true;
     }
-
     let codeSegWrapper = document.querySelector('.code_segment_wrapper');
     let instrWrapper = document.querySelector('.instructions_wrapper');
     instrWrapper.remove();
@@ -154,6 +163,7 @@ function handleAssembleAndSimulate() {
     }
     currPC = 0;
     // Initializing Execute Statement
+    console.log("CHECK", response.codeSegment);
     execute.init(response.codeSegment);
     // Updaing Register and Memory State
     updateRegAndMemState();
@@ -266,7 +276,7 @@ function writeRegisters() {
     }
 }
 
-// Showing demo content
+// Showing demo content in Memory Segment
 function writeMemory() {
     for (let i = 0; i < 4; i++) {
         let value = getMemValToDisplay(0);
@@ -275,6 +285,9 @@ function writeMemory() {
 
     }
 }
+
+writeMemory();
+writeRegisters();
 
 
 function getMemValToDisplay(num: number) {
@@ -289,6 +302,7 @@ function getMemValToDisplay(num: number) {
     return value;
 }
 
+// Helper function to 
 function getRegValToDisplay(num: number) {
     let value;
     if (displaySettings == 1) {
@@ -299,23 +313,18 @@ function getRegValToDisplay(num: number) {
     return value;
 }
 
-writeRegisters();
-writeMemory();
 
-// TODO: Search Feature
 
 
 // Function to update Registers and Memory after each instruction exectution
 function updateRegAndMemState() {
     let mem: Map<number, number> = execute.GlobalVar.memFile.getMemory();
     let regFile = execute.GlobalVar.regFile.getALL();
-
     regFile.forEach((val, index) => {
         let div = document.querySelector(`.registers_wrapper .register${index}`);
         let regData = div.querySelector('.reg_data') as HTMLElement;
         regData.innerText = getRegValToDisplay(val);
     });
-
     mem.forEach((val, key) => {
         console.log(key);
         let div = document.querySelector(`.memory_wrapper .memory${key}`);
@@ -331,6 +340,7 @@ function updateRegAndMemState() {
     });
 }
 
+// Handling Click Event Of Step Button
 document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     execute.singleINS();
     updateRegAndMemState();
@@ -343,6 +353,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     updateHighlightedInst(prevHighlighted)
 })
 
+// Handling Click Event Of Run Button
 document.getElementsByClassName('run_btn')[0].addEventListener('click', () => {
     execute.allINS();
     updateRegAndMemState();
@@ -350,7 +361,7 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', () => {
 })
 
 
-// Register Display Settings
+// Handling Clicking Event Of Hex Button
 document.getElementById('hex_btn').addEventListener('click', () => {
     if (displaySettings != 0) {
         let prevDisplaySettings = displaySettings;
@@ -359,6 +370,7 @@ document.getElementById('hex_btn').addEventListener('click', () => {
     }
 })
 
+// Handling Clicking Event Of ASCII Button
 document.getElementById('ascii_btn').addEventListener('click', () => {
     if (displaySettings != 2) {
         let prevDisplaySettings = displaySettings;
@@ -367,11 +379,7 @@ document.getElementById('ascii_btn').addEventListener('click', () => {
     }
 })
 
-function activateAssembleAndSimulateBtn() {
-
-    document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
-    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
-}
+// Handling Clicking Event Of Decimal Button
 document.getElementById('decimal_btn').addEventListener('click', () => {
     if (displaySettings != 1) {
         let prevDisplaySettings = displaySettings;
@@ -380,6 +388,7 @@ document.getElementById('decimal_btn').addEventListener('click', () => {
     }
 })
 
+// Function to transform the current values Registers and Memory Segment
 function onSettingsChange(prevDisplaySettings: number) {
     let currRegs = Array.from(document.getElementsByClassName('register_data'));
     currRegs.forEach((e) => {
@@ -396,7 +405,15 @@ function onSettingsChange(prevDisplaySettings: number) {
     })
 }
 
-// Search Feature
+
+
+function activateAssembleAndSimulateBtn() {
+    document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
+    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
+}
+
+
+// TODO: Search Feature
 // document.getElementById('mem_addr_val').addEventListener('keyup', (e) => {
 //     if(e.keyCode===13){
 //         // Enter Key is pressed
@@ -410,6 +427,7 @@ function onSettingsChange(prevDisplaySettings: number) {
 //     }
 // })
 
+// Function to Highlight the Current Instruction 
 function updateHighlightedInst(prevPC: number) {
     let prevInstr = document.getElementsByClassName(`pc${prevPC}`)[0];
     if (prevInstr) {
@@ -422,7 +440,7 @@ function updateHighlightedInst(prevPC: number) {
     }
 }
 
-
+// Handle Click Event Of Dump Button
 document.querySelector('.dump_btn').addEventListener('click', (e) => {
     let dumpArray = [];
     dumpSeg.split("\n").forEach((e) => {
@@ -439,5 +457,4 @@ document.querySelector('.dump_btn').addEventListener('click', (e) => {
     }, function (err) {
         console.error('Async: Could not copy text: ', err);
     });
-    // alert("Copied the text");
 })

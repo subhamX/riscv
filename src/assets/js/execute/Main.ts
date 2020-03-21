@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 // import * as rl from 'readline';
 import { Decode } from './Decode';
 import { Execute } from './ALU';
@@ -40,7 +39,7 @@ export class GlobalVar {
     static selectLineY = 1;
 
     // incase of invalid instruction
-    static invalid: boolean = false;
+    static invalid: boolean;
 
     static instructionMap: Map<number, string>;
     // opcode map
@@ -57,7 +56,7 @@ export class GlobalVar {
 export function getPC(): number {
     return GlobalVar.PC;
 }
-function getClocl(): number {
+function getClock(): number {
     return GlobalVar.CLOCK;
 }
 
@@ -65,6 +64,7 @@ export function init(data): void {
     // Setting pc and clock
     GlobalVar.PC = 0;
     GlobalVar.CLOCK = 0;
+    GlobalVar.invalid = false;
     GlobalVar.instructionMap = new Map<number, string>();
     // let data = fs.readFileSync('./test/test.mc', {encoding: 'utf-8'});
     // let data = fs.readFileSync('test/test.mc', { encoding: 'utf-8' });
@@ -100,6 +100,8 @@ export function init(data): void {
         }
         i++;
     }
+    console.log("CHECK1");
+    showState();
     // askQue();
 }
 // Commenting init and askQue for Web

@@ -1,8 +1,14 @@
 import ace from 'ace-builds/src-min-noconflict/ace';
 import { main } from './encode/index';
+import * as execute from './execute/Main';
+import { addZeros } from './encode/utility'
+
+
+// 0 => Hex | 1 => Decimal | 2 => ASCII
+let displaySettings = 0;
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
 var editor;
-
+let currPC: number;
 function setupEditor() {
     editor = ace.edit("editor");
     editor.setTheme("ace/theme/monokai");
@@ -40,15 +46,16 @@ function createInstrElement(pcVal, machineCodeVal, originalCodeVal) {
     originalCode.innerText = originalCodeVal;
     machineCode.innerText = machineCodeVal;
     let div = document.createElement('div');
-    div.classList.add('meta_instructions');
+    div.classList.add(`meta_instructions`);
+    div.classList.add(`pc${parseInt(pcVal)}`);
     div.appendChild(pc);
     div.appendChild(machineCode);
     div.appendChild(originalCode);
     div.addEventListener('click', (e) => {
         let parentElem = e.target["parentElement"];
-        if(parentElem.classList.contains('breakpoint_statement')){
+        if (parentElem.classList.contains('breakpoint_statement')) {
             e.target["parentElement"].classList.remove('breakpoint_statement');
-        }else{
+        } else {
             e.target["parentElement"].classList.add('breakpoint_statement');
         }
         console.log();
@@ -69,13 +76,14 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (prevActive == 1) {
                 disableSimulator();
             } else if (prevActive == 2) {
+                document.getElementById('aboutsection').style.display = 'none';
             }
             if (index == 0) {
                 activateEditor();
             } else if (index == 1) {
                 activateSimulator();
             } else if (index == 2) {
-
+                document.getElementById('aboutsection').style.display = 'block';
             }
             navbarBtns[activeElem].classList.remove("active");
             activeElem = index;
@@ -92,11 +100,14 @@ function disableEditor() {
 // Wrapper function to activate editor
 function activateEditor() {
     document.getElementById("editor").style.display = 'block';
+    activateAssembleAndSimulateBtn();
+    // Remove all instrcutions
+    document.querySelectorAll('.meta_instructions').forEach(e => {
+        e.remove();
+    })
 }
-
-
-
-// Function to handle the event Assemble And Simulate
+let dumpSeg: string;
+// Function to handle the event Assemble And Simulate Btn
 document.querySelector('.assemble_btn').addEventListener('click', handleAssembleAndSimulate);
 function handleAssembleAndSimulate() {
     let fileData = editor.getValue();
@@ -107,13 +118,23 @@ function handleAssembleAndSimulate() {
     }
     let response = main(fileData);
     if (response.error) {
-        alert("Error Occurred at line: " + response.error);
-        // sending error flag as true
+        // Showing Error Message
+        alert("Error Occurred! " + response.errorMessage);
         return true;
     }
+
+    let codeSegWrapper = document.querySelector('.code_segment_wrapper');
+    let instrWrapper = document.querySelector('.instructions_wrapper');
+    instrWrapper.remove();
+    instrWrapper = document.createElement('div');
+    instrWrapper.classList.add('instructions_wrapper');
     console.log(response);
-    let assembledCode = response.codeSegment;
-    assembledCode.forEach((e) => {
+    // For Dumping in future
+    dumpSeg = response.codeSegment;
+    let assembledCode = response.codeSegment.split('\n');
+    // Showing assembledCode | PC | originalCode
+    for (let i = 0; i < assembledCode.length; i++) {
+        let e = assembledCode[i];
         let instr = e.split(" ");
         let pc = instr[0];
         let machineCode = instr[1];
@@ -121,17 +142,25 @@ function handleAssembleAndSimulate() {
         console.log(pc);
         console.log(machineCode);
         console.log(originalCode);
-        let instrWrapper = document.querySelector('.instructions_wrapper');
         if (machineCode == '0xffffffff') {
-            return;
+            codeSegWrapper.appendChild(instrWrapper);
+            break;
         }
         let elem = createInstrElement(pc, machineCode, originalCode);
         elem.addEventListener("click", (e) => {
             console.log(e.target);
         })
         instrWrapper.appendChild(elem);
-    });
-    // TODO: Implement Error Flag
+    }
+    currPC = 0;
+    // Initializing Execute Statement
+    execute.init(response.codeSegment);
+    // Updaing Register and Memory State
+    updateRegAndMemState();
+    // Replacing the buttons bars with RUN | STEP | SIMULATE
+    document.querySelector('.simulate_btns_wrapper')['style'].display = 'none'
+    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'flex';
+    updateHighlightedInst(-1);
     return false;
 }
 
@@ -171,21 +200,21 @@ document.querySelector(".register_btn").addEventListener("click", () => {
     regWrapper["style"].display = 'block';
 })
 
-// Handling click event of Assemble Btn
-document.querySelector('.assemble_btn').addEventListener('click', (e) => {
-    document.querySelector('.simulate_btns_wrapper')['style'].display = 'none'
-    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'flex';
-})
+
 
 // Handling click event of Cancel Button before Assemble
-document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('click', ()=> {
+document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('click', () => {
     (<HTMLElement>document.querySelector('.editor-btn')).click();
 })
 
 // Handling click event of Cancel Button After Assemble
-document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', ()=> {
+document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', () => {
     document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
     document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
+    // Remove all instrcutions
+    document.querySelectorAll('.meta_instructions').forEach(e => {
+        e.remove();
+    })
 })
 
 
@@ -207,13 +236,13 @@ function createRegisterElem(regNumber, data) {
 }
 
 // Helper function to create memory element
-function createMemoryElem(address, data) {
+function createMemoryElem(address: number, data) {
     let div = document.createElement('div');
     div.classList.add('memory_data');
     div.classList.add(`memory${address}`);
     let spanLabel = document.createElement('span');
     spanLabel.classList.add('mem_label');
-    spanLabel.innerText = `0x${parseInt(address).toString(16)}`;
+    spanLabel.innerText = `0x${address.toString(16)}`;
     let spanData = document.createElement('span');
     spanData.classList.add('mem_data');
     spanData.innerText = data;
@@ -226,30 +255,189 @@ function createMemoryElem(address, data) {
 function writeRegisters() {
     for (let i = 0; i < 32; i++) {
         let div;
-        if(i!=2){
-            div = createRegisterElem(i, `0x00000000`);
-        }else{
-            div = createRegisterElem(i, `0x7FFFFFF0`);
+        if (i == 2) {
+            div = createRegisterElem(i, getRegValToDisplay(2147483632));
+        } else if (i == 3) {
+            div = createRegisterElem(i, getRegValToDisplay(268435456));
+        } else {
+            div = createRegisterElem(i, getRegValToDisplay(0));
         }
         document.getElementsByClassName('registers_wrapper')[0].appendChild(div);
     }
 }
-let BASE_ADDR = "0x100000"
+
+// Showing demo content
 function writeMemory() {
-    let MEM = new Map<number, string>();
-    MEM.set(0, "0x00");
-    MEM.set(1, "0x00");
-    MEM.set(2, "0x00");
-    MEM.set(3, "0x00");
-    MEM.set(4, "0x00");
-    MEM.forEach((e, index) => {
-        let div = createMemoryElem(parseInt(BASE_ADDR) + index, e);
+    for (let i = 0; i < 4; i++) {
+        let value = getMemValToDisplay(0);
+        let div = createMemoryElem((268435456 + i), value);
         document.getElementsByClassName('memory_wrapper')[0].appendChild(div);
-    })
+
+    }
 }
 
+
+function getMemValToDisplay(num: number) {
+    let value;
+    if (displaySettings == 0) {
+        value = `0x${addZeros(num.toString(16), 2)}`;
+    } else if (displaySettings == 1) {
+        value = num.toString();
+    } else {
+        value = `${String.fromCodePoint(num)} [0x${addZeros(num.toString(16), 2)}]`
+    }
+    return value;
+}
+
+function getRegValToDisplay(num: number) {
+    let value;
+    if (displaySettings == 1) {
+        value = num.toString();
+    } else {
+        value = `0x${addZeros(num.toString(16).toUpperCase(), 8)}`;
+    }
+    return value;
+}
 
 writeRegisters();
 writeMemory();
 
 // TODO: Search Feature
+
+
+// Function to update Registers and Memory after each instruction exectution
+function updateRegAndMemState() {
+    let mem: Map<number, number> = execute.GlobalVar.memFile.getMemory();
+    let regFile = execute.GlobalVar.regFile.getALL();
+
+    regFile.forEach((val, index) => {
+        let div = document.querySelector(`.registers_wrapper .register${index}`);
+        let regData = div.querySelector('.reg_data') as HTMLElement;
+        regData.innerText = getRegValToDisplay(val);
+    });
+
+    mem.forEach((val, key) => {
+        console.log(key);
+        let div = document.querySelector(`.memory_wrapper .memory${key}`);
+        console.log(div);
+        let displayNum = getMemValToDisplay(val);
+        if (div) {
+            let memData = div.querySelector('.mem_data') as HTMLElement;
+            memData.innerText = displayNum;
+        } else {
+            let div = createMemoryElem(key, displayNum);
+            document.getElementsByClassName('memory_wrapper')[0].append(div);
+        }
+    });
+}
+
+document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
+    execute.singleINS();
+    updateRegAndMemState();
+    let prevHighlighted = currPC;
+    currPC = execute.getPC();
+    if (execute.getInstrReg() == '0xffffffff') {
+        activateAssembleAndSimulateBtn();
+        return;
+    }
+    updateHighlightedInst(prevHighlighted)
+})
+
+document.getElementsByClassName('run_btn')[0].addEventListener('click', () => {
+    execute.allINS();
+    updateRegAndMemState();
+    activateAssembleAndSimulateBtn();
+})
+
+
+// Register Display Settings
+document.getElementById('hex_btn').addEventListener('click', () => {
+    if (displaySettings != 0) {
+        let prevDisplaySettings = displaySettings;
+        displaySettings = 0;
+        onSettingsChange(prevDisplaySettings);
+    }
+})
+
+document.getElementById('ascii_btn').addEventListener('click', () => {
+    if (displaySettings != 2) {
+        let prevDisplaySettings = displaySettings;
+        displaySettings = 2;
+        onSettingsChange(prevDisplaySettings);
+    }
+})
+
+function activateAssembleAndSimulateBtn() {
+
+    document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
+    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
+}
+document.getElementById('decimal_btn').addEventListener('click', () => {
+    if (displaySettings != 1) {
+        let prevDisplaySettings = displaySettings;
+        displaySettings = 1;
+        onSettingsChange(prevDisplaySettings);
+    }
+})
+
+function onSettingsChange(prevDisplaySettings: number) {
+    let currRegs = Array.from(document.getElementsByClassName('register_data'));
+    currRegs.forEach((e) => {
+        e.children[1].innerHTML = getRegValToDisplay(parseInt(e.children[1].innerHTML));
+    })
+    let currMems = Array.from(document.getElementsByClassName('memory_data'));
+    currMems.forEach((e) => {
+        if (prevDisplaySettings == 2) {
+            let val = e.children[1].innerHTML.match(/\[.+\]/)[0].split(/\[|\]/).join('');
+            e.children[1].innerHTML = getMemValToDisplay(parseInt(val));
+        } else {
+            e.children[1].innerHTML = getMemValToDisplay(parseInt(e.children[1].innerHTML));
+        }
+    })
+}
+
+// Search Feature
+// document.getElementById('mem_addr_val').addEventListener('keyup', (e) => {
+//     if(e.keyCode===13){
+//         // Enter Key is pressed
+//         let val = parseInt(e.target["value"]);
+
+//         if(!isNaN(val)){
+//             let memFile = execute.GlobalVar.memFile.getMemory();
+
+//         }
+//         console.log()
+//     }
+// })
+
+function updateHighlightedInst(prevPC: number) {
+    let prevInstr = document.getElementsByClassName(`pc${prevPC}`)[0];
+    if (prevInstr) {
+        prevInstr.classList.remove('active_statement')
+    }
+    let currInstr = document.getElementsByClassName(`pc${currPC}`)[0];
+    if (currInstr) {
+        currInstr.classList.add('active_statement');
+
+    }
+}
+
+
+document.querySelector('.dump_btn').addEventListener('click', (e) => {
+    let dumpArray = [];
+    dumpSeg.split("\n").forEach((e) => {
+        if (e) {
+            let ins = e.split(' ');
+            dumpArray.push(`${ins[0]} ${ins[1]}`)
+            if (ins[1] == '0xffffffff') {
+                dumpArray.push('');
+            }
+        }
+    })
+    navigator.clipboard.writeText(dumpArray.join('\n')).then(function () {
+        alert('Code Dump to clipboard was successful!');
+    }, function (err) {
+        console.error('Async: Could not copy text: ', err);
+    });
+    // alert("Copied the text");
+})

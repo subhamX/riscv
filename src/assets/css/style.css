@@ -149,12 +149,13 @@ header {
 
 .code_segment_wrapper .instructions_wrapper .meta_instructions:hover {
   background-color: #89e1ff;
-  box-shadow: 0 4px 4px -4px black;
+  box-shadow: 0 2px 4px -4px black;
   cursor: pointer;
 }
 .code_segment_wrapper .instructions_wrapper .meta_instructions {
   margin-bottom: 10px;
   border-radius: 20px;
+  padding: 5px;
 }
 .code_segment_wrapper .instructions_wrapper .meta_instructions span {
   padding-left: 30px;
@@ -315,3 +316,19 @@ header {
 
 .instr {
 } */
+
+
+@media only screen and (max-width: 753px){
+  .logo{
+    font-size: 20px;
+  }
+  .code_segment_wrapper{
+    font-size: 12px;
+  }
+  .register_pane{
+    font-size: 12px;
+  }
+  .mem_buttons_wrapper{
+    font-size: 15px;
+  }
+}

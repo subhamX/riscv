@@ -15,15 +15,7 @@
                 <a href="#simulator" class="toggle-btn simulator-btn">Simulator</a>
                 <a href="#about" class="toggle-btn about-btn">About</a>
             </div>
-            <div class="trailing-keys">
-                <div class="shortcut">
-                    <img src="./assets/img/ctrl-key.png" alt="" srcset="">
-                    <span>+</span>
-                    <img src="./assets/img/shift-key.png" alt="" srcset="">
-                    <span>+</span>
-                    <img src="./assets/img/s-key.png" alt="" srcset="">
-                </div>
-            </div>
+
         </nav>
     </header>
     <section class="simulator-wapper" style="display: none;">
@@ -99,30 +91,53 @@
                         </div> -->
                     </div>
                     <div class="go_to_mem_block">
-                        <label for="">Search Address: </label>
-                        <input type="text" id='mem_addr_val'>
+                        <!-- <label for="">Search Address: </label>
+                        <input type="text" id='mem_addr_val'> -->
                     </div>
 
                 </div>
                 <div class="reg_display_settings">
                     <span class="text_display">Register Display Settings</span>
                     <span class="options">
-                        <input type="radio" id="hex" name="gender" value="hex">
-                        <label for="hex">Hex</label><br>
-                        <input type="radio" id="decimal" name="gender" value="decimal">
-                        <label for="decimal">Decimal</label><br>
-                        <input type="radio" id="ascii" name="gender" value="ascii">
-                        <label for="ascii">ASCII</label><br>
+                        <input type="radio" id="hex_btn" name="gender" value="hex_btn" checked>
+                        <label for="hex_btn">Hex</label><br>
+                        <input type="radio" id="decimal_btn" name="gender" value="decimal_btn">
+                        <label for="decimal_btn">Decimal</label><br>
+                        <input type="radio" id="ascii_btn" name="gender" value="ascii_btn">
+                        <label for="ascii_btn">ASCII</label><br>
                     </span>
                 </div>
+
             </div>
         </div>
 
     </section>
-    <div id="editor">addi x1, x0, 100
-add x2 , x0, x1
-add x5, x8, x10
+    <section id="aboutsection" style="display: none;">
+        <center>
+            <h2>Shortcuts</h2>
+        </center>
+        <div class="trailing-keys-abt"
+            style="margin-top: 20px; margin-left: 20px; display: grid; grid-template-columns: 1fr 1fr; width: fit-content;">
+            <div>For Comments - </div>
+            <div class="shortcut" style="margin-left: 10px;">
+                <img src="./assets/img/ctrl-key.png" alt="" srcset="">
+                <span>+</span>
+                <img src="./assets/img/computer_key_Question_Forward_slash.png" alt="" srcset="">
+            </div>
 
+        </div>
+        <center>
+            <div style="font-weight: bold;">*More shortcuts will be added soon*</div>
+
+        </center>
+    </section>
+    <div id="editor">addi x1, x0, 100
+        add x2 , x0, x1
+        add x5, x8, x10
+
+        .data
+
+        var1: .word 10000
     </div>
     <script src="./assets/js/main.ts"></script>
 </body>

@@ -33,6 +33,7 @@ export class GlobalVar{
     static type: string;
     static operCode :string;
     static immVal:string;
+    static ALU_op:string;
 
     // select line for muxB, muxY
     static selectLineB;
@@ -157,7 +158,7 @@ function singleINS(){
     if(GlobalVar.invalid){
         return;
     }
-    Execute(GlobalVar.operCode, GlobalVar.immVal);
+    Execute(GlobalVar.immVal);
     MemoryOperations();
     WriteBack();
     GlobalVar.CLOCK += 1;
@@ -176,7 +177,7 @@ function allINS(){
         if(GlobalVar.invalid){
             break;
         }
-        Execute(GlobalVar.operCode, GlobalVar.immVal);
+        Execute(GlobalVar.immVal);
         MemoryOperations();
         WriteBack();
         GlobalVar.CLOCK += 1;
@@ -213,5 +214,4 @@ export function UpdatePC(PC_Select: number, inpImm?:number) : void{
             GlobalVar.PC+=4;
         }
     }
-    return ;
 }

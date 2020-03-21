@@ -117,6 +117,7 @@ export function Decode() {
         GlobalVar.invalid = true;
         return;
     }
+    GlobalVar.ALU_op = GlobalVar.operationMap.get(GlobalVar.operCode);
     // console.log("value in GlobalVar.RA => " + GlobalVar.RA);
     // console.log("value in GlobalVar.RB => " + GlobalVar.RB);
 }

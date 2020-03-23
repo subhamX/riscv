@@ -304,7 +304,6 @@ function writeMemory() {
         let value = getMemValToDisplay(0);
         let div = createMemoryElem((268435456 + i), value);
         document.getElementsByClassName('memory_wrapper')[0].appendChild(div);
-
     }
 }
 

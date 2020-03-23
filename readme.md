@@ -86,3 +86,9 @@ npm install
 npm run start:dev
 ```
 4. Now access the `RISCV Heritage` by visiting http://localhost:1234/
+
+
+
+## Assumption
+
+1. The `code segment` shown in the memory pane is starts from `0x00000000` but it is not used to store the actual code.

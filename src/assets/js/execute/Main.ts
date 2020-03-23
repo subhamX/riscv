@@ -92,24 +92,39 @@ export function init(data): void {
     // let data = fs.readFileSync('test/test.mc', { encoding: 'utf-8' });
     let dataArr = data.split('\n');
     let i = 0;
-
+    // let index = hexstring.length - 1;
+    // for (let i = 0; i < numberOfHalfBytes; i += 2) {
+    //     let foo = hexstring.slice(index - 1, index + 1);
+    //     dataMemory.push(foo);
+    //     index -= 2;
+    // }
     // Loading all instructions of program into instructionMap
-    while (dataArr[i]) {
-        let key = parseInt(dataArr[i].split(" ")[0], 16);
-        let value = dataArr[i].split(" ")[1];
-        GlobalVar.instructionMap.set(key, value);
-        i++;
-        if ((parseInt(value) >> 0) == -1) {
-            break;
-        }
-    }
-
     opcodeMapfunc(GlobalVar.opcodeMap);
     operationMapfunc(GlobalVar.operationMap);
 
     // Initializing Register File
     GlobalVar.memFile = new MemoryFile();
     GlobalVar.regFile = new RegisterFile();
+    let currMemoIndex = 0;
+    while (dataArr[i]) {
+        let key = parseInt(dataArr[i].split(" ")[0], 16);
+        let value = dataArr[i].split(" ")[1];
+        GlobalVar.instructionMap.set(key, value);
+        console.log()
+        let index = 7;
+        for (let i = 0; i < 8; i += 2) {
+            let foo = value.replace('0x', '').slice(index - 1, index + 1);
+            GlobalVar.memFile.WriteData(currMemoIndex, foo);
+            currMemoIndex +=1;
+            index -= 2;
+        }
+        i++;
+        if ((parseInt(value) >> 0) == -1) {
+            break;
+        }
+    }
+
+
 
     i++;
     while (dataArr[i]) {

@@ -20,9 +20,7 @@ export class MemoryFile{
         let temp1, val;
         for(let i=0;i<len;i++){
             val = this.memory.get(addr+i);
-            console.log('val', val);
             if(val==null){
-                console.log('set', )
                 this.memory.set(addr+i, 0);
                 val = this.memory.get(addr+i);
             }
@@ -51,19 +49,15 @@ export class MemoryFile{
         else{
             valString = (value >>> 0).toString(16);
         }
-        console.log(valString);
         for(let i=valString.length-2;len--;i-=2){
             tempStr = valString.slice(i, i+2);
-            console.log(tempStr);
             this.memory.set(addr++, parseInt(tempStr, 16));
         }
-        console.table(this.memory);
     }
     WriteData(addr: number, value: string){
         let paddedVal = addZeros(parseInt(value, 16).toString(2), 8);
         paddedVal = addOnesZeros(paddedVal);
         this.memory.set(addr, parseInt(paddedVal, 2)>>0);
-        console.log(addr, parseInt(paddedVal, 2)>>0);
     }
 }
 

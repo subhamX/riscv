@@ -29,7 +29,7 @@ body:not(#editor) {
 
 .logo {
   width: fit-content;
-  padding-left: 5%;
+  margin-left: 5%;
   font-size: 25px;
   text-decoration: none;
   color: black;
@@ -43,7 +43,7 @@ header {
   width: fit-content;
   height: fit-content;
   list-style-type: none;
-  padding-right: 5%;
+  margin-right: 5%;
   display: flex;
   justify-content: center;
 }
@@ -356,7 +356,7 @@ header {
     font-size: 15px;
   }
   .toggle-wrapper{
-    padding-right: 2%;
+    margin-right: 2%;
   }
   .toggle-wrapper a{
     padding: 7px;

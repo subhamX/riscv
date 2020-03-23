@@ -95,7 +95,7 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                     segmentFlag = 2;
                 } else {
                     // Error
-                    throw Error(`(No Label Found) ErrorB Encountered at line: ${i} (${line})`);
+                    throw Error(`(No Label Found) ${i} (${line})`);
                 }
             } else {
                 if (segmentFlag == 1) {
@@ -161,7 +161,8 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                             // If the current segment is void segment
                             if (resultSBformat) {
                                 // If the instruction is using branch then ERROR
-                                throw Error(`(Branch Instructions Not Allowed In Void Segement)|| Only jal is allowed ErrorC Encountered at line: ${i} (${line})`);
+                                // Only jal is allowed ErrorC Encountered at line
+                                throw Error(`(Branch Instructions Not Allowed In Void Segement)|| ${i} (${line})`);
                             }
                             textSegment.push(line);
                         }
@@ -178,7 +179,7 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                             labelMap.set(line, { "location": textSegment.length, "scope": "text" });
                         } else {
                             // Error! The line is neither a valid instruction nor a valid label
-                            throw Error(`ErrorA Encountered at line: ${i} (${line})`);
+                            throw Error(`${i} (${line})`);
                         }
                     }
 

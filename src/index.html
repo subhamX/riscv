@@ -4,7 +4,7 @@
 <head>
     <title>Project Heritage</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0" />
 </head>
 
 <body>
@@ -42,6 +42,9 @@
                 <div class="dump_btn">
                     Dump
                 </div>
+                <!-- <div class="stop_btn">
+                    Stop
+                </div> -->
                 <div class="cancel_btn">
                     Cancel
                 </div>
@@ -74,15 +77,43 @@
                             <span>Address</span>
                             <span>Value</span>
                         </div>
+
+                        <div class="stack_segment">
+                            <center>
+                                <h3>Stack Segment</h3>
+                            </center>
+                        </div>
+                        <hr />
+                        <div class="data_segment">
+                            <center>
+                                <h3>Data Segment</h3>
+                            </center>
+                        </div>
+                        <hr />
+                        <div class="code_segment">
+                            <center>
+                                <h3>Code Segment</h3>
+                            </center>
+                        </div>
+                        <hr />
+                        <div class="addi_segment">
+                            <center>
+                                <h3>Additional Segment</h3>
+                            </center>
+                        </div>
                     </div>
                     <div class="go_to_mem_block">
                         <!-- <label for="">Search Address: </label>
                         <input type="text" id='mem_addr_val'> -->
+                        <div class="note-label" style="font-size: 12px; text-align: center;">
+                            All Values which are not shown are <span
+                                style="color: #ffbf00; font-weight: bold;">0x00</span>
+                        </div>
                     </div>
 
                 </div>
                 <div class="reg_display_settings">
-                    <span class="text_display">Register Display Settings</span>
+                    <span class="text_display">Display Settings</span>
                     <span class="options">
                         <input type="radio" id="hex_btn" name="gender" value="hex_btn" checked>
                         <label for="hex_btn">Hex</label><br>
@@ -119,7 +150,7 @@
 add x2 , x0, x1
 sw x2, 0(x0)
 lb x3, 0(x0)
-</div>
+    </div>
     <script src="./assets/js/main.ts"></script>
 </body>
 

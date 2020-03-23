@@ -74,7 +74,6 @@ function createInstrElement(pcVal: any, machineCodeVal: any, originalCodeVal: an
                     }
                 }
             }
-
         })
         if (containBreakpoint) {
             // Remove breakpoint_statment
@@ -121,6 +120,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // Function to remove all instructions
 function removeAllInstruction() {
     document.querySelectorAll('.meta_instructions').forEach(e => {
+        e.remove();
+    });
+}
+
+function removeMemorySegment() {
+    document.querySelectorAll('.memory_data').forEach(e => {
         e.remove();
     })
 }
@@ -198,7 +203,6 @@ function activateSimulator() {
 
 // Wrapper function to disable simulator
 function disableSimulator() {
-    // ! Changed
     document.querySelector('.simulator-wapper').classList.add('display_none');
 }
 
@@ -304,7 +308,7 @@ function writeMemory() {
     }
 }
 
-writeMemory();
+// writeMemory();
 writeRegisters();
 
 
@@ -357,6 +361,7 @@ function updateRegAndMemState() {
         let regData = div.querySelector('.reg_data') as HTMLElement;
         regData.innerText = getRegValToDisplay(val);
     });
+    removeMemorySegment();
     mem.forEach((val, key) => {
         let div = document.querySelector(`.memory_wrapper .memory${key}`);
         let displayNum = getMemValToDisplay(val);
@@ -364,8 +369,21 @@ function updateRegAndMemState() {
             let memData = div.querySelector('.mem_data') as HTMLElement;
             memData.innerText = displayNum;
         } else {
+            // 0 => Code Seg | 1 => Data Seg | 2 => Heap Seg | 3 => Stack Segment |
             let div = createMemoryElem(key, displayNum);
-            document.getElementsByClassName('memory_wrapper')[0].append(div);
+            if (key < 268435456 && key >= 0) {
+                document.getElementsByClassName('code_segment')[0].append(div);
+                // Code Segment
+            } else if (key >= 268435456 && key < 268468200) {
+                // Data Segment
+                document.getElementsByClassName('data_segment')[0].append(div);
+            } else if (key >= 268468200 && key <= 2147483644) {
+                // Heap and Stack
+                document.getElementsByClassName('stack_segment')[0].append(div);
+            } else {
+                // Add Segment
+                document.getElementsByClassName('addi_segment')[0].append(div);
+            }
         }
     });
 }

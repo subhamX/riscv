@@ -21,6 +21,7 @@ export class MemoryFile{
         for(let i=0;i<len;i++){
             val = this.memory.get(addr+i);
             if(val==null){
+                console.log('set', )
                 this.memory.set(addr+i, 0);
                 val = this.memory.get(addr+i);
             }
@@ -28,7 +29,8 @@ export class MemoryFile{
                 temp1 = addZeros((val).toString(2), 8);
             }
             else{
-                temp1 = ( val >>> 0).toString(2).slice(val.length-8, val.length);
+                temp1 = ( val >>> 0).toString(2);
+                temp1 = temp1.slice(temp1.length-8, temp1.length);
             }
             temp = temp1+ temp;
         }
@@ -36,7 +38,6 @@ export class MemoryFile{
     }
 
     MEM_WRITE(addr: number, value:number, dtype:string){
-        // len contains number of bytes
         let len : number;
         if(dtype == 'b'){len = 1;}
         else if(dtype == 'h'){len = 2;}
@@ -44,20 +45,25 @@ export class MemoryFile{
         else if(dtype == 'd'){len = 8;}
         let valString : string, tempStr : string;
         if(value>=0){
-            valString = addZeros(value.toString(16), 8);
+            valString = addZeros(value.toString(2), 8*len);
         }
         else{
-            valString = (value >>> 0).toString(16);
+            valString = (value >>> 0).toString(2);
         }
-        for(let i=valString.length-2;len--;i-=2){
-            tempStr = valString.slice(i, i+2);
-            this.memory.set(addr++, parseInt(tempStr, 16));
+        for(let i=0;i<len;i++){
+            tempStr = valString.slice((len-i-1)*8, (len-i)*8);
+            tempStr = addOnesZeros(tempStr);
+            let val = parseInt(tempStr, 2)>>0;
+            this.memory.set((addr + i), val);
         }
+        console.table(this.memory);
     }
+
     WriteData(addr: number, value: string){
         let paddedVal = addZeros(parseInt(value, 16).toString(2), 8);
         paddedVal = addOnesZeros(paddedVal);
         this.memory.set(addr, parseInt(paddedVal, 2)>>0);
+        console.log(addr, parseInt(paddedVal, 2)>>0);
     }
 }
 

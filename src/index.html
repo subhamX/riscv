@@ -128,29 +128,106 @@
         </div>
 
     </section>
-    <section id="aboutsection" style="display: none;">
-        <center>
-            <h2>Shortcuts</h2>
-        </center>
-        <div class="trailing-keys-abt"
-            style="margin-top: 20px; margin-left: 20px; display: grid; grid-template-columns: 1fr 1fr; width: fit-content;">
-            <div>For Comments - </div>
-            <div class="shortcut" style="margin-left: 10px;">
-                <img src="./assets/img/ctrl-key.png" alt="" srcset="">
-                <span>+</span>
-                <img src="./assets/img/computer_key_Question_Forward_slash.png" alt="" srcset="">
-            </div>
-        </div>
-        <center>
-            <div style="font-weight: bold;">*More shortcuts will be added soon*</div>
-        </center>
+    <section id="aboutsection" style="display: none; margin: 10px;">
+        <h1 id="heritage-gui">Heritage GUI</h1>
+        <p>The following website is a course project under the guidance of <a href="https://sites.google.com/view/kalyantv">Dr T.V Kalyan</a>. It is a web simulator which converts the <code>Assembly code</code> written <code>RISCV syntax</code> to <code>Machine code</code> and provides a user-friendly environment for its execution.  </p>
+        <h2 id="valid-instructions">Valid Instructions</h2>
+        <p><strong>R format:</strong>
+        add, and, or, sll, slt, sra, srl, sub, xor, mul, div, rem</p>
+        <p><strong>I format:</strong>
+        addi, andi, ori, lb, ld, lh, lw, jalr</p>
+        <p><strong>S format:</strong>
+        sb, sw, sd, sh</p>
+        <p><strong>SB format:</strong>
+        beq, bne, bge, blt</p>
+        <p><strong>U format:</strong>
+        auipc, lui</p>
+        <p><strong>UJ format:</strong>
+        jal</p>
+        <p><strong>Assembler Directives:</strong>
+        .text, .data, .byte, .half, .word, .dword, .asciiz</p>
+        <h2 id="team-members">Team Members</h2>
+        <table>
+        <thead>
+        <tr>
+        <th style="text-align:center">Name</th>
+        <th style="text-align:right">Entry Number</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+        <td style="text-align:center"><a href="https://github.com/Bh4r4t">Bharat Ladrecha</a></td>
+        <td style="text-align:right">2018CSB1080</td>
+        </tr>
+        <tr>
+        <td style="text-align:center"><a href="https://github.com/subhamX/">Subham Sahu</a></td>
+        <td style="text-align:right">2018EEB1183</td>
+        </tr>
+        </tbody>
+        </table>
+        <h2 id="technology-stack">Technology Stack</h2>
+        <ol>
+        <li>Typescript</li>
+        <li>HTML/CSS</li>
+        <li>NodeJS</li>
+        </ol>
+        <h2 id="file-structure">File Structure</h2>
+        <pre><code>src
+        │   README<span class="hljs-selector-class">.md</span>
+        │   tsconfig<span class="hljs-selector-class">.json</span>
+        │
+        └───assets
+           │   index<span class="hljs-selector-class">.html</span>
+           │
+           └───css
+           │   style<span class="hljs-selector-class">.css</span>
+           │    
+           └───js
+                │ main<span class="hljs-selector-class">.ts</span>
+                │   
+                └───encode
+                │
+                └───execute
+        </code></pre><p><strong>encode</strong> contains files required to convert <code>Assembly Code</code> written in <code>RISC V</code> syntax into <code>Machine Code</code><br><strong>execute</strong> contains files required to execute the generated <code>Machine Code</code><br><strong>main.ts</strong> is the entrypoint of the application</p>
+        <h2 id="features">Features</h2>
+        <ol>
+        <li>On pressing <code>Ctrl+S</code> on <strong>Editor Pane</strong> current file will be downloaded.</li>
+        <li>On pressing <code>Ctrl+S</code> on <strong>Simulator Pane</strong> Output file will be downloaded if it&#39;s assembled.
+        Format - </li>
+        <li><strong>Editor Pane</strong> supports <code>Ctrl+/</code> as comment shortcut</li>
+        </ol>
+        <h2 id="general-instructions-to-run-locally">General Instructions To Run Locally</h2>
+        <ol>
+        <li>If you do not have a copy of <code>RISCV Heritage</code> clone the repo and checkout <code>GUI</code> branch. If you do have the project then go to <code>step 2</code><pre><code>git <span class="hljs-keyword">clone</span> <span class="hljs-title">URL</span>
+        git checkout GUI
+        </code></pre></li>
+        <li>Install all dependencies<pre><code>npm <span class="hljs-keyword">install</span>
+        </code></pre></li>
+        <li>Now to run the developement server run the following command in terminal<pre><code>npm <span class="hljs-keyword">run</span><span class="bash"> start:dev</span>
+        </code></pre></li>
+        <li>Now access the <code>RISCV Heritage</code> by visiting <a href="http://localhost:1234/">http://localhost:1234/</a></li>
+        </ol>
+        <h2 id="functionalities-our-gui-provide">Functionalities our GUI provide</h2>
+        <ol>
+        <li><p>BreakPoint:- Users can use a breakpoint for debugging. Users can select as many breakpoints as s(he) wants. During the execution of instructions, the program will stop after the execution of selected instructions in the order of program flow.</p>
+        </li>
+        <li><p>Run:- To run the complete program in a single go</p>
+        </li>
+        <li><p>Step:- To run the program instruction wise(one instruction at a time).</p>
+        </li>
+        <li><p>Stop:- Users can stop the execution process using the stop button.</p>
+        </li>
+        <li><p>Memory Segment displays only those values into which something is explicitly written during program execution or in the data segment and all other values which are not shown are <code>0x00</code></p>
+        </li>
+        <li><p>On any error, the program will alert the user and will not proceed further for execution</p>
+        </li>
+        <li><p>Any instruction which uses <strong>Double</strong> like <code>sd, ld</code> are invalid since it is <code>32-bit system</code></p>
+        </li>
+        </ol>
+        
     </section>
     <div id="snackbar">Program Successfully Executed</div>
-    <div id="editor">addi x1, x0, 1000
-add x2 , x0, x1
-sw x2, 0(x0)
-lb x3, 0(x0)
-    </div>
+    <div id="editor"></div>
     <script src="./assets/js/main.ts"></script>
 </body>
 

@@ -87,17 +87,9 @@ export function init(data): void {
     GlobalVar.invalid = false;
     GlobalVar.instructionMap = new Map<number, string>();
     GlobalVar.breakPoint = new Array<number>();
-
-    // let data = fs.readFileSync('./test/test.mc', {encoding: 'utf-8'});
-    // let data = fs.readFileSync('test/test.mc', { encoding: 'utf-8' });
     let dataArr = data.split('\n');
     let i = 0;
-    // let index = hexstring.length - 1;
-    // for (let i = 0; i < numberOfHalfBytes; i += 2) {
-    //     let foo = hexstring.slice(index - 1, index + 1);
-    //     dataMemory.push(foo);
-    //     index -= 2;
-    // }
+
     // Loading all instructions of program into instructionMap
     opcodeMapfunc(GlobalVar.opcodeMap);
     operationMapfunc(GlobalVar.operationMap);

@@ -448,7 +448,7 @@ function handleDataSegment(lines: string[]) {
                 })
                 dataMemory.push('00');
             } else {
-                let totalNums = line.match(/((0[xX][0-9a-fA-F]+|[\d]+)[ ]*,[ ]*)*(0[xX][0-9a-fA-F]+|[\d]+)[ ]*$/)[0].split(/[ ]|[,]/).filter((e) => e);
+                let totalNums = line.match(/(([-]?0[xX][0-9a-fA-F]+|[-]?[\d]+)[ ]*,[ ]*)*([-]?0[xX][0-9a-fA-F]+|[-]?[\d]+)[ ]*$/)[0].split(/[ ]|[,]/).filter((e) => e);
                 // Half Bytes means 4 bits;
                 let numberOfHalfBytes: number;
                 switch (type) {
@@ -473,14 +473,15 @@ function handleDataSegment(lines: string[]) {
                     throw Error(`${name} variable already exists!`)
                 }
                 // Inserting to dataSegmentMap
+
                 dataSegmentMap.set(name, { "length": numberOfHalfBytes, "type": type, "startIndex": dataMemory.length })
                 totalNums.forEach((e) => {
                     if (parseInt(e) > Number.MAX_SAFE_INTEGER) {
                         throw Error(`MAX_SAFE_INTEGER VALUE REACHED!`);
                     }
-                    let hexstring = parseInt(e).toString(16);
-                    hexstring = addZeros(hexstring, numberOfHalfBytes);
-                    // hexstring is now >=numberOfHalfBytes
+                    let hexstring = parseInt(getImmString(parseInt(e), 32), 2).toString(16);
+                    hexstring = addZeros(hexstring, 8);
+                    console.log(hexstring);
                     let index = hexstring.length - 1;
                     for (let i = 0; i < numberOfHalfBytes; i += 2) {
                         let foo = hexstring.slice(index - 1, index + 1);

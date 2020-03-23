@@ -289,9 +289,14 @@ header {
   text-align: center;
 }
 
-.simulate1_btns_wrapper div:hover {
+.reset_btn:hover {
   background-color: black;
   color: white;
+}
+
+.dump_btn:hover {
+  background-color:#ffbf00;
+  color: black;
 }
 
 /* 
@@ -377,6 +382,16 @@ header {
 
 .display_none {
   display: none !important;
+}
+
+.run_btn:hover, .step_btn:hover{
+  background-color:#ffbf00;
+  color: black;
+}
+
+.run_btn, .step_btn{
+  background-color: wheat;
+  color: black;
 }
 
 /* 

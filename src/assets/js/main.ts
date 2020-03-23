@@ -83,11 +83,9 @@ function createInstrElement(pcVal: any, machineCodeVal: any, originalCodeVal: an
                 execute.removeBreakPoint(instrPC);
         } else {
             e.target["parentElement"].classList.add('breakpoint_statement');
-            console.log(`Instr: ${instrPC}`)
             if (instrPC !== undefined)
                 execute.addBreakPoint(instrPC);
         }
-        console.log(execute.getBreakPoint());
     })
     return div;
 }
@@ -142,10 +140,14 @@ function activateEditor() {
 
 
 // Function to handle the event Assemble And Simulate Btn
-document.querySelector('.assemble_btn').addEventListener('click', handleAssembleAndSimulate);
+document.querySelector('.assemble_btn').addEventListener('click', () => {
+    handleAssembleAndSimulate()
+    // Replacing the buttons bars with RUN | STEP | SIMULATE
+    document.querySelector('.simulate_btns_wrapper')['style'].display = 'none'
+    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'flex';
+});
 function handleAssembleAndSimulate() {
     let fileData = editor.getValue();
-    console.log(fileData);
     if (!fileData) {
         document.querySelector('.simulator')["style"].display = 'block';
         return false;
@@ -184,11 +186,8 @@ function handleAssembleAndSimulate() {
     execute.init(response.codeSegment);
     // Updaing Register and Memory State
     updateRegAndMemState();
-    // Replacing the buttons bars with RUN | STEP | SIMULATE
-    document.querySelector('.simulate_btns_wrapper')['style'].display = 'none'
-    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'flex';
     updateHighlightedInst(-1);
-    return false;
+    return 0;
 }
 
 // Wrapper function to activate simulator
@@ -271,10 +270,10 @@ function createMemoryElem(address: number, data) {
     div.classList.add(`memory${address}`);
     let spanLabel = document.createElement('span');
     spanLabel.classList.add('mem_label');
-    spanLabel.innerText = `0x${address.toString(16)}`;
+    spanLabel.innerText = `0x${addZeros(address.toString(16), 8)}`;
     let spanData = document.createElement('span');
     spanData.classList.add('mem_data');
-    spanData.innerText = data;
+    spanData.innerText = data.toUpperCase();
     div.appendChild(spanLabel);
     div.appendChild(spanData);
     return div;
@@ -332,14 +331,14 @@ function getMemValToDisplay(num: number) {
     } else {
         value = `${String.fromCodePoint(num)} [0x${addZeros(num.toString(16), 2)}]`
     }
-    return value;
+    return value.toString().toUpperCase();
 }
 
 
 function getRegValToDisplay(num: number) {
     let value;
     if (displaySettings == 1) {
-        value = (num >> 0).toString();
+        value = (num >> 0).toString()
     } else {
         value = `0x${addZeros((num >>> 0).toString(16).toUpperCase(), 8)}`;
     }
@@ -543,16 +542,25 @@ document.addEventListener("keydown", function (e) {
     if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
         e.preventDefault();
         if (activeElem == 0) {
-            let data = editor.getValue();
-            saveContent(data, 'riscv_heritage.asm');
-            alert('Your file has been downloaded!');
+            let res = confirm('Are you sure you want to download the current version of the code?');
+            if (res) {
+                let data = editor.getValue();
+                saveContent(data, 'riscv_heritage.asm');
+            }
         } else if (activeElem == 1) {
-            console.log(document.querySelector('.simulate_btns_wrapper')['style'].display === 'none');
             if (document.querySelector('.simulate_btns_wrapper')['style'].display === 'none') {
-                let data = getdumpArrayOutput();
-                saveContent(data.join('\n'), 'riscv_heritage_out.m');
-                alert('Output file has been downloaded!');
+                let res = confirm('Are you sure you want to the Output file?');
+                if (res) {
+                    let data = getdumpArrayOutput();
+                    saveContent(data.join('\n'), 'riscv_heritage_out.m');
+                }
             }
         }
     }
 }, false);
+
+
+// On Click Reset Button
+document.querySelector('.reset_btn').addEventListener('click', () => {
+    handleAssembleAndSimulate();
+})

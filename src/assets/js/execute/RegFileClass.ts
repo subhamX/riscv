@@ -48,7 +48,6 @@ export class RegisterFile{
     }
     getALL(): Array<number>{
         // return type array<number>
-        console.table(this.Registers);
         return this.Registers;
     }
 }

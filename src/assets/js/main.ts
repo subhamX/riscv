@@ -49,7 +49,7 @@ function createInstrElement(pcVal: any, machineCodeVal: any, originalCodeVal: an
     let originalCode = document.createElement('span');
     pc.innerText = pcVal;
     originalCode.innerText = originalCodeVal;
-    machineCode.innerText = machineCodeVal;
+    machineCode.innerText = machineCodeVal.toUpperCase();
     let div = document.createElement('div');
     div.classList.add(`meta_instructions`);
     div.classList.add(`pc${parseInt(pcVal)}`);
@@ -57,12 +57,37 @@ function createInstrElement(pcVal: any, machineCodeVal: any, originalCodeVal: an
     div.appendChild(machineCode);
     div.appendChild(originalCode);
     div.addEventListener('click', (e) => {
-        let parentElem = e.target["parentElement"];
-        if (parentElem.classList.contains('breakpoint_statement')) {
+        let parentElem = <HTMLElement>e.target["parentElement"];
+        let containBreakpoint = false;
+        let containActive = false;
+        let instrPC: number;
+        parentElem.classList.forEach((e) => {
+            if (e === 'breakpoint_statement') {
+                containBreakpoint = true;
+            } else if (e === 'active_statment') {
+                containActive = true;
+            } else {
+                let grps = e.match(/(pc)([\d]+)/);
+                if (grps) {
+                    if (grps[1] === 'pc') {
+                        instrPC = parseInt(grps[2]);
+                    }
+                }
+            }
+
+        })
+        if (containBreakpoint) {
+            // Remove breakpoint_statment
             e.target["parentElement"].classList.remove('breakpoint_statement');
+            if (instrPC !== undefined)
+                execute.removeBreakPoint(instrPC);
         } else {
             e.target["parentElement"].classList.add('breakpoint_statement');
+            console.log(`Instr: ${instrPC}`)
+            if (instrPC !== undefined)
+                execute.addBreakPoint(instrPC);
         }
+        console.log(execute.getBreakPoint());
     })
     return div;
 }
@@ -146,12 +171,13 @@ function handleAssembleAndSimulate() {
         let pc = instr[0];
         let machineCode = instr[1];
         let originalCode = instr.slice(2).join(" ");
+        let elem = createInstrElement(pc, machineCode, originalCode);
+        instrWrapper.appendChild(elem);
         if (machineCode == '0xffffffff') {
             codeSegWrapper.appendChild(instrWrapper);
             break;
         }
-        let elem = createInstrElement(pc, machineCode, originalCode);
-        instrWrapper.appendChild(elem);
+
     }
     currPC = 0;
     // Initializing Execute Statement
@@ -347,11 +373,14 @@ function updateRegAndMemState() {
 
 // Handling Click Event Of Step Button
 document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
+    // updating Inital PC
+    let prevHighlighted = currPC;
+    // Executing SingleINS
     execute.singleINS();
     updateRegAndMemState();
-    let prevHighlighted = currPC;
+    // updating Current PC locally
     currPC = execute.getPC();
-    if (execute.getInstrReg() == '0xffffffff') {
+    if (execute.getIsComplete()) {
         activateAssembleAndSimulateBtn();
         return;
     }
@@ -360,9 +389,19 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
 
 // Handling Click Event Of Run Button
 document.getElementsByClassName('run_btn')[0].addEventListener('click', () => {
+    // updating Inital PC
+    let prevHighlighted = currPC;
+    // Executing allINS
     execute.allINS();
+    // updating Current PC locally
+    currPC = execute.getPC();
     updateRegAndMemState();
-    activateAssembleAndSimulateBtn();
+    if (execute.getIsComplete()) {
+        activateAssembleAndSimulateBtn();
+        return;
+    }
+    updateHighlightedInst(prevHighlighted)
+    // activateAssembleAndSimulateBtn();
 })
 
 
@@ -496,8 +535,8 @@ document.addEventListener("keydown", function (e) {
             saveContent(data, 'riscv_heritage.asm');
             alert('Your file has been downloaded!');
         } else if (activeElem == 1) {
-            console.log(document.querySelector('.simulate_btns_wrapper')['style'].display==='none');
-            if (document.querySelector('.simulate_btns_wrapper')['style'].display==='none') {
+            console.log(document.querySelector('.simulate_btns_wrapper')['style'].display === 'none');
+            if (document.querySelector('.simulate_btns_wrapper')['style'].display === 'none') {
                 let data = getdumpArrayOutput();
                 saveContent(data.join('\n'), 'riscv_heritage_out.m');
                 alert('Output file has been downloaded!');

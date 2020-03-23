@@ -393,7 +393,7 @@ function handleTextSegment(lines: string[], codeSegment: string[]) {
         params.index++;
         params.lineNumber++;
     }
-    codeSegment.push('ffffffff END CODE');
+    codeSegment.push('ffffffff END');
 }
 
 

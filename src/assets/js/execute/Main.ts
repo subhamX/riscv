@@ -40,9 +40,10 @@ export class GlobalVar {
 
     // incase of invalid instruction
     static invalid: boolean;
+    static isComplete:boolean;
 
     // holds the breakpoints
-    static breakPoint : Array<number>;
+    static breakPoint: Array<number>;
 
     static instructionMap: Map<number, string>;
     // opcode map
@@ -58,12 +59,35 @@ function getClock(): number {
     return GlobalVar.CLOCK;
 }
 
+
+export function getBreakPoint(): Array<number> {
+    return GlobalVar.breakPoint;
+}
+
+export function addBreakPoint(instrPC: number) {
+    let out = GlobalVar.breakPoint.find((e) => {
+        return e == instrPC;
+    })
+    if (out === undefined) {
+        GlobalVar.breakPoint.push(instrPC);
+    }
+}
+// Helper function to remove Breakpoint
+export function removeBreakPoint(instrPC: number) {
+    GlobalVar.breakPoint = GlobalVar.breakPoint.filter((pc) => instrPC !== pc);
+}
+
+
+
 export function init(data): void {
     // Setting pc and clock
     GlobalVar.PC = 0;
     GlobalVar.CLOCK = 0;
+    GlobalVar.isComplete = false;
     GlobalVar.invalid = false;
     GlobalVar.instructionMap = new Map<number, string>();
+    GlobalVar.breakPoint = new Array<number>();
+
     // let data = fs.readFileSync('./test/test.mc', {encoding: 'utf-8'});
     // let data = fs.readFileSync('test/test.mc', { encoding: 'utf-8' });
     let dataArr = data.split('\n');
@@ -99,7 +123,11 @@ export function init(data): void {
     }
 }
 
-export function getInstrReg(){
+export function getIsComplete(){
+    return GlobalVar.isComplete
+}
+
+export function getInstrReg() {
     return GlobalVar.IR;
 }
 function showState(atEndAll?: boolean) {
@@ -116,22 +144,12 @@ function showState(atEndAll?: boolean) {
     };
 }
 
-export function updateBreakPoint(pcValue : number, remove?:boolean) : void {
-    if (remove){
-        delete GlobalVar.breakPoint[pcValue];
-        return;
-    }
-    else{
-        GlobalVar.breakPoint.push(pcValue);
-    }
-}
-
 export function singleINS() {
     let no_inst: boolean = false;
     console.log('-----------**********------------')
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     no_inst = Fetch();
-    if(no_inst){
+    if (no_inst) {
         return;
     }
     Decode();
@@ -146,14 +164,15 @@ export function singleINS() {
 
 export function allINS() {
     let no_inst: boolean = false;
-    let bp : boolean = false;
+    let bp: boolean = false;
     while (1) {
         console.log('-----------**********------------')
         console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
-        if(GlobalVar.breakPoint.find(pc =>  pc == GlobalVar.PC)){
+        let isBreakPointPC = GlobalVar.breakPoint.find(pc => pc == GlobalVar.PC);
+        if (isBreakPointPC !== undefined) {
             // remove the current breakpoint
-            updateBreakPoint(GlobalVar.PC, true);
-            bp = false;
+            removeBreakPoint(GlobalVar.PC);
+            bp = true;
         }
         no_inst = Fetch();
         if (no_inst) {
@@ -167,7 +186,7 @@ export function allINS() {
         MemoryOperations();
         WriteBack();
         GlobalVar.CLOCK += 1;
-        if(bp){
+        if (bp) {
             return;
         }
     }
@@ -176,19 +195,19 @@ export function allINS() {
 function Fetch(): boolean {
     // Fetching the current Instruction
     let temp = GlobalVar.instructionMap.get(GlobalVar.PC);
-    GlobalVar.IR = temp;
+    GlobalVar.pcTemp = GlobalVar.PC;
+    GlobalVar.PC += 4;
     // Terminating Condition 
     if (!temp || (parseInt(temp) >> 0) == -1) {
         GlobalVar.CLOCK++;
-        GlobalVar.pcTemp = GlobalVar.PC;
-        GlobalVar.PC += 4;
+        // Setting isComplete Flag as true
+        GlobalVar.isComplete = true;
         return true;
-        // process.exit(0);
+    } else {
+        temp = parseInt(temp, 16).toString(2);
+        temp = addZeros(temp, 32);
+        GlobalVar.IR = temp;
     }
-    temp = parseInt(temp, 16).toString(2);
-    temp = addZeros(temp, 32);
-    GlobalVar.pcTemp = GlobalVar.PC;
-    GlobalVar.PC += 4;
     return false;
 }
 

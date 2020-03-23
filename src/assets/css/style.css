@@ -204,26 +204,26 @@ header {
 
 /* Registers */
 
-.reg_mem_pane{
+.reg_mem_pane {
   height: 75vh;
 }
 
-.registers_wrapper{
+.registers_wrapper {
   height: 65vh;
   overflow-y: scroll;
 }
-.register_data{
+.register_data {
   display: grid;
   grid-template-columns: 1fr 2fr;
   justify-items: center;
   margin-bottom: 10px;
 }
 
-.register_data .reg_label{
+.register_data .reg_label {
   font-weight: bold;
 }
 
-.reg_display_settings{
+.reg_display_settings {
   display: grid;
   border-top: 1px solid black;
   height: 10vh;
@@ -231,17 +231,17 @@ header {
   padding-top: 1vh;
   grid-template-columns: 1fr 1fr;
 }
-.reg_display_settings .text_display{
+.reg_display_settings .text_display {
   text-align: center;
   font-weight: bold;
 }
 
-.memory_wrapper{
+.memory_wrapper {
   height: 60vh;
   overflow-y: scroll;
 }
 
-.memory_head{
+.memory_head {
   display: grid;
   grid-template-columns: 1fr 1fr;
   justify-items: center;
@@ -249,36 +249,36 @@ header {
   margin-bottom: 20px;
 }
 
-.memory_data{
+.memory_data {
   display: grid;
   margin-bottom: 10px;
   grid-template-columns: 1fr 1fr;
 }
-.memory_data .mem_addr{
+.memory_data .mem_addr {
   padding-left: 30px;
 }
 
-.go_to_mem_block{
+.go_to_mem_block {
   height: 5vh;
 }
-.memory_data span:not(.mem_addr){
+.memory_data span:not(.mem_addr) {
   text-align: center;
 }
 
-.go_to_mem_block{
+.go_to_mem_block {
   height: 5vh;
   padding-left: 10px;
 }
-#mem_addr_val{
+#mem_addr_val {
   width: 40%;
 }
 
-.simulate1_btns_wrapper{
+.simulate1_btns_wrapper {
   display: flex;
   justify-content: center;
   padding: 10px;
 }
-.simulate1_btns_wrapper div{
+.simulate1_btns_wrapper div {
   border: 1px solid black;
   margin: 10px;
   padding: 10px;
@@ -317,7 +317,6 @@ header {
 .instr {
 } */
 
-
 /* @media only screen and (max-width: 753px){
   .code_segment_wrapper{
     font-size: 12px;
@@ -330,52 +329,126 @@ header {
   }
 } */
 
-@media only screen and (max-width: 600px){
-  .simulator-wapper{
+@media only screen and (max-width: 600px) {
+  .simulator-wapper {
     display: flex;
     flex-direction: column;
   }
-  .instructions_wrapper{
+  .instructions_wrapper {
     height: 50vh;
     border-bottom: 1px solid grey;
   }
-  .toggle-wrapper a{
+  .toggle-wrapper a {
     padding: 7px;
     margin: 4px;
   }
 }
 
-@media only screen and (max-width: 477px){
-  .logo{
+@media only screen and (max-width: 477px) {
+  .logo {
     font-size: 19px;
   }
 }
 
-@media only screen and (max-width: 435px){
-  .logo{
+@media only screen and (max-width: 435px) {
+  .logo {
     font-size: 15px;
   }
-  .toggle-wrapper{
+  .toggle-wrapper {
     margin-right: 2%;
   }
-  .toggle-wrapper a{
+  .toggle-wrapper a {
     padding: 7px;
     margin: 4px;
   }
 }
-@media only screen and (max-width: 383px){
-  .logo{
+@media only screen and (max-width: 383px) {
+  .logo {
     display: none;
   }
-  .toggle-wrapper{
+  .toggle-wrapper {
     width: 100%;
   }
-  .toggle-wrapper a{
+  .toggle-wrapper a {
     padding: 9px;
     margin: 4px;
   }
 }
 
-.display_none{
+.display_none {
   display: none !important;
+}
+
+/* 
+Copied from w3schools
+*/
+
+/* The snackbar - position it at the bottom and in the middle of the screen */
+#snackbar {
+  visibility: hidden; /* Hidden by default. Visible on click */
+  min-width: 250px; /* Set a default minimum width */
+  margin-left: -125px; /* Divide value of min-width by 2 */
+  background-color: #333; /* Black background color */
+  color: #fff; /* White text color */
+  text-align: center; /* Centered text */
+  border-radius: 2px; /* Rounded borders */
+  padding: 16px; /* Padding */
+  position: fixed; /* Sit on top of the screen */
+  z-index: 9999; /* Add a z-index if needed */
+  left: 50%; /* Center the snackbar */
+  bottom: 30px; /* 30px from the bottom */
+}
+
+/* Show the snackbar when clicking on a button (class added with JavaScript) */
+#snackbar.show {
+  visibility: visible; /* Show the snackbar */
+  /* Add animation: Take 0.5 seconds to fade in and out the snackbar.
+  However, delay the fade out process for 2.5 seconds */
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+/* Animations to fade the snackbar in and out */
+@-webkit-keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
 }

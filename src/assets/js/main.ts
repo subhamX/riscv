@@ -371,6 +371,16 @@ function updateRegAndMemState() {
     });
 }
 
+// Helper function to showSnackBar
+function showSnackBar() {
+    var x = document.getElementById("snackbar");
+    // Add the "show" class to DIV
+    x.className = "show";
+    // After 3 seconds, remove the show class from DIV
+    setTimeout(function () { x.className = x.className.replace("show", ""); }, 3000);
+}
+
+
 // Handling Click Event Of Step Button
 document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     // updating Inital PC
@@ -382,6 +392,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     currPC = execute.getPC();
     if (execute.getIsComplete()) {
         activateAssembleAndSimulateBtn();
+        showSnackBar();
         return;
     }
     updateHighlightedInst(prevHighlighted)
@@ -398,6 +409,7 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', () => {
     updateRegAndMemState();
     if (execute.getIsComplete()) {
         activateAssembleAndSimulateBtn();
+        showSnackBar();
         return;
     }
     updateHighlightedInst(prevHighlighted)

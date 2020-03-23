@@ -41,6 +41,9 @@ export class GlobalVar {
     // incase of invalid instruction
     static invalid: boolean;
 
+    // holds the breakpoints
+    static breakPoint : Array<number>;
+
     static instructionMap: Map<number, string>;
     // opcode map
     static opcodeMap: Map<string, string> = new Map<string, string>();
@@ -113,10 +116,24 @@ function showState(atEndAll?: boolean) {
     };
 }
 
+export function updateBreakPoint(pcValue : number, remove?:boolean) : void {
+    if (remove){
+        delete GlobalVar.breakPoint[pcValue];
+        return;
+    }
+    else{
+        GlobalVar.breakPoint.push(pcValue);
+    }
+}
+
 export function singleINS() {
+    let no_inst: boolean = false;
     console.log('-----------**********------------')
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
-    Fetch();
+    no_inst = Fetch();
+    if(no_inst){
+        return;
+    }
     Decode();
     if (GlobalVar.invalid) {
         return;
@@ -129,9 +146,15 @@ export function singleINS() {
 
 export function allINS() {
     let no_inst: boolean = false;
+    let bp : boolean = false;
     while (1) {
         console.log('-----------**********------------')
         console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
+        if(GlobalVar.breakPoint.find(pc =>  pc == GlobalVar.PC)){
+            // remove the current breakpoint
+            updateBreakPoint(GlobalVar.PC, true);
+            bp = false;
+        }
         no_inst = Fetch();
         if (no_inst) {
             return;
@@ -144,6 +167,9 @@ export function allINS() {
         MemoryOperations();
         WriteBack();
         GlobalVar.CLOCK += 1;
+        if(bp){
+            return;
+        }
     }
 }
 
@@ -153,12 +179,14 @@ function Fetch(): boolean {
     GlobalVar.IR = temp;
     // Terminating Condition 
     if (!temp || (parseInt(temp) >> 0) == -1) {
+        GlobalVar.CLOCK++;
+        GlobalVar.pcTemp = GlobalVar.PC;
+        GlobalVar.PC += 4;
         return true;
         // process.exit(0);
     }
     temp = parseInt(temp, 16).toString(2);
     temp = addZeros(temp, 32);
-    GlobalVar.IR = temp;
     GlobalVar.pcTemp = GlobalVar.PC;
     GlobalVar.PC += 4;
     return false;

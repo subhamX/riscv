@@ -167,12 +167,14 @@ function handleAssembleAndSimulate() {
 
 // Wrapper function to activate simulator
 function activateSimulator() {
-    document.getElementsByClassName('simulator-wapper')[0]["style"].display = "grid";
+    // document.getElementsByClassName('simulator-wapper')[0]["style"].display = "grid";
+    document.querySelector('.simulator-wapper').classList.remove('display_none');
 }
 
 // Wrapper function to disable simulator
 function disableSimulator() {
-    document.querySelector('.simulator-wapper')['style'].display = 'none';
+    // ! Changed
+    document.querySelector('.simulator-wapper').classList.add('display_none');
 }
 
 
@@ -443,8 +445,8 @@ function updateHighlightedInst(prevPC: number) {
     }
 }
 
-// Handle Click Event Of Dump Button
-document.querySelector('.dump_btn').addEventListener('click', (e) => {
+
+function getdumpArrayOutput() {
     let dumpArray = [];
     dumpSeg.split("\n").forEach((e) => {
         if (e) {
@@ -454,10 +456,52 @@ document.querySelector('.dump_btn').addEventListener('click', (e) => {
                 dumpArray.push('');
             }
         }
-    })
-    navigator.clipboard.writeText(dumpArray.join('\n')).then(function () {
-        alert('Code Dump to clipboard was successful!');
-    }, function (err) {
-        console.error('Async: Could not copy text: ', err);
     });
+    return dumpArray;
+}
+
+// Handle Click Event Of Dump Button
+document.querySelector('.dump_btn').addEventListener('click', (e) => {
+    let dumpArray = getdumpArrayOutput();
+    if (dumpArray.length) {
+
+        navigator.clipboard.writeText(dumpArray.join('\n')).then(function () {
+            alert('Code Dump to clipboard was successful!');
+        }, function (err) {
+            console.error('Async: Could not copy text: ', err);
+        });
+    }
 })
+
+function saveContent(data: string, title: string) {
+    var blob = new Blob([data], {
+        type: "text/plain;charset=utf-8"
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    // the filename you want
+    a.download = title;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+document.addEventListener("keydown", function (e) {
+    if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
+        e.preventDefault();
+        if (activeElem == 0) {
+            let data = editor.getValue();
+            saveContent(data, 'riscv_heritage.asm');
+            alert('Your file has been downloaded!');
+        } else if (activeElem == 1) {
+            console.log(document.querySelector('.simulate_btns_wrapper')['style'].display==='none');
+            if (document.querySelector('.simulate_btns_wrapper')['style'].display==='none') {
+                let data = getdumpArrayOutput();
+                saveContent(data.join('\n'), 'riscv_heritage_out.m');
+                alert('Output file has been downloaded!');
+            }
+        }
+    }
+}, false);

@@ -48,11 +48,6 @@ export class GlobalVar {
     static operationMap: Map<string, string> = new Map<string, string>();
 }
 
-// const readL = rl.createInterface({
-//     input: process.stdin,
-//     output: process.stdout
-// });
-
 export function getPC(): number {
     return GlobalVar.PC;
 }
@@ -91,7 +86,6 @@ export function init(data): void {
 
     i++;
     while (dataArr[i]) {
-        console.log(dataArr[i].split(' '));
         let temp = dataArr[i].split(' ');
         let key = temp[0];
         let value = temp[1];
@@ -100,39 +94,8 @@ export function init(data): void {
         }
         i++;
     }
-    console.log("CHECK1");
-    showState();
-    // askQue();
 }
-// Commenting init and askQue for Web
-// init();
 
-// function askQue() {
-//     readL.question(
-//         '(current pc:' + getPC() + ')\n', function (flag) {
-//             if (flag == 'step') {
-//                 singleINS();
-//                 if (GlobalVar.invalid) {
-//                     console.error("Invalid instruction");
-//                     readL.close();
-//                 }
-//                 showState();
-//                 if (!GlobalVar.instructionMap.get(GlobalVar.PC)) {
-//                     readL.close();
-//                 }
-//                 askQue();
-//             }
-//             else if (flag == 'all') {
-//                 allINS();
-//                 if (GlobalVar.invalid) {
-//                     console.error("Invalid instruction");
-//                     readL.close();
-//                 }
-//                 showState(true);
-//                 readL.close();
-//             }
-//         });
-// }
 export function getInstrReg(){
     return GlobalVar.IR;
 }
@@ -149,11 +112,6 @@ function showState(atEndAll?: boolean) {
         console.table(GlobalVar.memFile.getMemory());
     };
 }
-
-// readL.on("close", function () {
-//     console.log("\nExiting...");
-//     process.exit(0);
-// });
 
 export function singleINS() {
     console.log('-----------**********------------')

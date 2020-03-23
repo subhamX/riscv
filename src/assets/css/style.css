@@ -126,6 +126,11 @@ header {
   color: white;
 }
 
+.stop_btn:hover{
+  background-color: red !important;
+  color: white;
+}
+
 .instructions_wrapper {
   height: 70vh;
   overflow-y: scroll;
@@ -349,6 +354,16 @@ header {
   }
 }
 
+@media only screen and (max-width: 501px) {
+  .simulate1_btns_wrapper {
+    font-size: 15px;
+  }
+  .simulate1_btns_wrapper div{
+    margin: 5px;
+    padding: 6px;
+  }
+}
+
 @media only screen and (max-width: 477px) {
   .logo {
     font-size: 19px;
@@ -377,6 +392,9 @@ header {
   .toggle-wrapper a {
     padding: 9px;
     margin: 4px;
+  }
+  .simulate1_btns_wrapper{
+    flex-wrap: wrap;
   }
 }
 

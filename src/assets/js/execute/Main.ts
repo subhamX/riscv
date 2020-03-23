@@ -40,7 +40,7 @@ export class GlobalVar {
 
     // incase of invalid instruction
     static invalid: boolean;
-    static isComplete:boolean;
+    static isComplete: boolean;
 
     // holds the breakpoints
     static breakPoint: Array<number>;
@@ -123,7 +123,7 @@ export function init(data): void {
     }
 }
 
-export function getIsComplete(){
+export function getIsComplete() {
     return GlobalVar.isComplete
 }
 
@@ -162,34 +162,34 @@ export function singleINS() {
     GlobalVar.CLOCK += 1;
 }
 
+// Returns true if execution is complete
 export function allINS() {
     let no_inst: boolean = false;
     let bp: boolean = false;
-    while (1) {
-        console.log('-----------**********------------')
-        console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
-        let isBreakPointPC = GlobalVar.breakPoint.find(pc => pc == GlobalVar.PC);
-        if (isBreakPointPC !== undefined) {
-            // remove the current breakpoint
-            removeBreakPoint(GlobalVar.PC);
-            bp = true;
-        }
-        no_inst = Fetch();
-        if (no_inst) {
-            return;
-        }
-        Decode();
-        if (GlobalVar.invalid) {
-            break;
-        }
-        Execute(GlobalVar.immVal);
-        MemoryOperations();
-        WriteBack();
-        GlobalVar.CLOCK += 1;
-        if (bp) {
-            return;
-        }
+    console.log('-----------**********------------')
+    console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
+    let isBreakPointPC = GlobalVar.breakPoint.find(pc => pc == GlobalVar.PC);
+    if (isBreakPointPC !== undefined) {
+        // remove the current breakpoint
+        removeBreakPoint(GlobalVar.PC);
+        bp = true;
     }
+    no_inst = Fetch();
+    if (no_inst) {
+        return true;
+    }
+    Decode();
+    if (GlobalVar.invalid) {
+        return true;
+    }
+    Execute(GlobalVar.immVal);
+    MemoryOperations();
+    WriteBack();
+    GlobalVar.CLOCK += 1;
+    if (bp) {
+        return true;
+    }
+    return false;
 }
 
 function Fetch(): boolean {

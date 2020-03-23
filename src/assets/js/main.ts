@@ -415,12 +415,27 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     updateHighlightedInst(prevHighlighted)
 })
 
+function syncSetInterval() {
+    return new Promise((resolve, reject) => {
+        let interval = setInterval(() => {
+            let res = execute.allINS();
+            if (res || !canRun) {
+                clearInterval(interval);
+                resolve();
+            }
+        }, 50);
+    })
+}
+
+
+let canRun = true;
 // Handling Click Event Of Run Button
-document.getElementsByClassName('run_btn')[0].addEventListener('click', () => {
+document.getElementsByClassName('run_btn')[0].addEventListener('click', async () => {
     // updating Inital PC
     let prevHighlighted = currPC;
     // Executing allINS
-    execute.allINS();
+    await syncSetInterval();
+    console.log("Hello")
     // updating Current PC locally
     currPC = execute.getPC();
     updateRegAndMemState();
@@ -433,6 +448,14 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', () => {
     // activateAssembleAndSimulateBtn();
 })
 
+document.querySelector('.stop_btn').addEventListener('click', () => {
+    canRun = false;
+    console.log("Stopping the Run");
+    setTimeout(() => {
+        canRun = true;
+        console.log("Setting canRun as true");
+    }, 500)
+})
 
 // Handling Clicking Event Of Hex Button
 document.getElementById('hex_btn').addEventListener('click', () => {

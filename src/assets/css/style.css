@@ -339,6 +339,32 @@ header {
   }
 } */
 
+
+pre {
+  padding: 1em;
+  margin: .5em 0;
+  overflow: auto;
+}
+
+pre{
+  color: #ccc;
+  background: #2d2d2d;
+  font-family: Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;
+  font-size: 1em;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+  -webkit-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
 @media only screen and (max-width: 600px) {
   .simulator-wapper {
     display: flex;

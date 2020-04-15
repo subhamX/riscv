@@ -129,102 +129,146 @@
 
     </section>
     <section id="aboutsection" style="display: none; margin: 10px;">
-        <h1 id="heritage-gui">Heritage GUI</h1>
-        <p>The following website is a course project under the guidance of <a href="https://sites.google.com/view/kalyantv">Dr T.V Kalyan</a>. It is a web simulator which converts the <code>Assembly code</code> written <code>RISCV syntax</code> to <code>Machine code</code> and provides a user-friendly environment for its execution.  </p>
-        <h2 id="valid-instructions">Valid Instructions</h2>
-        <p><strong>R format:</strong>
-        add, and, or, sll, slt, sra, srl, sub, xor, mul, div, rem</p>
-        <p><strong>I format:</strong>
-        addi, andi, ori, lb, ld, lh, lw, jalr</p>
-        <p><strong>S format:</strong>
-        sb, sw, sd, sh</p>
-        <p><strong>SB format:</strong>
-        beq, bne, bge, blt</p>
-        <p><strong>U format:</strong>
-        auipc, lui</p>
-        <p><strong>UJ format:</strong>
-        jal</p>
-        <p><strong>Assembler Directives:</strong>
-        .text, .data, .byte, .half, .word, .dword, .asciiz</p>
-        <h2 id="team-members">Team Members</h2>
-        <table>
-        <thead>
-        <tr>
-        <th style="text-align:center">Name</th>
-        <th style="text-align:right">Entry Number</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-        <td style="text-align:center"><a href="https://github.com/Bh4r4t">Bharat Ladrecha</a></td>
-        <td style="text-align:right">2018CSB1080</td>
-        </tr>
-        <tr>
-        <td style="text-align:center"><a href="https://github.com/subhamX/">Subham Sahu</a></td>
-        <td style="text-align:right">2018EEB1183</td>
-        </tr>
-        </tbody>
+        <h1 class="code-line" data-line-start=0 data-line-end=1><a id="RISCV_Heritage_0"></a>RISCV Heritage</h1>
+        <p class="has-line-data" data-line-start="2" data-line-end="3">The following website is a course project under
+            the guidance of <a href="https://sites.google.com/view/kalyantv">Dr T.V Kalyan</a>. It is a web simulator
+            which converts the <code>Assembly code</code> written <code>RISCV syntax</code> to <code>Machine code</code>
+            and provides a user-friendly environment for its execution.</p>
+        <h2 class="code-line" data-line-start=4 data-line-end=5><a id="Valid_Instructions_4"></a>Valid Instructions</h2>
+        <p class="has-line-data" data-line-start="6" data-line-end="8"><strong>R format:</strong><br>
+            add, and, or, sll, slt, sra, srl, sub, xor, mul, div, rem</p>
+        <p class="has-line-data" data-line-start="9" data-line-end="11"><strong>I format:</strong><br>
+            addi, andi, ori, lb, ld, lh, lw, jalr</p>
+        <p class="has-line-data" data-line-start="12" data-line-end="14"><strong>S format:</strong><br>
+            sb, sw, sd, sh</p>
+        <p class="has-line-data" data-line-start="15" data-line-end="17"><strong>SB format:</strong><br>
+            beq, bne, bge, blt</p>
+        <p class="has-line-data" data-line-start="18" data-line-end="20"><strong>U format:</strong><br>
+            auipc, lui</p>
+        <p class="has-line-data" data-line-start="21" data-line-end="23"><strong>UJ format:</strong><br>
+            jal</p>
+        <p class="has-line-data" data-line-start="24" data-line-end="26"><strong>Assembler Directives:</strong><br>
+            .text, .data, .byte, .half, .word, .dword, .asciiz</p>
+        <h2 class="code-line" data-line-start=27 data-line-end=28><a id="Team_Members_27"></a>Team Members</h2>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th style="text-align:center">Name</th>
+                    <th style="text-align:right">Entry Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align:center"><a href="https://github.com/Bh4r4t">Bharat Ladrecha</a></td>
+                    <td style="text-align:right">2018CSB1080</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center"><a href="https://github.com/subhamX/">Subham Sahu</a></td>
+                    <td style="text-align:right">2018EEB1183</td>
+                </tr>
+            </tbody>
         </table>
-        <h2 id="technology-stack">Technology Stack</h2>
+        <h2 class="code-line" data-line-start=34 data-line-end=35><a id="Technology_Stack_34"></a>Technology Stack</h2>
         <ol>
-        <li>Typescript</li>
-        <li>HTML/CSS</li>
-        <li>NodeJS</li>
+            <li class="has-line-data" data-line-start="35" data-line-end="36">Typescript</li>
+            <li class="has-line-data" data-line-start="36" data-line-end="37">HTML/CSS</li>
+            <li class="has-line-data" data-line-start="37" data-line-end="39">NodeJS</li>
         </ol>
-        <h2 id="file-structure">File Structure</h2>
-        <pre><code>src
-        │   README<span class="hljs-selector-class">.md</span>
-        │   tsconfig<span class="hljs-selector-class">.json</span>
+        <h2 class="code-line" data-line-start=39 data-line-end=40><a id="File_Structure_39"></a>File Structure</h2>
+        <pre><code class="has-line-data" data-line-start="41" data-line-end="58">src
+│   README.md
+│   tsconfig.json
+│
+└───assets
+   │   index.html
+   │
+   └───css
+   │   style.css
+   │    
+   └───js
+        │ main.ts
+        │   
+        └───encode
         │
-        └───assets
-           │   index<span class="hljs-selector-class">.html</span>
-           │
-           └───css
-           │   style<span class="hljs-selector-class">.css</span>
-           │    
-           └───js
-                │ main<span class="hljs-selector-class">.ts</span>
-                │   
-                └───encode
-                │
-                └───execute
-        </code></pre><p><strong>encode</strong> contains files required to convert <code>Assembly Code</code> written in <code>RISC V</code> syntax into <code>Machine Code</code><br><strong>execute</strong> contains files required to execute the generated <code>Machine Code</code><br><strong>main.ts</strong> is the entrypoint of the application</p>
-        <h2 id="features">Features</h2>
+        └───execute
+</code></pre>
+        <p class="has-line-data" data-line-start="59" data-line-end="62"><strong>encode</strong> contains files required
+            to convert <code>Assembly Code</code> written in <code>RISC V</code> syntax into
+            <code>Machine Code</code><br>
+            <strong>execute</strong> contains files required to execute the generated <code>Machine Code</code><br>
+            <strong>main.ts</strong> is the entrypoint of the application</p>
+        <h2 class="code-line" data-line-start=64 data-line-end=65><a id="Features_64"></a>Features</h2>
         <ol>
-        <li>On pressing <code>Ctrl+S</code> on <strong>Editor Pane</strong> current file will be downloaded.</li>
-        <li>On pressing <code>Ctrl+S</code> on <strong>Simulator Pane</strong> Output file will be downloaded if it&#39;s assembled.
-        Format - </li>
-        <li><strong>Editor Pane</strong> supports <code>Ctrl+/</code> as comment shortcut</li>
+            <li class="has-line-data" data-line-start="66" data-line-end="67">On pressing <code>Ctrl+S</code> on
+                <strong>Editor Pane</strong> current file will be downloaded.</li>
+            <li class="has-line-data" data-line-start="67" data-line-end="69">On pressing <code>Ctrl+S</code> on
+                <strong>Simulator Pane</strong> Output file will be downloaded if it’s assembled.<br>
+                Format -</li>
+            <li class="has-line-data" data-line-start="69" data-line-end="70"><strong>Editor Pane</strong> supports
+                <code>Ctrl+/</code> as comment shortcut</li>
         </ol>
-        <h2 id="general-instructions-to-run-locally">General Instructions To Run Locally</h2>
+        <h2 class="code-line" data-line-start=72 data-line-end=73><a
+                id="General_Instructions_To_Run_Locally_72"></a>General Instructions To Run Locally</h2>
         <ol>
-        <li>If you do not have a copy of <code>RISCV Heritage</code> clone the repo and checkout <code>GUI</code> branch. If you do have the project then go to <code>step 2</code><pre><code>git <span class="hljs-keyword">clone</span> <span class="hljs-title">URL</span>
-        git checkout GUI
-        </code></pre></li>
-        <li>Install all dependencies<pre><code>npm <span class="hljs-keyword">install</span>
-        </code></pre></li>
-        <li>Now to run the developement server run the following command in terminal<pre><code>npm <span class="hljs-keyword">run</span><span class="bash"> start:dev</span>
-        </code></pre></li>
-        <li>Now access the <code>RISCV Heritage</code> by visiting <a href="http://localhost:1234/">http://localhost:1234/</a></li>
+            <li class="has-line-data" data-line-start="74" data-line-end="75">If you do not have a copy of
+                <code>RISCV Heritage</code> clone the repo and checkout <code>GUI</code> branch. If you do have the
+                project then go to <code>step 2</code></li>
         </ol>
-        <h2 id="functionalities-our-gui-provide">Functionalities our GUI provide</h2>
+        <pre><code class="has-line-data" data-line-start="76" data-line-end="79">git clone URL
+git checkout GUI
+</code></pre>
+        <ol start="2">
+            <li class="has-line-data" data-line-start="79" data-line-end="80">Install all dependencies</li>
+        </ol>
+        <pre><code class="has-line-data" data-line-start="81" data-line-end="83">npm install
+</code></pre>
+        <ol start="3">
+            <li class="has-line-data" data-line-start="83" data-line-end="84">Now to run the developement server run the
+                following command in terminal</li>
+        </ol>
+        <pre><code class="has-line-data" data-line-start="85" data-line-end="87">npm run start:dev
+</code></pre>
+        <ol start="4">
+            <li class="has-line-data" data-line-start="87" data-line-end="88">Now access the <code>RISCV Heritage</code>
+                by visiting <a href="http://localhost:1234/">http://localhost:1234/</a></li>
+        </ol>
+        <h2 class="code-line" data-line-start=90 data-line-end=91><a
+                id="Functionalities_our_GUI_provide_90"></a>Functionalities our GUI provide</h2>
         <ol>
-        <li><p>BreakPoint:- Users can use a breakpoint for debugging. Users can select as many breakpoints as s(he) wants. During the execution of instructions, the program will stop after the execution of selected instructions in the order of program flow.</p>
-        </li>
-        <li><p>Run:- To run the complete program in a single go</p>
-        </li>
-        <li><p>Step:- To run the program instruction wise(one instruction at a time).</p>
-        </li>
-        <li><p>Stop:- Users can stop the execution process using the stop button.</p>
-        </li>
-        <li><p>Memory Segment displays only those values into which something is explicitly written during program execution or in the data segment and all other values which are not shown are <code>0x00</code></p>
-        </li>
-        <li><p>On any error, the program will alert the user and will not proceed further for execution</p>
-        </li>
-        <li><p>Any instruction which uses <strong>Double</strong> like <code>sd, ld</code> are invalid since it is <code>32-bit system</code></p>
-        </li>
+            <li class="has-line-data" data-line-start="92" data-line-end="94">
+                <p class="has-line-data" data-line-start="92" data-line-end="93">BreakPoint:- Users can use a breakpoint
+                    for debugging. Users can select as many breakpoints as s(he) wants. During the execution of
+                    instructions, the program will stop after the execution of selected instructions in the order of
+                    program flow.</p>
+            </li>
+            <li class="has-line-data" data-line-start="94" data-line-end="96">
+                <p class="has-line-data" data-line-start="94" data-line-end="95">Run:- To run the complete program in a
+                    single go</p>
+            </li>
+            <li class="has-line-data" data-line-start="96" data-line-end="98">
+                <p class="has-line-data" data-line-start="96" data-line-end="97">Step:- To run the program instruction
+                    wise(one instruction at a time).</p>
+            </li>
+            <li class="has-line-data" data-line-start="98" data-line-end="100">
+                <p class="has-line-data" data-line-start="98" data-line-end="99">Stop:- Users can stop the execution
+                    process using the stop button.</p>
+            </li>
+            <li class="has-line-data" data-line-start="100" data-line-end="102">
+                <p class="has-line-data" data-line-start="100" data-line-end="101">Memory Segment displays only those
+                    values into which something is explicitly written during program execution or in the data segment
+                    and all other values which are not shown are <code>0x00</code></p>
+            </li>
+            <li class="has-line-data" data-line-start="102" data-line-end="104">
+                <p class="has-line-data" data-line-start="102" data-line-end="103">On any error, the program will alert
+                    the user and will not proceed further for execution</p>
+            </li>
+            <li class="has-line-data" data-line-start="104" data-line-end="106">
+                <p class="has-line-data" data-line-start="104" data-line-end="105">Any instruction which uses
+                    <strong>Double</strong> like <code>sd, ld</code> are invalid since it is <code>32-bit system</code>
+                </p>
+            </li>
         </ol>
-        
+
     </section>
     <div id="snackbar">Program Successfully Executed</div>
     <div id="editor"></div>

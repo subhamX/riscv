@@ -5,6 +5,8 @@ import { RegisterFile } from './RegFileClass';
 import { opcodeMapfunc, operationMapfunc } from './MapPhase2';
 import { MemoryFile, addZeros } from './MemFileClass'
 import { MemoryOperations, WriteBack } from './MA_MWB';
+import { evaluateImm } from './helperFun';
+import { InterStateBuffer } from './InterStateBuffer';
 
 export class GlobalVar {
     // PC->Program Counter, IR->Instruction Register
@@ -28,6 +30,7 @@ export class GlobalVar {
     static numberOfALUInstr: Number; //Stat5
     static numberOfControlInstr: Number; // Stat6
 
+    static isb: InterStateBuffer;
     // Holds return address
     static returnAddr;
 
@@ -101,7 +104,7 @@ export function init(data): void {
     GlobalVar.breakPoint = new Array<number>();
     let dataArr = data.split('\n');
     let i = 0;
-
+    GlobalVar.isb = new InterStateBuffer();
     // Loading all instructions of program into instructionMap
     opcodeMapfunc(GlobalVar.opcodeMap);
     operationMapfunc(GlobalVar.operationMap);
@@ -227,8 +230,64 @@ function Fetch(): boolean {
         temp = addZeros(temp, 32);
         GlobalVar.IR = temp;
     }
+    // TODO: If pipelining is enabled
+    if (GlobalVar.mode == 1 || GlobalVar.mode == 2) {
+        let controlHazardType = detectControlHazard();
+        let { branchAddressDef, branchAddress } = updateBranchAddress(controlHazardType);
+        GlobalVar.isb.branchAddress = branchAddress;
+        GlobalVar.isb.branchAddressDef = branchAddressDef;
+        GlobalVar.isb.controlHazardType = controlHazardType;
+    }
     return false;
 }
+
+
+
+function updateBranchAddress(controlHazardType: Number) {
+    let branchAddress, branchAddressDef;
+    if (controlHazardType == 3) {
+        // Branch
+        GlobalVar.immVal = GlobalVar.IR[0] + GlobalVar.IR[24] + GlobalVar.IR.slice(1, 7) + GlobalVar.IR.slice(20, 24);
+        GlobalVar.immVal = (GlobalVar.immVal + '0');
+        let inA: number = GlobalVar.regFile.getRS1();
+        branchAddress = inA + evaluateImm(GlobalVar.immVal);
+    } else if (controlHazardType == 2) {
+        // jalr
+        GlobalVar.immVal = GlobalVar.IR.slice(0, 12);
+        let rs1 = GlobalVar.IR.slice(12, 17);
+        GlobalVar.regFile.setRS1(parseInt(rs1, 2));
+        let inA: number = GlobalVar.regFile.getRS1();
+        GlobalVar.RZ = inA + evaluateImm(GlobalVar.immVal);
+    } else if (controlHazardType == 1) {
+        // jal
+        GlobalVar.immVal = GlobalVar.IR[0] + GlobalVar.IR.slice(12, 20) + GlobalVar.IR[11] + GlobalVar.IR.slice(1, 11);
+        GlobalVar.immVal = (GlobalVar.immVal + '0');
+        branchAddress = evaluateImm(GlobalVar.immVal) + GlobalVar.PC - 4;
+    }
+    branchAddressDef = GlobalVar.PC;
+    return { branchAddressDef, branchAddress };
+}
+
+
+function detectControlHazard() {
+    let opcode = GlobalVar.IR.slice(25, 32);
+    // setting instruction type of current instruction
+    GlobalVar.type = GlobalVar.opcodeMap.get(opcode);
+    if (GlobalVar.type == 'SB') {
+        // Branch
+        return 3;
+    } else if (opcode == '1100111') {
+        // jalr
+        return 2;
+    } else if (GlobalVar.type == 'UJ') {
+        // jal
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
 
 export function UpdatePC(PC_Select: number, inpImm?: number): void {
     GlobalVar.pcTemp = GlobalVar.PC;

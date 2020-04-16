@@ -35,4 +35,8 @@ export class InterStateBuffer {
     numberOfDataHazardStalls: Number; // Stat11
     numberOfControlHazardStalls: Number; // Stat12
 
+    branchAddressDef: number;
+    branchAddress: number;
+    controlHazardType: number;
+
 }

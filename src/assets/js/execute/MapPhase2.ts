@@ -1,11 +1,11 @@
 // func to map opcode with corresponding instruction type
-export function opcodeMapfunc(opMap: Map<String, string>){
+export function opcodeMapfunc(opMap: Map<String, string>) {
     // R type
     opMap.set('0110011', 'R');
 
     // I type
     opMap.set('0010011', 'I');
-        // Load instructions
+    // Load instructions
     opMap.set('0000011', 'I');
     opMap.set('1100111', 'I');
 
@@ -24,7 +24,7 @@ export function opcodeMapfunc(opMap: Map<String, string>){
 }
 
 // function to map opcode + func3 + func7 to operand
-export function operationMapfunc(operMap : Map<string, string>){
+export function operationMapfunc(operMap: Map<string, string>) {
     // R type
     operMap.set("0000000000", 'add');
     operMap.set("0000100000", 'sub');

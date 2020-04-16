@@ -13,8 +13,20 @@ export class GlobalVar {
     static pcTemp: number;
     static regFile: RegisterFile;
     static memFile: MemoryFile;
+    /* mode: 
+    0=> Without Pipeline 
+    1=> Pipelining with data forwarding 
+    2=> Pipelining without data forwarding
+    */
+    static mode: number = 1;
 
     static CLOCK: number = 0;
+
+    // Stats
+    static totalInstructions: Number; //Stat2
+    static numberOfDataTransfers: Number; //Stat4
+    static numberOfALUInstr: Number; //Stat5
+    static numberOfControlInstr: Number; // Stat6
 
     // Holds return address
     static returnAddr;
@@ -107,7 +119,7 @@ export function init(data): void {
         for (let i = 0; i < 8; i += 2) {
             let foo = value.replace('0x', '').slice(index - 1, index + 1);
             GlobalVar.memFile.WriteData(currMemoIndex, foo);
-            currMemoIndex +=1;
+            currMemoIndex += 1;
             index -= 2;
         }
         i++;

@@ -3,6 +3,11 @@ import { main } from './encode/index';
 import * as execute from './execute/Main';
 import { addZeros, addOnes } from './encode/utility'
 
+// Debug Flag: Set this true to open simulator pane directly
+let debug: boolean = true;
+
+
+
 // Defining theme asset
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
 
@@ -115,6 +120,9 @@ document.addEventListener("DOMContentLoaded", () => {
             navbarBtns[activeElem].classList.add("active");
         })
     })
+    if (debug == true) {
+        (<HTMLElement>document.querySelector('.simulator-btn')).click();
+    }
 })
 
 // Function to remove all instructions
@@ -153,11 +161,8 @@ document.querySelector('.assemble_btn').addEventListener('click', () => {
 });
 function handleAssembleAndSimulate() {
     let fileData = editor.getValue();
-    if (!fileData) {
-        document.querySelector('.simulator')["style"].display = 'block';
-        return false;
-    }
     let response = main(fileData);
+    console.log(response);
     if (response.error) {
         // Showing Error Message
         alert("Error Occurred! " + response.errorMessage);
@@ -604,3 +609,4 @@ document.addEventListener("keydown", function (e) {
 document.querySelector('.reset_btn').addEventListener('click', () => {
     handleAssembleAndSimulate();
 })
+

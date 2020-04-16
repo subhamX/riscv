@@ -406,8 +406,10 @@ function showSnackBar() {
 document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     // updating Inital PC
     let prevHighlighted = currPC;
-    // Executing SingleINS
-    execute.singleINS();
+    // ! Executing SingleINS
+    // execute.singleINS();
+    // ! Executing Pipeline step instead of normal step
+    execute.singlePipelineStep();
     updateRegAndMemState();
     // updating Current PC locally
     currPC = execute.getPC();

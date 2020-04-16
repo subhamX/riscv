@@ -271,8 +271,12 @@ git checkout GUI
 
     </section>
     <div id="snackbar">Program Successfully Executed</div>
-    <div id="editor">addi x5, x2, x3
-sub x4, x5, x10
+    <div id="editor">add x5, x2, x3
+        beq x10, x10, hello
+        sub x4, x5, x10
+        jal x11, hello
+        sub x4, x5, x10
+        hello:
     </div>
     <script src="./assets/js/main.ts"></script>
 </body>

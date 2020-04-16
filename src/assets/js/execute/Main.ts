@@ -20,7 +20,9 @@ export class GlobalVar {
     1=> Pipelining with data forwarding 
     2=> Pipelining without data forwarding
     */
-    static mode: number = 1;
+    // TODO: Handle Default Values
+    static mode: number = 2;
+    static pipelineEnabled: boolean = true;
 
     static CLOCK: number = 0;
 
@@ -152,6 +154,7 @@ export function getIsComplete() {
 export function getInstrReg() {
     return GlobalVar.IR;
 }
+
 function showState(atEndAll?: boolean) {
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     console.log("REGISTER");
@@ -178,7 +181,7 @@ export function singleINS() {
     if (GlobalVar.invalid) {
         return;
     }
-    Execute(GlobalVar.immVal);
+    Execute();
     MemoryOperations();
     WriteBack();
     GlobalVar.CLOCK += 1;
@@ -204,7 +207,7 @@ export function allINS() {
     if (GlobalVar.invalid) {
         return true;
     }
-    Execute(GlobalVar.immVal);
+    Execute();
     MemoryOperations();
     WriteBack();
     GlobalVar.CLOCK += 1;
@@ -213,6 +216,8 @@ export function allINS() {
     }
     return false;
 }
+
+
 
 function Fetch(): boolean {
     // Fetching the current Instruction
@@ -233,6 +238,7 @@ function Fetch(): boolean {
     // TODO: If pipelining is enabled
     if (GlobalVar.mode == 1 || GlobalVar.mode == 2) {
         let controlHazardType = detectControlHazard();
+        // TODO: Create Branch Target Buffer And save addresses indexed by PC 
         let { branchAddressDef, branchAddress } = updateBranchAddress(controlHazardType);
         GlobalVar.isb.branchAddress = branchAddress;
         GlobalVar.isb.branchAddressDef = branchAddressDef;
@@ -303,4 +309,42 @@ export function UpdatePC(PC_Select: number, inpImm?: number): void {
             GlobalVar.PC += 4;
         }
     }
+}
+
+
+
+/**
+ * 
+ * Pipeline functions
+ * 
+ * 
+ */
+
+export function singlePipelineStep() {
+    let no_inst: boolean = false;
+    console.log('-----------*****PIPE*****------------')
+    console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
+    // Fetch Begin
+    no_inst = Fetch();
+    // Updating the InterstateBuffer
+    console.log(GlobalVar.pcTemp);
+    GlobalVar.isb.updateInterStateBuffer();
+    // If the fetched instruction is jal, beq, jalr
+    if (GlobalVar.isb.controlHazardType) {
+        // Overriding the updation of PC and pcTemp inside Fetch()
+        GlobalVar.PC = GlobalVar.isb.branchAddress;
+        GlobalVar.pcTemp = GlobalVar.PC;
+    }
+    // TODO: Run for four more times. If Last Instructions is fetched
+    if (no_inst) {
+        return;
+    }
+    // Fetch End
+    GlobalVar.isb.showInterStateBuffer();
+    // Decode Begin
+
+}
+
+function pipelinedFetch() {
+
 }

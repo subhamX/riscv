@@ -8,6 +8,10 @@ import { MemoryOperations, WriteBack } from './MA_MWB';
 import { evaluateImm } from './helperFun';
 import { InterStateBuffer } from './InterStateBuffer';
 
+// For pipelined step and run
+let noInstr: boolean = false;
+let times: number = 0;
+
 export class GlobalVar {
     // PC->Program Counter, IR->Instruction Register
     static PC: number;
@@ -100,6 +104,8 @@ export function init(data): void {
     // Setting pc and clock
     GlobalVar.PC = 0;
     GlobalVar.CLOCK = 0;
+    times = 0;
+    noInstr = false;
     GlobalVar.isComplete = false;
     GlobalVar.invalid = false;
     GlobalVar.instructionMap = new Map<number, string>();
@@ -227,9 +233,13 @@ function Fetch(): boolean {
     // Terminating Condition 
     if (!temp || (parseInt(temp) >> 0) == -1) {
         GlobalVar.CLOCK++;
-        // Setting isComplete Flag as true
-        GlobalVar.isComplete = true;
-        return true;
+        if (!GlobalVar.pipelineEnabled) {
+            // Setting isComplete Flag as true
+            GlobalVar.isComplete = true;
+            return true;
+        } else {
+            return true;
+        }
     } else {
         temp = parseInt(temp, 16).toString(2);
         temp = addZeros(temp, 32);
@@ -313,14 +323,16 @@ export function UpdatePC(PC_Select: number, inpImm?: number): void {
  * 
  */
 
-
 export function singlePipelineStep() {
-    console.log('-----------*****PIPE*****------------')
+    console.log('-----------*****PIPE*****------------');
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
-    let no_inst: boolean = false;
+    if (GlobalVar.isComplete) {
+        console.log("ALREADY COMPLETE: times: ", times);
+        return;
+    }
     if (GlobalVar.CLOCK === 0) {
         // Pipeline is empty! Only Fetch a new instruction
-        pipelinedFetch(no_inst);
+        noInstr = pipelinedFetch(noInstr);
     } else if (GlobalVar.CLOCK === 1) {
         // Decode then Fetch
         let res = pipelinedDecode();
@@ -328,7 +340,7 @@ export function singlePipelineStep() {
             GlobalVar.CLOCK++;
             return;
         }
-        pipelinedFetch(no_inst);
+        noInstr = pipelinedFetch(noInstr);
     } else if (GlobalVar.CLOCK === 2) {
         // Execute then Decode then Fetch
         console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
@@ -338,7 +350,7 @@ export function singlePipelineStep() {
             GlobalVar.CLOCK++;
             return;
         }
-        pipelinedFetch(no_inst);
+        noInstr = pipelinedFetch(noInstr);
     } else if (GlobalVar.CLOCK === 3) {
         // Memory then Execute then Decode then Fetch
         pipelinedMemory();
@@ -348,7 +360,7 @@ export function singlePipelineStep() {
             GlobalVar.CLOCK++;
             return;
         }
-        pipelinedFetch(no_inst);
+        noInstr = pipelinedFetch(noInstr);
     } else {
         // Run all steps WriteBack then Memory then Execute then Decode then Fetch
         pipelineWriteBack();
@@ -359,14 +371,14 @@ export function singlePipelineStep() {
             GlobalVar.CLOCK++;
             return;
         }
-        pipelinedFetch(no_inst);
+        noInstr = pipelinedFetch(noInstr);
     }
     GlobalVar.CLOCK++;
 
     GlobalVar.isb.showInterStateBuffer();
     console.log("CH", GlobalVar.PC);
 
-    if (no_inst === false) {
+    if (noInstr === false) {
 
     }
 }
@@ -393,11 +405,21 @@ function pipelinedDecode(): boolean {
     // Decode End    
 }
 
-function pipelinedFetch(no_inst) {
+function pipelinedFetch(no_inst): boolean {
+    console.log("FETCH: ", no_inst);
+    // If no instructions then returning
+    if (no_inst) {
+        times++;
+        console.log("SETTING times as: ", times);
+        if (times === 4) {
+            GlobalVar.isComplete = true;
+        }
+        return true;
+    }
     // Fetch Begin
     no_inst = Fetch();
     // TODO: If pipelining is enabled
-    if (GlobalVar.mode == 1 || GlobalVar.mode == 2) {
+    if (GlobalVar.pipelineEnabled) {
         let controlHazardType = detectControlHazard();
         // TODO: Create Branch Target Buffer And save addresses indexed by PC 
         let { branchAddressDef, branchAddress } = updateBranchAddress(controlHazardType);
@@ -415,6 +437,7 @@ function pipelinedFetch(no_inst) {
         GlobalVar.PC = GlobalVar.isb.branchAddress;
         GlobalVar.pcTemp = GlobalVar.PC;
     }
+    return no_inst;
     // TODO: Run for four more times. If Last Instructions is fetched
     if (no_inst) {
         return;

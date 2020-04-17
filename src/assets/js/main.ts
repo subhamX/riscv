@@ -2,7 +2,9 @@ import ace from 'ace-builds/src-min-noconflict/ace';
 import { main } from './encode/index';
 import * as execute from './execute/Main';
 import { addZeros, addOnes } from './encode/utility'
-
+var vex = require('vex-js')
+vex.registerPlugin(require('vex-dialog'))
+vex.defaultOptions.className = 'vex-theme-wireframe'
 // Debug Flag: Set this true to open simulator pane directly
 let debug: boolean = true;
 
@@ -401,25 +403,52 @@ function showSnackBar() {
     setTimeout(function () { x.className = x.className.replace("show", ""); }, 3000);
 }
 
+// Updated by Modal
+/* mode: 
+0=> Without Pipeline 
+1=> Pipelining with data forwarding 
+2=> Pipelining without data forwarding
+*/
+// By default Without Pipeline mode is enabled
+let mode: number = 0;
+
 
 // Handling Click Event Of Step Button
 document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
-    // updating Inital PC
-    let prevHighlighted = currPC;
-    // ! Executing SingleINS
-    // execute.singleINS();
-    // ! Executing Pipeline step instead of normal step
-    execute.singlePipelineStep();
-    updateRegAndMemState();
-    // updating Current PC locally
-    currPC = execute.getPC();
-    console.log("NEW PC", currPC);
-    if (execute.getIsComplete()) {
-        activateAssembleAndSimulateBtn();
-        showSnackBar();
-        return;
+    if (mode == 1 || mode == 2) {
+        // updating Inital PC
+        let prevHighlighted = currPC;
+        // ! Executing SingleINS
+        // execute.singleINS();
+        // ! Executing Pipeline step instead of normal step
+        execute.singlePipelineStep();
+        updateRegAndMemState();
+        // updating Current PC locally
+        currPC = execute.getPC();
+        console.log("NEW PC", currPC);
+        if (execute.getIsComplete()) {
+            activateAssembleAndSimulateBtn();
+            showSnackBar();
+            return;
+        }
+        updateHighlightedInst(prevHighlighted)
+    } else {
+        // updating Inital PC
+        let prevHighlighted = currPC;
+        //  Executing SingleINS
+        execute.singleINS();
+        //  Executing Pipeline step instead of normal step
+        updateRegAndMemState();
+        // updating Current PC locally
+        currPC = execute.getPC();
+        console.log("NEW PC", currPC);
+        if (execute.getIsComplete()) {
+            activateAssembleAndSimulateBtn();
+            showSnackBar();
+            return;
+        }
+        updateHighlightedInst(prevHighlighted)
     }
-    updateHighlightedInst(prevHighlighted)
 })
 
 function syncSetInterval() {
@@ -613,3 +642,55 @@ document.querySelector('.reset_btn').addEventListener('click', () => {
     handleAssembleAndSimulate();
 })
 
+
+
+// config Button
+document.querySelector(".config-btn").addEventListener('click', () => {
+    vex.dialog.open({
+        message: 'Please select any desired option:',
+        input: [
+            '<div class="modal-config">',
+            '<input name="configMode" type="radio" value="nopipeline"  id="nopipeline"/>',
+            '<label for="nopipeline">No pipelining</label>',
+            '</div>',
+            '<div class="modal-config">',
+            '<input name="configMode" type="radio" value="dfEnabledPipeline"  id="dfEnabledPipeline"/>',
+            '<label for="dfEnabledPipeline">Pipelining without Data Forwarding</label>',
+            '</div>',
+            '<div class="modal-config">',
+            '<input name="configMode" type="radio" id="dfDisabledPipeline" value="dfDisabledPipeline"/>',
+            '<label for="dfDisabledPipeline">Pipelining + Data Forwarding</label>',
+            '</div>',
+        ].join(''),
+        callback: function (value) {
+            console.log(value)
+            if (!value) {
+                return;
+            }
+
+            if (value.configMode === 'nopipeline') {
+                mode = 0;
+            } else if (value.configMode === 'dfEnabledPipeline') {
+                mode = 1;
+                execute.GlobalVar.mode = 1;
+            } else if (value.configMode === 'dfDisabledPipeline') {
+                mode = 2;
+                execute.GlobalVar.mode = 2;
+            }
+        }
+    })
+})
+
+document.querySelector('.config-btn-display-only').addEventListener('click', () => {
+    let message;
+    if (mode === 0) {
+        message = 'The following execution is <b>Non Pipelined</b>'
+    } else if (mode === 1) {
+        message = 'The following execution is <b>Pipelined based with Data Forwarding</b>'
+    } else if (mode === 2) {
+        message = 'The following execution is <b>Pipelined based without Data Forwarding</b>'
+    }
+    vex.dialog.alert({
+        unsafeMessage: message
+    })
+})

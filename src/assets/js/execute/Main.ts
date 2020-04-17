@@ -25,8 +25,8 @@ export class GlobalVar {
     2=> Pipelining without data forwarding
     */
     // TODO: Handle Default Values
-    static mode: number = 2;
-    static pipelineEnabled: boolean = true;
+    static mode: number = 0;
+    static pipelineEnabled: boolean = false;
 
     static CLOCK: number = 0;
 
@@ -101,6 +101,9 @@ export function removeBreakPoint(instrPC: number) {
 
 
 export function init(data): void {
+    if (GlobalVar.mode === 1 || GlobalVar.mode === 2) {
+        GlobalVar.pipelineEnabled = true;
+    }
     // Setting pc and clock
     GlobalVar.PC = 0;
     GlobalVar.CLOCK = 0;

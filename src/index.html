@@ -5,6 +5,10 @@
     <title>Project Heritage</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.4.0/bootbox.min.js"
+        integrity="sha256-sfG8c9ILUB8EXQ5muswfjZsKICbRIJUG/kBogvvV5sY=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="../node_modules/vex-js/dist/css/vex.css" />
+    <link rel="stylesheet" href="../node_modules/vex-js/dist/css/vex-theme-wireframe.css" />
 </head>
 
 <body>
@@ -15,10 +19,10 @@
                 <a href="#heditor" class="toggle-btn editor-btn">Editor</a>
                 <a href="#simulator" class="toggle-btn simulator-btn">Simulator</a>
                 <a href="#about" class="toggle-btn about-btn">About</a>
-            </div>
-
         </nav>
     </header>
+
+    <a href="#" data-micromodal-trigger="my-modal"></a>
     <section class="simulator-wapper display_none">
         <div class="simulator">
             <div class="simulate_btns_wrapper">
@@ -27,6 +31,9 @@
                 </div>
                 <div class="cancel_btn">
                     Cancel
+                </div>
+                <div class="config-btn">
+                    Settings
                 </div>
             </div>
             <div class="simulate1_btns_wrapper" style="display: none;">
@@ -47,6 +54,9 @@
                 </div>
                 <div class="cancel_btn">
                     Cancel
+                </div>
+                <div class="config-btn-display-only">
+                    Settings
                 </div>
             </div>
             <div class='code_segment_wrapper'>
@@ -273,6 +283,7 @@ git checkout GUI
     <div id="snackbar">Program Successfully Executed</div>
     <div id="editor">
         addi x10, x12, 193
+        add x8, x10, x0
         # jal x11, hello0
 
         # jalr x10, x0, 16

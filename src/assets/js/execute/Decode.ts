@@ -255,9 +255,13 @@ export function Decode() {
         GlobalVar.isb.isb1.RM = GlobalVar.regFile.getRegVal(locationC);
     }
 
-    // TODO: Handle JAL instructions
+    // TODO: Handle JALR instructions (DONE)
     if (GlobalVar.isb.controlHazardType === 2) {
-
+        console.log("JALR(From Decode): Setting newpc value");
+        // setting new value of PC
+        console.log(GlobalVar.PC);
+        GlobalVar.PC = GlobalVar.regFile.getRS1() + evaluateImm(GlobalVar.immVal);
+        console.log("NEW PC:", GlobalVar.PC);
     }
 
     // Verifing the branch prediction
@@ -286,13 +290,15 @@ export function Decode() {
                 console.log('evim', evaluateImm(GlobalVar.immVal));
             }
         }
-        // Finding misprediction
+        // Finding misprediction: If true then updating PC
         if (GlobalVar.isb.isb1.isBranchTaken && branchActualCondition == false) {
             GlobalVar.isb.branchMispredictions++;
+            console.log("MISPREDiCTION");
             GlobalVar.isb.flushPipeline = true;
             GlobalVar.PC = GlobalVar.isb.branchAddressDef;
         } else if (GlobalVar.isb.isb1.isBranchTaken == false && branchActualCondition) {
             GlobalVar.isb.branchMispredictions++;
+            console.log("MISPREDiCTION");
             GlobalVar.isb.flushPipeline = true;
             GlobalVar.PC = GlobalVar.isb.branchAddressDef;
         } else {

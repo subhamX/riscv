@@ -413,6 +413,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     updateRegAndMemState();
     // updating Current PC locally
     currPC = execute.getPC();
+    console.log("NEW PC", currPC);
     if (execute.getIsComplete()) {
         activateAssembleAndSimulateBtn();
         showSnackBar();

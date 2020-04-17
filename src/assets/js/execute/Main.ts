@@ -240,6 +240,7 @@ function Fetch(): boolean {
         let controlHazardType = detectControlHazard();
         // TODO: Create Branch Target Buffer And save addresses indexed by PC 
         let { branchAddressDef, branchAddress } = updateBranchAddress(controlHazardType);
+        console.log("BRANCH: ", branchAddress, branchAddressDef);
         GlobalVar.isb.branchAddress = branchAddress;
         GlobalVar.isb.branchAddressDef = branchAddressDef;
         GlobalVar.isb.controlHazardType = controlHazardType;
@@ -255,15 +256,17 @@ function updateBranchAddress(controlHazardType: Number) {
         // Branch
         GlobalVar.immVal = GlobalVar.IR[0] + GlobalVar.IR[24] + GlobalVar.IR.slice(1, 7) + GlobalVar.IR.slice(20, 24);
         GlobalVar.immVal = (GlobalVar.immVal + '0');
-        let inA: number = GlobalVar.regFile.getRS1();
-        branchAddress = inA + evaluateImm(GlobalVar.immVal);
+        branchAddress = GlobalVar.PC - 4 + evaluateImm(GlobalVar.immVal);
+        console.log("SettingNew BranchAddress as: ", branchAddress)
     } else if (controlHazardType == 2) {
         // jalr
+        // !! Check if for JAL Branch address calculation is done here at fetch or not
+        console.log("JAI")
         GlobalVar.immVal = GlobalVar.IR.slice(0, 12);
         let rs1 = GlobalVar.IR.slice(12, 17);
         GlobalVar.regFile.setRS1(parseInt(rs1, 2));
         let inA: number = GlobalVar.regFile.getRS1();
-        GlobalVar.RZ = inA + evaluateImm(GlobalVar.immVal);
+        branchAddress = GlobalVar.PC - 4 + inA + evaluateImm(GlobalVar.immVal);
     } else if (controlHazardType == 1) {
         // jal
         GlobalVar.immVal = GlobalVar.IR[0] + GlobalVar.IR.slice(12, 20) + GlobalVar.IR[11] + GlobalVar.IR.slice(1, 11);
@@ -320,10 +323,45 @@ export function UpdatePC(PC_Select: number, inpImm?: number): void {
  * 
  */
 
+
 export function singlePipelineStep() {
-    let no_inst: boolean = false;
     console.log('-----------*****PIPE*****------------')
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
+    let no_inst: boolean = false;
+    if (GlobalVar.CLOCK === 0) {
+        // Pipeline is empty! Only Fetch a new instruction
+        pipelinedFetch(no_inst);
+    } else if (GlobalVar.CLOCK === 1) {
+        // Decode then Fetch
+        pipelinedDecode();
+        pipelinedFetch(no_inst);
+    } else {
+        // Execute then Decode then Fetch
+        Execute();
+
+    }
+    GlobalVar.CLOCK++;
+
+    GlobalVar.isb.showInterStateBuffer();
+    console.log("CH", GlobalVar.PC);
+
+    if (no_inst === false) {
+
+    }
+}
+
+
+function pipelinedDecode() {
+    // Decode Begin
+    Decode();
+    if (GlobalVar.isb.stallAtDecode === true) {
+        // stall pipeline
+        console.log("STALLING PIPELINE");
+    }
+    // Decode End    
+}
+
+function pipelinedFetch(no_inst) {
     // Fetch Begin
     no_inst = Fetch();
     // Updating the InterstateBuffer
@@ -340,11 +378,4 @@ export function singlePipelineStep() {
         return;
     }
     // Fetch End
-    GlobalVar.isb.showInterStateBuffer();
-    // Decode Begin
-
-}
-
-function pipelinedFetch() {
-
 }

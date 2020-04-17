@@ -42,12 +42,31 @@ class ISB4 {
 
 }
 
+export class ProgramCounterBuffer {
+    fetchPC: number;
+    decodePC: number;
+    executePC: number;
+    memoryPC: number;
+    writeBackPC: number;
+
+    constructor() {
+        this.fetchPC = -1;
+        this.decodePC = -1;
+        this.executePC = -1;
+        this.memoryPC = -1;
+        this.writeBackPC = -1;
+    }
+}
 
 export class InterStateBuffer {
     isb1: ISB1;
     isb2: ISB2;
     isb3: ISB3;
     isb4: ISB4;
+
+    // This is entirely for GUI purposes
+    pcBuf: ProgramCounterBuffer;
+
 
     // Stores the Address of the Register
     prevWriteReg: Number;
@@ -75,9 +94,25 @@ export class InterStateBuffer {
         this.isb2 = new ISB2();
         this.isb3 = new ISB3();
         this.isb4 = new ISB4();
+        this.pcBuf = new ProgramCounterBuffer();
         this.branchMispredictions = 0;
         this.flushPipeline = false;
         this.stallAtDecode = false;
+    }
+
+    updatePCBuffer() {
+        this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
+        this.pcBuf.memoryPC = this.pcBuf.executePC;
+        this.pcBuf.executePC = this.pcBuf.decodePC;
+        this.pcBuf.decodePC = this.pcBuf.fetchPC;
+        console.log("PCTEMP: ", GlobalVar.pcTemp)
+        this.pcBuf.fetchPC = GlobalVar.pcTemp;
+    }
+
+    updatePCBufferOnStall() {
+        this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
+        this.pcBuf.memoryPC = this.pcBuf.executePC;
+        // this.pcBuf.executePC = this.pcBuf.decodePC;
     }
 
     updateInterStateBufferAfterDecode() {
@@ -88,13 +123,13 @@ export class InterStateBuffer {
 
     updateOnStall() {
         this.isb4.type = this.isb3.type;
-        this.isb3.type = this.isb2.type;
+        // this.isb3.type = this.isb2.type;
         // this.isb2.type = this.isb1.type;
         this.isb4.returnAddress = this.isb3.returnAddress;
-        this.isb3.returnAddress = this.isb2.returnAddress;
+        // this.isb3.returnAddress = this.isb2.returnAddress;
 
         this.isb4.operCode = this.isb3.operCode;
-        this.isb3.operCode = this.isb2.operCode;
+        // this.isb3.operCode = this.isb2.operCode;
     }
 
     updateInterStateBuffer() {

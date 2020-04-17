@@ -2,7 +2,10 @@ import ace from 'ace-builds/src-min-noconflict/ace';
 import { main } from './encode/index';
 import * as execute from './execute/Main';
 import { addZeros, addOnes } from './encode/utility'
+import { ProgramCounterBuffer } from './execute/InterStateBuffer'
 var vex = require('vex-js')
+
+
 vex.registerPlugin(require('vex-dialog'))
 vex.defaultOptions.className = 'vex-theme-wireframe'
 // Debug Flag: Set this true to open simulator pane directly
@@ -124,6 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     if (debug == true) {
         (<HTMLElement>document.querySelector('.simulator-btn')).click();
+        // setting mode as pipeline + data forwarding
+        mode = 1;
+        execute.GlobalVar.mode = 1;
     }
 })
 
@@ -198,7 +204,10 @@ function handleAssembleAndSimulate() {
     execute.init(response.codeSegment);
     // Updaing Register and Memory State
     updateRegAndMemState();
-    updateHighlightedInst(-1);
+    // Highlighting only if pipeline is enabled
+    if (!execute.GlobalVar.pipelineEnabled) {
+        updateHighlightedInst(-1);
+    }
     return 0;
 }
 
@@ -403,6 +412,35 @@ function showSnackBar() {
     setTimeout(function () { x.className = x.className.replace("show", ""); }, 3000);
 }
 
+let pcBufNameToClassName: Map<string, string> = new Map<string, string>();
+
+pcBufNameToClassName.set('fetchPC', 'curr_fetch_statement')
+pcBufNameToClassName.set('decodePC', 'curr_decode_statement')
+pcBufNameToClassName.set('executePC', 'curr_execute_statement')
+pcBufNameToClassName.set('memoryPC', 'curr_memory_statement')
+pcBufNameToClassName.set('writeBackPC', 'curr_writeback_statement')
+
+function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, removeOnly: boolean = false) {
+    console.log("OLD", prev)
+    console.log("New", execute.GlobalVar.isb.pcBuf)
+    Object.entries(prev).forEach((e) => {
+        if (e[1] !== -1) {
+            let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
+            let className = pcBufNameToClassName.get(e[0]);
+            console.log("REMOVING: ", e, className);
+            prevInstr.classList.remove(className);
+        }
+    })
+    if (!removeOnly) {
+        Object.entries(execute.GlobalVar.isb.pcBuf).forEach((e) => {
+            if (e[1] !== -1) {
+                let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
+                let className = pcBufNameToClassName.get(e[0]);
+                prevInstr.classList.add(className);
+            }
+        })
+    }
+}
 // Updated by Modal
 /* mode: 
 0=> Without Pipeline 
@@ -417,21 +455,24 @@ let mode: number = 0;
 document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     if (mode == 1 || mode == 2) {
         // updating Inital PC
-        let prevHighlighted = currPC;
+        let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
         // ! Executing SingleINS
         // execute.singleINS();
         // ! Executing Pipeline step instead of normal step
         execute.singlePipelineStep();
+        console.log("New: ", execute.GlobalVar.isb.pcBuf);
+
         updateRegAndMemState();
         // updating Current PC locally
         currPC = execute.getPC();
         console.log("NEW PC", currPC);
         if (execute.getIsComplete()) {
+            updateHighlightedPipelineInstr(prevHighlightedPCBuffer, true);
             activateAssembleAndSimulateBtn();
             showSnackBar();
             return;
         }
-        updateHighlightedInst(prevHighlighted)
+        updateHighlightedPipelineInstr(prevHighlightedPCBuffer)
     } else {
         // updating Inital PC
         let prevHighlighted = currPC;

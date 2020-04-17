@@ -7,6 +7,7 @@ body:not(#editor) {
   padding: 0;
   margin: 0;
   font-family: "Lato-Regular";
+  overflow-y: scroll !important;
 }
 
 #editor {
@@ -99,7 +100,13 @@ header {
 .simulate_btns_wrapper {
   display: flex;
   justify-content: center;
-  height: 10vh;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* height: 10vh; */
 }
 
 .simulator-wapper .simulate_btns_wrapper div {
@@ -109,6 +116,7 @@ header {
   height: fit-content;
   cursor: pointer;
   width: fit-content;
+  vertical-align: center;
   border-radius: 20px;
   text-align: center;
 }
@@ -173,6 +181,31 @@ header {
 
 .instructions_wrapper .active_statement {
   background-color: rgb(107, 216, 107) !important;
+}
+
+.curr_fetch_statement {
+  background-color: #aa00ff !important;
+  color: white;
+}
+
+.curr_decode_statement {
+  background-color: #00897b !important;
+  color: white;
+}
+
+.curr_execute_statement {
+  background-color: #0288d1 !important;
+  color: white;
+}
+
+.curr_memory_statement {
+  background-color: #673ab7 !important;
+  color: white;
+}
+
+.curr_writeback_statement {
+  background-color: #880e4f !important;
+  color: white;
 }
 
 /* Memory Pane */
@@ -283,6 +316,12 @@ header {
   justify-content: center;
   padding: 10px;
   flex-flow: wrap;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .simulate1_btns_wrapper div {
   border: 1px solid black;

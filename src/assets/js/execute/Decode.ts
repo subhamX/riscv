@@ -319,7 +319,6 @@ export function Decode() {
     if (GlobalVar.pipelineEnabled && (GlobalVar.isb.controlHazardType === 1 || GlobalVar.isb.controlHazardType === 2)) {
         GlobalVar.regFile.setRegVal(locationC, GlobalVar.isb.isb1.returnAddress);
     }
-
     // Increment the stall count
     if (stallRB || stallRC || stallRA) {
         GlobalVar.isb.numberOfStalls++;

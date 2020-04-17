@@ -101,14 +101,19 @@ export function removeBreakPoint(instrPC: number) {
 
 
 export function init(data): void {
+    // setting pipeline enabled flag
     if (GlobalVar.mode === 1 || GlobalVar.mode === 2) {
         GlobalVar.pipelineEnabled = true;
+    } else if (GlobalVar.mode === 0) {
+        GlobalVar.pipelineEnabled = false;
     }
     // Setting pc and clock
     GlobalVar.PC = 0;
     GlobalVar.CLOCK = 0;
+    // variable used in case of pipelined instructions
     times = 0;
     noInstr = false;
+
     GlobalVar.isComplete = false;
     GlobalVar.invalid = false;
     GlobalVar.instructionMap = new Map<number, string>();
@@ -329,17 +334,20 @@ export function UpdatePC(PC_Select: number, inpImm?: number): void {
 export function singlePipelineStep() {
     console.log('-----------*****PIPE*****------------');
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
+    console.log("OLD: ", GlobalVar.isb.pcBuf);
     if (GlobalVar.isComplete) {
         console.log("ALREADY COMPLETE: times: ", times);
         return;
     }
     if (GlobalVar.CLOCK === 0) {
-        // Pipeline is empty! Only Fetch a new instruction
+        // Pipeline is empty! Only Fetching a new instruction
         noInstr = pipelinedFetch(noInstr);
     } else if (GlobalVar.CLOCK === 1) {
         // Decode then Fetch
         let res = pipelinedDecode();
         if (res === true) {
+            // If stall is true
+            GlobalVar.isb.updatePCBufferOnStall();
             GlobalVar.CLOCK++;
             return;
         }
@@ -350,6 +358,8 @@ export function singlePipelineStep() {
         pipelinedExecute();
         let res = pipelinedDecode();
         if (res === true) {
+            // If stall is true
+            GlobalVar.isb.updatePCBufferOnStall();
             GlobalVar.CLOCK++;
             return;
         }
@@ -360,6 +370,8 @@ export function singlePipelineStep() {
         pipelinedExecute();
         let res = pipelinedDecode();
         if (res === true) {
+            // If stall is true
+            GlobalVar.isb.updatePCBufferOnStall();
             GlobalVar.CLOCK++;
             return;
         }
@@ -371,6 +383,8 @@ export function singlePipelineStep() {
         pipelinedExecute();
         let res = pipelinedDecode();
         if (res === true) {
+            // If stall is true
+            GlobalVar.isb.updatePCBufferOnStall();
             GlobalVar.CLOCK++;
             return;
         }
@@ -412,6 +426,8 @@ function pipelinedFetch(no_inst): boolean {
     console.log("FETCH: ", no_inst);
     // If no instructions then returning
     if (no_inst) {
+        GlobalVar.isb.updatePCBuffer();
+        GlobalVar.isb.pcBuf.fetchPC = -1;
         times++;
         console.log("SETTING times as: ", times);
         if (times === 4) {
@@ -421,7 +437,7 @@ function pipelinedFetch(no_inst): boolean {
     }
     // Fetch Begin
     no_inst = Fetch();
-    // TODO: If pipelining is enabled
+    // If pipelining is enabled
     if (GlobalVar.pipelineEnabled) {
         let controlHazardType = detectControlHazard();
         // TODO: Create Branch Target Buffer And save addresses indexed by PC 
@@ -440,11 +456,15 @@ function pipelinedFetch(no_inst): boolean {
         GlobalVar.PC = GlobalVar.isb.branchAddress;
         GlobalVar.pcTemp = GlobalVar.PC;
     }
+    console.log("HELLO", GlobalVar.pcTemp, GlobalVar.pipelineEnabled)
+    if (GlobalVar.pipelineEnabled) {
+        GlobalVar.isb.updatePCBuffer();
+    }
     return no_inst;
     // TODO: Run for four more times. If Last Instructions is fetched
-    if (no_inst) {
-        return;
-    }
+    // if (no_inst) {
+    //     return;
+    // }
     // Fetch End
 }
 

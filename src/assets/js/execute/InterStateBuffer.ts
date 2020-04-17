@@ -151,7 +151,9 @@ export class InterStateBuffer {
         // Passing type to next Interstatebuffer
         this.isb4.operCode = this.isb3.operCode;
         this.isb3.operCode = this.isb2.operCode;
-        this.isb2.operCode = GlobalVar.operCode;
+        if (this.isb2.type) {
+            this.isb2.operCode = GlobalVar.operCode;
+        }
         // operCode directly set to isb2
     }
 

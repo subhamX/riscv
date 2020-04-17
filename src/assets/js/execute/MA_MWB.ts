@@ -7,8 +7,9 @@ export function MemoryOperations() {
     if (GlobalVar.pipelineEnabled) {
         let opr = GlobalVar.operationMap.get(GlobalVar.isb.isb3.operCode);
         if (GlobalVar.isb.isb3.type === 'S') {
-            console.log("HANU", GlobalVar.isb.isb3.operCode)
+            console.log("HANU: operCode, opr", GlobalVar.isb.isb3.operCode, opr)
             GlobalVar.MDR = GlobalVar.RM;
+            console.log("Address, Value: ", GlobalVar.RZ, GlobalVar.RM);
             GlobalVar.memFile.MEM_WRITE(GlobalVar.RZ, GlobalVar.RM, opr.slice(1));
         } else if (opr == 'ld' || opr == 'lw' || opr == 'lh' || opr == 'lb') {
             GlobalVar.MDR = GlobalVar.memFile.MEM_READ(GlobalVar.RZ, opr.slice(1));
@@ -73,6 +74,6 @@ export function WriteBack() {
         if (GlobalVar.type == 'R' || GlobalVar.type == 'I' || GlobalVar.type == 'U' || GlobalVar.type == 'UJ') {
             GlobalVar.regFile.setRegVal(GlobalVar.regFile.getRDAddr(), GlobalVar.RY);
         }
-        console.log("RY", GlobalVar.RY);
+        console.log("Ry", GlobalVar.RY);
     }
 }

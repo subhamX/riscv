@@ -283,8 +283,11 @@ git checkout GUI
     </section>
     <div id="snackbar">Program Successfully Executed</div>
     <div id="editor">
-        addi x5, x5, 100
-        addi x5, x5, 200
+        sw x2, 15(x2)
+        lw x4, 12(x2)
+        sw x4, 20(x2)
+        # addi x5, x5, 100
+        # addi x5, x5, 200
         # jal x11, hello0
         # addi x10, x12, 193
         # add x8, x10, x0

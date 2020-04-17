@@ -209,6 +209,8 @@ export function Decode() {
             stallRB = false;
             GlobalVar.RB = GlobalVar.regFile.getRS2();
         }
+    } else if (GlobalVar.type === 'I' || GlobalVar.type === 'S') {
+        GlobalVar.RB = GlobalVar.regFile.getRS2();
     }
 
     // Passing values to inA and inB

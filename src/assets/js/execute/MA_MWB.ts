@@ -17,6 +17,7 @@ export function MemoryOperations() {
         // Updating RY
         if (GlobalVar.selectLineY == 0) {
             GlobalVar.RY = GlobalVar.RZ;
+            console.log("Chose path from ALU: RY", GlobalVar.RY)
         }
         else if (GlobalVar.selectLineY == 1) {
             GlobalVar.RY = GlobalVar.MDR;
@@ -58,11 +59,13 @@ export function MemoryOperations() {
 
 // Stage - 5
 export function WriteBack() {
+    console.log("WRITEBACK");
     if (GlobalVar.pipelineEnabled) {
         let type = GlobalVar.isb.isb4.type;
+        console.log("WRITE TO: ", GlobalVar.isb.isb4.writeBackRegLocation);
         console.log('type', type);
         if (type == 'R' || type == 'I' || type == 'U' || type == 'UJ') {
-            GlobalVar.regFile.setRegVal(GlobalVar.regFile.getRDAddr(), GlobalVar.RY);
+            GlobalVar.regFile.setRegVal(GlobalVar.isb.isb4.writeBackRegLocation, GlobalVar.RY);
         }
         console.log("RY", GlobalVar.RY);
     } else {

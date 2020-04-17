@@ -323,26 +323,42 @@ export function singlePipelineStep() {
         pipelinedFetch(no_inst);
     } else if (GlobalVar.CLOCK === 1) {
         // Decode then Fetch
-        pipelinedDecode();
+        let res = pipelinedDecode();
+        if (res === true) {
+            GlobalVar.CLOCK++;
+            return;
+        }
         pipelinedFetch(no_inst);
     } else if (GlobalVar.CLOCK === 2) {
         // Execute then Decode then Fetch
         console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
         pipelinedExecute();
-        pipelinedDecode();
+        let res = pipelinedDecode();
+        if (res === true) {
+            GlobalVar.CLOCK++;
+            return;
+        }
         pipelinedFetch(no_inst);
     } else if (GlobalVar.CLOCK === 3) {
         // Memory then Execute then Decode then Fetch
         pipelinedMemory();
         pipelinedExecute();
-        pipelinedDecode();
+        let res = pipelinedDecode();
+        if (res === true) {
+            GlobalVar.CLOCK++;
+            return;
+        }
         pipelinedFetch(no_inst);
     } else {
         // Run all steps WriteBack then Memory then Execute then Decode then Fetch
         pipelineWriteBack();
         pipelinedMemory()
         pipelinedExecute();
-        pipelinedDecode();
+        let res = pipelinedDecode();
+        if (res === true) {
+            GlobalVar.CLOCK++;
+            return;
+        }
         pipelinedFetch(no_inst);
     }
     GlobalVar.CLOCK++;
@@ -361,12 +377,18 @@ function pipelinedMemory() {
 }
 
 
-function pipelinedDecode() {
+function pipelinedDecode(): boolean {
     // Decode Begin
     Decode();
     if (GlobalVar.isb.stallAtDecode === true) {
         // stall pipeline
-        console.log("STALLING PIPELINE");
+        console.log("STALLING PIPELINE! Returning");
+        GlobalVar.isb.updateOnStall();
+        GlobalVar.isb.updateInterStateBufferAfterDecode();
+        return true;
+    } else {
+        GlobalVar.isb.updateInterStateBufferAfterDecode();
+        return false;
     }
     // Decode End    
 }

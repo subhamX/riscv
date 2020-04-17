@@ -9,6 +9,7 @@ class ISB1 {
     operCode: string;
     RM;
     isBranchTaken: boolean = true;
+    writeBackRegLocation: number;
 }
 
 
@@ -17,6 +18,7 @@ class ISB2 {
     returnAddress;
     // operCode is opcode + func3 + func7
     operCode: string;
+    writeBackRegLocation: number;
 
 }
 
@@ -26,6 +28,7 @@ class ISB3 {
     returnAddress;
     // operCode is opcode + func3 + func7
     operCode: string;
+    writeBackRegLocation: number;
 
 }
 
@@ -35,6 +38,7 @@ class ISB4 {
     returnAddress;
     // operCode is opcode + func3 + func7
     operCode: string;
+    writeBackRegLocation: number;
 
 }
 
@@ -75,6 +79,24 @@ export class InterStateBuffer {
         this.flushPipeline = false;
         this.stallAtDecode = false;
     }
+
+    updateInterStateBufferAfterDecode() {
+        this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
+        this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
+        this.isb2.writeBackRegLocation = GlobalVar.regFile.getRDAddr();
+    }
+
+    updateOnStall() {
+        this.isb4.type = this.isb3.type;
+        this.isb3.type = this.isb2.type;
+        // this.isb2.type = this.isb1.type;
+        this.isb4.returnAddress = this.isb3.returnAddress;
+        this.isb3.returnAddress = this.isb2.returnAddress;
+
+        this.isb4.operCode = this.isb3.operCode;
+        this.isb3.operCode = this.isb2.operCode;
+    }
+
     updateInterStateBuffer() {
         this.isb4.returnAddress = this.isb3.returnAddress;
         this.isb3.returnAddress = this.isb2.returnAddress;

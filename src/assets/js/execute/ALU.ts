@@ -14,7 +14,7 @@ export function Execute() {
         inB = evaluateImm(GlobalVar.immVal);
     }
     else {
-        inB = GlobalVar.regFile.getRS2()
+        inB = GlobalVar.regFile.getRS2();
     }
     console.log('inB inA', inB, inA);
     console.log("operation", GlobalVar.ALU_op);
@@ -75,9 +75,14 @@ export function Execute() {
         GlobalVar.RZ = inB << 12;
     }
     else if (GlobalVar.ALU_op == 'auipc') {
-        // TODO: need to use something else (not GlobalVar.PC) maybe returnAddress
-        inA = GlobalVar.PC - 4;
-        GlobalVar.RZ = inA + (inB << 12)
+        // TODO: need to use something else (not GlobalVar.PC) maybe returnAddress (DONE)
+        if (GlobalVar.pipelineEnabled) {
+            inA = GlobalVar.isb.isb2.returnAddress - 4;
+            GlobalVar.RZ = inA + (inB << 12)
+        } else {
+            inA = GlobalVar.PC - 4;
+            GlobalVar.RZ = inA + (inB << 12)
+        }
     }
     else if (GlobalVar.ALU_op == 'jal') {
         // enabling this only for non pipelined version

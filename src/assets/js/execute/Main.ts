@@ -235,43 +235,33 @@ function Fetch(): boolean {
         temp = addZeros(temp, 32);
         GlobalVar.IR = temp;
     }
-    // TODO: If pipelining is enabled
-    if (GlobalVar.mode == 1 || GlobalVar.mode == 2) {
-        let controlHazardType = detectControlHazard();
-        // TODO: Create Branch Target Buffer And save addresses indexed by PC 
-        let { branchAddressDef, branchAddress } = updateBranchAddress(controlHazardType);
-        console.log("BRANCH: ", branchAddress, branchAddressDef);
-        GlobalVar.isb.branchAddress = branchAddress;
-        GlobalVar.isb.branchAddressDef = branchAddressDef;
-        GlobalVar.isb.controlHazardType = controlHazardType;
-    }
     return false;
 }
 
 
 
 function updateBranchAddress(controlHazardType: Number) {
-    let branchAddress, branchAddressDef;
+    let branchAddress, branchAddressDef, immVal;
     if (controlHazardType == 3) {
         // Branch
-        GlobalVar.immVal = GlobalVar.IR[0] + GlobalVar.IR[24] + GlobalVar.IR.slice(1, 7) + GlobalVar.IR.slice(20, 24);
-        GlobalVar.immVal = (GlobalVar.immVal + '0');
-        branchAddress = GlobalVar.PC - 4 + evaluateImm(GlobalVar.immVal);
+        immVal = GlobalVar.IR[0] + GlobalVar.IR[24] + GlobalVar.IR.slice(1, 7) + GlobalVar.IR.slice(20, 24);
+        immVal = (immVal + '0');
+        branchAddress = GlobalVar.PC - 4 + evaluateImm(immVal);
         console.log("SettingNew BranchAddress as: ", branchAddress)
     } else if (controlHazardType == 2) {
         // jalr
         // !! Check if for JAL Branch address calculation is done here at fetch or not
         console.log("JAI")
-        GlobalVar.immVal = GlobalVar.IR.slice(0, 12);
+        immVal = GlobalVar.IR.slice(0, 12);
         let rs1 = GlobalVar.IR.slice(12, 17);
         GlobalVar.regFile.setRS1(parseInt(rs1, 2));
         let inA: number = GlobalVar.regFile.getRS1();
-        branchAddress = GlobalVar.PC - 4 + inA + evaluateImm(GlobalVar.immVal);
+        branchAddress = GlobalVar.PC - 4 + inA + evaluateImm(immVal);
     } else if (controlHazardType == 1) {
         // jal
-        GlobalVar.immVal = GlobalVar.IR[0] + GlobalVar.IR.slice(12, 20) + GlobalVar.IR[11] + GlobalVar.IR.slice(1, 11);
-        GlobalVar.immVal = (GlobalVar.immVal + '0');
-        branchAddress = evaluateImm(GlobalVar.immVal) + GlobalVar.PC - 4;
+        immVal = GlobalVar.IR[0] + GlobalVar.IR.slice(12, 20) + GlobalVar.IR[11] + GlobalVar.IR.slice(1, 11);
+        immVal = (immVal + '0');
+        branchAddress = evaluateImm(immVal) + GlobalVar.PC - 4;
     }
     branchAddressDef = GlobalVar.PC;
     return { branchAddressDef, branchAddress };
@@ -335,10 +325,25 @@ export function singlePipelineStep() {
         // Decode then Fetch
         pipelinedDecode();
         pipelinedFetch(no_inst);
-    } else {
+    } else if (GlobalVar.CLOCK === 2) {
         // Execute then Decode then Fetch
-        Execute();
-
+        console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
+        pipelinedExecute();
+        pipelinedDecode();
+        pipelinedFetch(no_inst);
+    } else if (GlobalVar.CLOCK === 3) {
+        // Memory then Execute then Decode then Fetch
+        pipelinedMemory();
+        pipelinedExecute();
+        pipelinedDecode();
+        pipelinedFetch(no_inst);
+    } else {
+        // Run all steps WriteBack then Memory then Execute then Decode then Fetch
+        pipelineWriteBack();
+        pipelinedMemory()
+        pipelinedExecute();
+        pipelinedDecode();
+        pipelinedFetch(no_inst);
     }
     GlobalVar.CLOCK++;
 
@@ -348,6 +353,11 @@ export function singlePipelineStep() {
     if (no_inst === false) {
 
     }
+}
+
+
+function pipelinedMemory() {
+    MemoryOperations();
 }
 
 
@@ -364,6 +374,16 @@ function pipelinedDecode() {
 function pipelinedFetch(no_inst) {
     // Fetch Begin
     no_inst = Fetch();
+    // TODO: If pipelining is enabled
+    if (GlobalVar.mode == 1 || GlobalVar.mode == 2) {
+        let controlHazardType = detectControlHazard();
+        // TODO: Create Branch Target Buffer And save addresses indexed by PC 
+        let { branchAddressDef, branchAddress } = updateBranchAddress(controlHazardType);
+        console.log("BRANCH: ", branchAddress, branchAddressDef);
+        GlobalVar.isb.branchAddress = branchAddress;
+        GlobalVar.isb.branchAddressDef = branchAddressDef;
+        GlobalVar.isb.controlHazardType = controlHazardType;
+    }
     // Updating the InterstateBuffer
     console.log(GlobalVar.pcTemp);
     GlobalVar.isb.updateInterStateBuffer();
@@ -378,4 +398,14 @@ function pipelinedFetch(no_inst) {
         return;
     }
     // Fetch End
+}
+
+
+function pipelinedExecute() {
+    Execute();
+}
+
+
+function pipelineWriteBack() {
+    WriteBack();
 }

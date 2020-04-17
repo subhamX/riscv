@@ -2,8 +2,12 @@ import { GlobalVar, UpdatePC } from './Main';
 import { determineSelectLines, evaluateImm } from './helperFun';
 
 export function Execute() {
-
-    determineSelectLines(GlobalVar.type);
+    if (GlobalVar.pipelineEnabled) {
+        console.log("HELLo ISB2: Type: ", GlobalVar.isb.isb2.type)
+        determineSelectLines(GlobalVar.isb.isb2.type);
+    } else {
+        determineSelectLines(GlobalVar.type);
+    }
     let inA: number = GlobalVar.regFile.getRS1();
     let inB: number;
     if (GlobalVar.selectLineB == 1) {
@@ -37,29 +41,7 @@ export function Execute() {
     }
     else if (GlobalVar.ALU_op == 'xor') {
         GlobalVar.RZ = inA ^ inB;
-    }
-    else if (GlobalVar.ALU_op == 'beq') {
-        if (inA == inB) {
-            UpdatePC(1, evaluateImm(GlobalVar.immVal));
-        }
-    }
-    else if (GlobalVar.ALU_op == 'bne') {
-        if (inA != inB) {
-            UpdatePC(1, evaluateImm(GlobalVar.immVal));
-        }
-    }
-    else if (GlobalVar.ALU_op == 'bge') {
-        if (inA >= inB) {
-            UpdatePC(1, evaluateImm(GlobalVar.immVal));
-        }
-    }
-    else if (GlobalVar.ALU_op == 'blt') {
-        if (inA < inB) {
-            UpdatePC(1, evaluateImm(GlobalVar.immVal));
-            console.log('evim', evaluateImm(GlobalVar.immVal));
-        }
-    }
-    else if (GlobalVar.ALU_op == 'sll') {
+    } else if (GlobalVar.ALU_op == 'sll') {
         GlobalVar.RZ = inA << inB;
     }
     else if (GlobalVar.ALU_op == 'slt') {
@@ -77,10 +59,15 @@ export function Execute() {
     }
     else if (GlobalVar.ALU_op == 'jalr') {
         GlobalVar.RZ = inA + inB;
-        UpdatePC(0);
+        // If pipeline enabled then no updation of PC
+        if (!GlobalVar.pipelineEnabled) {
+            UpdatePC(0);
+        }
     }
     else if (GlobalVar.ALU_op == 'sb' || GlobalVar.ALU_op == 'sw' || GlobalVar.ALU_op == 'sd' || GlobalVar.ALU_op == 'sh') {
+        console.log("Imm", evaluateImm(GlobalVar.immVal))
         GlobalVar.RZ = inA + evaluateImm(GlobalVar.immVal);
+        console.log("RZ", GlobalVar.RZ)
         GlobalVar.RM = GlobalVar.RB;
         console.log('RM', GlobalVar.RM);
     }
@@ -88,12 +75,44 @@ export function Execute() {
         GlobalVar.RZ = inB << 12;
     }
     else if (GlobalVar.ALU_op == 'auipc') {
+        // TODO: need to use something else (not GlobalVar.PC) maybe returnAddress
         inA = GlobalVar.PC - 4;
         GlobalVar.RZ = inA + (inB << 12)
     }
     else if (GlobalVar.ALU_op == 'jal') {
-        UpdatePC(1, inB);
+        // enabling this only for non pipelined version
+        if (!GlobalVar.pipelineEnabled) {
+            UpdatePC(1, inB);
+        }
     }
+
+
+    // Branch Instructions
+    // Handling only if pipelining is false;
+    if (!GlobalVar.pipelineEnabled) {
+        if (GlobalVar.ALU_op == 'beq') {
+            if (inA == inB) {
+                UpdatePC(1, evaluateImm(GlobalVar.immVal));
+            }
+        }
+        else if (GlobalVar.ALU_op == 'bne') {
+            if (inA != inB) {
+                UpdatePC(1, evaluateImm(GlobalVar.immVal));
+            }
+        }
+        else if (GlobalVar.ALU_op == 'bge') {
+            if (inA >= inB) {
+                UpdatePC(1, evaluateImm(GlobalVar.immVal));
+            }
+        }
+        else if (GlobalVar.ALU_op == 'blt') {
+            if (inA < inB) {
+                UpdatePC(1, evaluateImm(GlobalVar.immVal));
+                console.log('evim', evaluateImm(GlobalVar.immVal));
+            }
+        }
+    }
+
     // Converting any overflowing number to negative 
     GlobalVar.RZ <<= 0;
     console.log('rz', GlobalVar.RZ);

@@ -5,7 +5,8 @@ class ISB1 {
     type: string;
     returnAddress;
     // For identification of jalr
-    opcode: string;
+    // operCode is opcode + func3 + func7
+    operCode: string;
     RM;
     isBranchTaken: boolean = true;
 }
@@ -14,7 +15,8 @@ class ISB1 {
 class ISB2 {
     type: string;
     returnAddress;
-    opcode: string;
+    // operCode is opcode + func3 + func7
+    operCode: string;
 
 }
 
@@ -22,7 +24,8 @@ class ISB2 {
 class ISB3 {
     type: string;
     returnAddress;
-    opcode: string;
+    // operCode is opcode + func3 + func7
+    operCode: string;
 
 }
 
@@ -30,7 +33,8 @@ class ISB3 {
 class ISB4 {
     type: string;
     returnAddress;
-    opcode: string;
+    // operCode is opcode + func3 + func7
+    operCode: string;
 
 }
 
@@ -76,6 +80,18 @@ export class InterStateBuffer {
         this.isb3.returnAddress = this.isb2.returnAddress;
         this.isb2.returnAddress = this.isb1.returnAddress;
         this.isb1.returnAddress = GlobalVar.pcTemp;
+
+        // Passing type to next Interstatebuffer
+        this.isb4.type = this.isb3.type;
+        this.isb3.type = this.isb2.type;
+        this.isb2.type = this.isb1.type;
+        this.isb1.type = GlobalVar.type;
+
+        // Passing type to next Interstatebuffer
+        this.isb4.operCode = this.isb3.operCode;
+        this.isb3.operCode = this.isb2.operCode;
+        this.isb2.operCode = GlobalVar.operCode;
+        // operCode directly set to isb2
     }
 
     showInterStateBuffer() {

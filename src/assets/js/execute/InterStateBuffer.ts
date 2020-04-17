@@ -123,13 +123,17 @@ export class InterStateBuffer {
 
     updateOnStall() {
         this.isb4.type = this.isb3.type;
-        // this.isb3.type = this.isb2.type;
+        this.isb3.type = this.isb2.type;
         // this.isb2.type = this.isb1.type;
         this.isb4.returnAddress = this.isb3.returnAddress;
-        // this.isb3.returnAddress = this.isb2.returnAddress;
+        this.isb3.returnAddress = this.isb2.returnAddress;
 
         this.isb4.operCode = this.isb3.operCode;
-        // this.isb3.operCode = this.isb2.operCode;
+        this.isb3.operCode = this.isb2.operCode;
+
+        this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
+        this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
+
     }
 
     updateInterStateBuffer() {

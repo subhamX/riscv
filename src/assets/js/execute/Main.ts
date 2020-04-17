@@ -414,7 +414,6 @@ function pipelinedDecode(): boolean {
         // stall pipeline
         console.log("STALLING PIPELINE! Returning");
         GlobalVar.isb.updateOnStall();
-        GlobalVar.isb.updateInterStateBufferAfterDecode();
         return true;
     } else {
         GlobalVar.isb.updateInterStateBufferAfterDecode();
@@ -447,7 +446,6 @@ function pipelinedFetch(no_inst): boolean {
         let controlHazardType = detectControlHazard();
         // TODO: Create Branch Target Buffer And save addresses indexed by PC 
         let { branchAddressDef, branchAddress } = updateBranchAddress(controlHazardType);
-        console.log("BRANCH: ", branchAddress, branchAddressDef);
         GlobalVar.isb.branchAddress = branchAddress;
         GlobalVar.isb.branchAddressDef = branchAddressDef;
         GlobalVar.isb.controlHazardType = controlHazardType;

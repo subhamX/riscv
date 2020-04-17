@@ -422,8 +422,8 @@ pcBufNameToClassName.set('memoryPC', 'curr_memory_statement')
 pcBufNameToClassName.set('writeBackPC', 'curr_writeback_statement')
 
 function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, removeOnly: boolean = false) {
-    console.log("OLD", prev)
-    console.log("New", execute.GlobalVar.isb.pcBuf)
+    // console.log("OLD", prev)
+    // console.log("New", execute.GlobalVar.isb.pcBuf)
     Object.entries(prev).forEach((e) => {
         if (e[1] !== -1) {
             let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];

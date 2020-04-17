@@ -409,6 +409,7 @@ function pipelinedMemory() {
 function pipelinedDecode(): boolean {
     // Decode Begin
     Decode();
+    console.log("StallAtDecode:Bool =>", GlobalVar.isb.stallAtDecode);
     if (GlobalVar.isb.stallAtDecode === true) {
         // stall pipeline
         console.log("STALLING PIPELINE! Returning");
@@ -426,6 +427,8 @@ function pipelinedFetch(no_inst): boolean {
     console.log("FETCH: ", no_inst);
     // If no instructions then returning
     if (no_inst) {
+        // Updating ISB
+        GlobalVar.isb.updateInterStateBuffer();
         // Only for GUI
         GlobalVar.isb.updatePCBuffer();
         GlobalVar.isb.pcBuf.fetchPC = -1;

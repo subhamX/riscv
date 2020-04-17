@@ -700,11 +700,11 @@ document.querySelector(".config-btn").addEventListener('click', () => {
             '</div>',
             '<div class="modal-config">',
             '<input name="configMode" type="radio" value="dfEnabledPipeline"  id="dfEnabledPipeline"/>',
-            '<label for="dfEnabledPipeline">Pipelining without Data Forwarding</label>',
+            '<label for="dfEnabledPipeline">Pipelining + Data Forwarding</label>',
             '</div>',
             '<div class="modal-config">',
             '<input name="configMode" type="radio" id="dfDisabledPipeline" value="dfDisabledPipeline"/>',
-            '<label for="dfDisabledPipeline">Pipelining + Data Forwarding</label>',
+            '<label for="dfDisabledPipeline">Pipelining without Data Forwarding</label>',
             '</div>',
         ].join(''),
         callback: function (value) {
@@ -712,7 +712,6 @@ document.querySelector(".config-btn").addEventListener('click', () => {
             if (!value) {
                 return;
             }
-
             if (value.configMode === 'nopipeline') {
                 mode = 0;
                 execute.GlobalVar.mode = 0;

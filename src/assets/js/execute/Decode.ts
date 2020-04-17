@@ -137,7 +137,6 @@ export function Decode() {
     // GlobalVar.regFile.getRS2();
 
 
-
     let locationA = GlobalVar.regFile.getR1Addr();
     let stallRA: boolean = false;
 
@@ -153,7 +152,9 @@ export function Decode() {
             } else {
                 stallRA = false;
                 // Address is already set above
-                GlobalVar.RA = GlobalVar.regFile.getRS1();
+                // ? CHECK: Type Data Forwarding
+                console.log(GlobalVar.RZ, "CHECK YOURSELF")
+                GlobalVar.RA = GlobalVar.RZ;
             }
         } else {
             stallRA = true;
@@ -161,7 +162,8 @@ export function Decode() {
     } else if ((GlobalVar.pipelineEnabled) && (locationA == GlobalVar.isb.prevPrevWriteReg && GlobalVar.isb.prevPrevWriteReg != 0)) {
         if (GlobalVar.mode === 1) {
             stallRA = false;
-            GlobalVar.RA = GlobalVar.regFile.getRS1();
+            // ? CHECK: Type Data Forwarding
+            GlobalVar.RA = GlobalVar.RY;
         } else {
             stallRA = true;
         }
@@ -185,7 +187,8 @@ export function Decode() {
                     stallRB = true;
                 } else {
                     stallRB = false;
-                    GlobalVar.RB = GlobalVar.regFile.getRS2();
+                    // ? CHECK: Type Data Forwarding
+                    GlobalVar.RB = GlobalVar.RZ;
                 }
             } else {
                 // Data Forwarding is disabled and only pipelining is enabled
@@ -196,7 +199,8 @@ export function Decode() {
             if (GlobalVar.mode === 1) {
                 // Data Forwarding is enabled
                 stallRB = false;
-                GlobalVar.RB = GlobalVar.regFile.getRS2();
+                // ? CHECK: Type Data Forwarding
+                GlobalVar.RB = GlobalVar.RY;
             } else {
                 stallRB = true;
             }
@@ -317,7 +321,6 @@ export function Decode() {
 
     // Write Back pcTemp value to Register [We will save 3 cycles if we perform this operation here]
     if (GlobalVar.pipelineEnabled && (GlobalVar.isb.controlHazardType === 1 || GlobalVar.isb.controlHazardType === 2)) {
-        console.log("BHAGWAN: ", GlobalVar.isb.isb1.returnAddress)
         GlobalVar.regFile.setRegVal(locationC, GlobalVar.isb.isb1.returnAddress);
     }
     // Increment the stall count

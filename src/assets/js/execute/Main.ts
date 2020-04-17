@@ -426,8 +426,10 @@ function pipelinedFetch(no_inst): boolean {
     console.log("FETCH: ", no_inst);
     // If no instructions then returning
     if (no_inst) {
+        // Only for GUI
         GlobalVar.isb.updatePCBuffer();
         GlobalVar.isb.pcBuf.fetchPC = -1;
+
         times++;
         console.log("SETTING times as: ", times);
         if (times === 4) {
@@ -449,17 +451,21 @@ function pipelinedFetch(no_inst): boolean {
     }
     // Updating the InterstateBuffer
     console.log(GlobalVar.pcTemp);
-    GlobalVar.isb.updateInterStateBuffer();
     // If the fetched instruction is jal, beq, jalr
     if (GlobalVar.isb.controlHazardType) {
+        console.log("OLD: PCTEMP, PC: ", GlobalVar.pcTemp, GlobalVar.PC);
+        // For control hazard instruction setting decodePC (For GUI)
+        GlobalVar.isb.pcBuf.decodePC = GlobalVar.pcTemp;
         // Overriding the updation of PC and pcTemp inside Fetch()
-        GlobalVar.PC = GlobalVar.isb.branchAddress;
         GlobalVar.pcTemp = GlobalVar.PC;
+        GlobalVar.PC = GlobalVar.isb.branchAddress;
     }
-    console.log("HELLO", GlobalVar.pcTemp, GlobalVar.pipelineEnabled)
+    console.log("PCTEMP, PC: ", GlobalVar.pcTemp, GlobalVar.PC);
     if (GlobalVar.pipelineEnabled) {
         GlobalVar.isb.updatePCBuffer();
     }
+    GlobalVar.isb.updateInterStateBuffer();
+
     return no_inst;
     // TODO: Run for four more times. If Last Instructions is fetched
     // if (no_inst) {

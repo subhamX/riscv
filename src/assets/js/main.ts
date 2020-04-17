@@ -204,6 +204,7 @@ function handleAssembleAndSimulate() {
     execute.init(response.codeSegment);
     // Updaing Register and Memory State
     updateRegAndMemState();
+    console.log(execute.GlobalVar.pipelineEnabled, "HEHE");
     // Highlighting only if pipeline is enabled
     if (!execute.GlobalVar.pipelineEnabled) {
         updateHighlightedInst(-1);
@@ -428,7 +429,10 @@ function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, removeOnly: 
             let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
             let className = pcBufNameToClassName.get(e[0]);
             console.log("REMOVING: ", e, className);
-            prevInstr.classList.remove(className);
+            if (prevInstr.classList.contains(className))
+                prevInstr.classList.remove(className);
+            else
+                console.log("Doesn't contain: ", className, e)
         }
     })
     if (!removeOnly) {
@@ -711,6 +715,7 @@ document.querySelector(".config-btn").addEventListener('click', () => {
 
             if (value.configMode === 'nopipeline') {
                 mode = 0;
+                execute.GlobalVar.mode = 0;
             } else if (value.configMode === 'dfEnabledPipeline') {
                 mode = 1;
                 execute.GlobalVar.mode = 1;

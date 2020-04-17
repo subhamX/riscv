@@ -317,6 +317,7 @@ export function Decode() {
 
     // Write Back pcTemp value to Register [We will save 3 cycles if we perform this operation here]
     if (GlobalVar.pipelineEnabled && (GlobalVar.isb.controlHazardType === 1 || GlobalVar.isb.controlHazardType === 2)) {
+        console.log("BHAGWAN: ", GlobalVar.isb.isb1.returnAddress)
         GlobalVar.regFile.setRegVal(locationC, GlobalVar.isb.isb1.returnAddress);
     }
     // Increment the stall count

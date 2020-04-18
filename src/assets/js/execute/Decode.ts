@@ -2,6 +2,7 @@ import { GlobalVar } from './Main';
 import { evaluateImm } from './helperFun';
 
 export function Decode() {
+    console.log("BEGIN OF DECODE")
     // extracting opcode of current instruction
     let opcode = GlobalVar.IR.slice(25, 32);
     // setting instruction type of current instruction
@@ -159,6 +160,7 @@ export function Decode() {
                 stallRA = false;
                 // Address is already set above
                 // ? CHECK: Type Data Forwarding
+                console.warn("Data Forwarding: RA = ", GlobalVar.RZ)
                 GlobalVar.RA = GlobalVar.RZ;
             }
         } else {
@@ -240,6 +242,7 @@ export function Decode() {
                     GlobalVar.RB = GlobalVar.regFile.getRS2()
                 } else {
                     stallRC = false;
+                    console.log("RX DATA", GlobalVar.RZ, GlobalVar.RY);
                     // Forwarding Data
                     GlobalVar.RB = GlobalVar.RZ;
                 }
@@ -354,5 +357,7 @@ export function Decode() {
     } else {
         GlobalVar.isb.prevWriteReg = locationC;
     }
+
+    console.log("END OF DECODE: RA, RB", GlobalVar.RA, GlobalVar.RB)
 
 }

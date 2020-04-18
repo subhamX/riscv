@@ -249,10 +249,11 @@ header {
 
 .instructions_wrapper .breakpoint_statement {
   background: rgb(250, 119, 119) !important;
+  width: 50px;
 }
 
 .instructions_wrapper .active_statement {
-  background-color: rgb(107, 216, 107) !important;
+  background: rgb(107, 216, 107) !important;
 }
 
 /* Memory Pane */

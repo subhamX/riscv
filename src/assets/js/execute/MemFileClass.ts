@@ -56,7 +56,6 @@ export class MemoryFile {
             let val = parseInt(tempStr, 2) >> 0;
             this.memory.set((addr + i), val);
         }
-        console.table(this.memory);
     }
 
     WriteData(addr: number, value: string) {

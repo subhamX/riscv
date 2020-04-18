@@ -2,19 +2,20 @@ import { GlobalVar, UpdatePC } from './Main';
 import { determineSelectLines, evaluateImm } from './helperFun';
 
 export function Execute() {
+    console.log("EXECUTE BEGIN: RA, RB, imm", GlobalVar.RA, GlobalVar.RB, evaluateImm(GlobalVar.immVal));
     if (GlobalVar.pipelineEnabled) {
         console.log("HELLo ISB2: Type: ", GlobalVar.isb.isb2.type)
         determineSelectLines(GlobalVar.isb.isb2.type);
     } else {
         determineSelectLines(GlobalVar.type);
     }
-    let inA: number = GlobalVar.regFile.getRS1();
+    let inA: number = GlobalVar.RA;
     let inB: number;
     if (GlobalVar.selectLineB == 1) {
         inB = evaluateImm(GlobalVar.immVal);
     }
     else {
-        inB = GlobalVar.regFile.getRS2();
+        inB = GlobalVar.RB;
     }
     console.log('inB inA', inB, inA);
     console.log("operation", GlobalVar.ALU_op);

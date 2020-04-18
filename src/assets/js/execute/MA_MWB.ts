@@ -2,16 +2,16 @@ import { GlobalVar } from './Main';
 
 // Memory Access and Memory Write Back
 export function MemoryOperations() {
-    console.log("MEMORY OPE")
+    console.log("MEMORY OPERATIONS")
     // If pipeline is enabled
     if (GlobalVar.pipelineEnabled) {
         let opr = GlobalVar.operationMap.get(GlobalVar.isb.isb3.operCode);
         if (GlobalVar.isb.isb3.type === 'S') {
-            console.log("HANU: operCode, opr", GlobalVar.isb.isb3.operCode, opr)
             GlobalVar.MDR = GlobalVar.RM;
-            console.log("Address, Value: ", GlobalVar.RZ, GlobalVar.RM);
+            console.log("(STORE)HANU: operCode, opr, RZ(Address), RM(Value)", GlobalVar.isb.isb3.operCode, opr, GlobalVar.RZ, GlobalVar.RM)
             GlobalVar.memFile.MEM_WRITE(GlobalVar.RZ, GlobalVar.RM, opr.slice(1));
         } else if (opr == 'ld' || opr == 'lw' || opr == 'lh' || opr == 'lb') {
+            console.log("(LOAD)HANU: operCode, opr, RZ(Address)", GlobalVar.isb.isb3.operCode, opr, GlobalVar.RZ)
             GlobalVar.MDR = GlobalVar.memFile.MEM_READ(GlobalVar.RZ, opr.slice(1));
         }
 

@@ -52,6 +52,19 @@ function setupEditor() {
     });
 }
 
+
+let pipelineInfoWrapper = document.createElement('div');
+pipelineInfoWrapper.classList.add('pipeline_helper');
+let colorWrapper = document.createElement('div');
+colorWrapper.classList.add('pipeline_color_wrapper');
+['fetch', 'decode', 'alu', 'memory', 'write'].forEach((e) => {
+    let t = document.createElement('div');
+    t.innerText = e.toUpperCase();
+    t.classList.add(`${e}_section`)
+    colorWrapper.appendChild(t);
+})
+pipelineInfoWrapper.appendChild(colorWrapper);
+
 // Helper Function to create an instruction element
 function createInstrElement(pcVal: any, machineCodeVal: any, originalCodeVal: any): HTMLDivElement {
     let pc = document.createElement('span');
@@ -162,18 +175,20 @@ function activateEditor() {
 
 // Function to handle the event Assemble And Simulate Btn
 document.querySelector('.assemble_btn').addEventListener('click', () => {
-    handleAssembleAndSimulate()
+    let res = handleAssembleAndSimulate()
     // Replacing the buttons bars with RUN | STEP | SIMULATE
-    document.querySelector('.simulate_btns_wrapper')['style'].display = 'none'
-    document.querySelector('.simulate1_btns_wrapper')["style"].display = 'flex';
+    if (!res) {
+        document.querySelector('.simulate_btns_wrapper')['style'].display = 'none'
+        document.querySelector('.simulate1_btns_wrapper')["style"].display = 'flex';
+    }
 });
+
 function handleAssembleAndSimulate() {
     let fileData = editor.getValue();
     let response = main(fileData);
-    console.log(response);
     if (response.error) {
         // Showing Error Message
-        alert("Error Occurred! " + response.errorMessage);
+        vex.dialog.alert("Error Occurred! " + response.errorMessage);
         return true;
     }
     let codeSegWrapper = document.querySelector('.code_segment_wrapper');
@@ -182,20 +197,9 @@ function handleAssembleAndSimulate() {
     instrWrapper = document.createElement('div');
     instrWrapper.classList.add('instructions_wrapper');
     if (mode === 1 || mode === 2) {
-        let pipelineInfoWrapper = document.createElement('div');
-        pipelineInfoWrapper.classList.add('pipeline_helper');
-        let colorWrapper = document.createElement('div');
-        colorWrapper.classList.add('pipeline_color_wrapper');
-        ['fetch', 'decode', 'alu', 'memory', 'write'].forEach((e) => {
-            let t = document.createElement('div');
-            t.innerText = e.toUpperCase();
-            t.classList.add(`${e}_section`)
-            colorWrapper.appendChild(t);
-        })
-        pipelineInfoWrapper.appendChild(colorWrapper);
+        // Pushing pipeline information palette
         instrWrapper.appendChild(pipelineInfoWrapper);
     }
-    console.log(instrWrapper);
     // For Dumping in future
     dumpSeg = response.codeSegment;
     let assembledCode = response.codeSegment.split('\n');
@@ -219,12 +223,11 @@ function handleAssembleAndSimulate() {
     execute.init(response.codeSegment);
     // Updaing Register and Memory State
     updateRegAndMemState();
-    console.log(execute.GlobalVar.pipelineEnabled, "HEHE");
     // Highlighting only if pipeline is enabled
     if (!execute.GlobalVar.pipelineEnabled) {
         updateHighlightedInst(-1);
     }
-    return 0;
+    return false;
 }
 
 // Wrapper function to activate simulator
@@ -275,8 +278,8 @@ document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('c
 document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', () => {
     document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
     document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
-    // Remove all instrcutions
-    document.querySelectorAll('.meta_instructions').forEach(e => {
+    // Remove all instrcutions and pipeline_helper if it exist
+    document.querySelectorAll('.meta_instructions, .pipeline_helper').forEach(e => {
         e.remove();
     })
 })
@@ -420,8 +423,9 @@ function updateRegAndMemState() {
 }
 
 // Helper function to showSnackBar
-function showSnackBar() {
+function showSnackBar(message: string) {
     var x = document.getElementById("snackbar");
+    x.innerText = message;
     // Add the "show" class to DIV
     x.className = "show";
     // After 3 seconds, remove the show class from DIV
@@ -472,6 +476,7 @@ let mode: number = 0;
 
 // Handling Click Event Of Step Button
 document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
+    // If it's a pipelined execution then calling pipelined step
     if (mode == 1 || mode == 2) {
         // updating Inital PC
         let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
@@ -479,6 +484,19 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
         // execute.singleINS();
         // ! Executing Pipeline step instead of normal step
         execute.singlePipelineStep();
+        if (execute.GlobalVar.isb.stallAtDecode) {
+            showSnackBar('Stalling at Decode')
+        }
+        let dfType = execute.GlobalVar.isb.dataForwardingType
+        if (dfType) {
+            if (dfType === 1) {
+                showSnackBar('E to E Data Forwarding')
+            } else if (dfType === 2) {
+                showSnackBar('M to E Data Forwarding')
+            } else if (dfType === 3) {
+                showSnackBar('M to M Data Forwarding')
+            }
+        }
         execute.GlobalVar.isb.showInterStateBuffer()
         console.log("New pcBuff(GUI): ", execute.GlobalVar.isb.pcBuf);
 
@@ -489,7 +507,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
         if (execute.getIsComplete()) {
             updateHighlightedPipelineInstr(prevHighlightedPCBuffer, true);
             activateAssembleAndSimulateBtn();
-            showSnackBar();
+            showSnackBar('Program Successfully Executed');
             return;
         }
         updateHighlightedPipelineInstr(prevHighlightedPCBuffer)
@@ -505,14 +523,14 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
         console.log("NEW PC", currPC);
         if (execute.getIsComplete()) {
             activateAssembleAndSimulateBtn();
-            showSnackBar();
+            showSnackBar('Program Successfully Executed');
             return;
         }
         updateHighlightedInst(prevHighlighted)
     }
 })
 
-function syncSetInterval() {
+function runAllInstructions() {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
             let res = execute.allINS();
@@ -524,25 +542,75 @@ function syncSetInterval() {
     })
 }
 
+function runPipelinedInstructions() {
+    return new Promise((resolve, reject) => {
+        let interval = setInterval(() => {
+            let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
+            let res = execute.pipelinedAllINS();
+            updateHighlightedPipelineInstr(prevHighlightedPCBuffer);
+            updateRegAndMemState();
+            if (res || !canRun) {
+                clearInterval(interval);
+                resolve();
+            }
+        }, 800);
+    })
+}
+
 
 let canRun = true;
 // Handling Click Event Of Run Button
 document.getElementsByClassName('run_btn')[0].addEventListener('click', async () => {
-    // updating Inital PC
-    let prevHighlighted = currPC;
-    // Executing allINS
-    await syncSetInterval();
-    console.log("Hello")
-    // updating Current PC locally
-    currPC = execute.getPC();
-    updateRegAndMemState();
-    if (execute.getIsComplete()) {
-        activateAssembleAndSimulateBtn();
-        showSnackBar();
-        return;
+    if (mode == 1 || mode == 2) {
+        // updating Inital PC
+        let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
+        // ! Executing SingleINS
+        // execute.singleINS();
+        // ! Executing Pipeline step instead of normal step
+        await runPipelinedInstructions();
+        // if (execute.GlobalVar.isb.stallAtDecode) {
+        //     showSnackBar('Stalling at Decode')
+        // }
+        // let dfType = execute.GlobalVar.isb.dataForwardingType
+        // if (dfType) {
+        //     if (dfType === 1) {
+        //         showSnackBar('E to E Data Forwarding')
+        //     } else if (dfType === 2) {
+        //         showSnackBar('M to E Data Forwarding')
+        //     } else if (dfType === 3) {
+        //         showSnackBar('M to M Data Forwarding')
+        //     }
+        // }
+        // execute.GlobalVar.isb.showInterStateBuffer()
+        // console.log("New pcBuff(GUI): ", execute.GlobalVar.isb.pcBuf);
+
+        updateRegAndMemState();
+        // updating Current PC locally
+        currPC = execute.getPC();
+        console.log("NEW PC", currPC);
+        if (execute.getIsComplete()) {
+            updateHighlightedPipelineInstr(prevHighlightedPCBuffer, true);
+            activateAssembleAndSimulateBtn();
+            showSnackBar('Program Successfully Executed');
+            return;
+        }
+        updateHighlightedPipelineInstr(prevHighlightedPCBuffer)
+    } else {
+        // updating Inital PC
+        let prevHighlighted = currPC;
+        // Executing allINS
+        await runAllInstructions();
+        console.log("Hello")
+        // updating Current PC locally
+        currPC = execute.getPC();
+        updateRegAndMemState();
+        if (execute.getIsComplete()) {
+            activateAssembleAndSimulateBtn();
+            showSnackBar('Program Successfully Executed');
+            return;
+        }
+        updateHighlightedInst(prevHighlighted)
     }
-    updateHighlightedInst(prevHighlighted)
-    // activateAssembleAndSimulateBtn();
 })
 
 document.querySelector('.stop_btn').addEventListener('click', () => {
@@ -654,7 +722,7 @@ document.querySelector('.dump_btn').addEventListener('click', (e) => {
     if (dumpArray.length) {
 
         navigator.clipboard.writeText(dumpArray.join('\n')).then(function () {
-            alert('Code Dump to clipboard was successful!');
+            vex.dialog.alert('Code Dump to clipboard was successful!');
         }, function (err) {
             console.error('Async: Could not copy text: ', err);
         });

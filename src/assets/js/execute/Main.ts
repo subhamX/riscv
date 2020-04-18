@@ -333,14 +333,92 @@ export function UpdatePC(PC_Select: number, inpImm?: number): void {
  * 
  */
 
+// Returns true if execution is complete
+export function pipelinedAllINS() {
+    let no_inst: boolean = false;
+    let bp: boolean = false;
+    console.log('-----------*****PIPEALL*****------------')
+    console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
+    let isBreakPointPC = GlobalVar.breakPoint.find(pc => pc == GlobalVar.PC);
+    if (isBreakPointPC !== undefined) {
+        // remove the current breakpoint
+        removeBreakPoint(GlobalVar.PC);
+        bp = true;
+    }
+    if (GlobalVar.isComplete) {
+        console.log("ALREADY COMPLETE: times: ", times);
+        return true;
+    }
+    if (GlobalVar.CLOCK === 0) {
+        // Pipeline is empty! Only Fetching a new instruction
+        noInstr = pipelinedFetch(noInstr);
+    } else if (GlobalVar.CLOCK === 1) {
+        // Decode then Fetch
+        let res = pipelinedDecode();
+        if (res === true) {
+            // If stall is true
+            GlobalVar.isb.updatePCBufferOnStall();
+            GlobalVar.CLOCK++;
+            return;
+        }
+        noInstr = pipelinedFetch(noInstr);
+    } else if (GlobalVar.CLOCK === 2) {
+        // Execute then Decode then Fetch
+        console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
+        pipelinedExecute();
+        let res = pipelinedDecode();
+        if (res === true) {
+            // If stall is true
+            GlobalVar.isb.updatePCBufferOnStall();
+            GlobalVar.CLOCK++;
+            return;
+        }
+        noInstr = pipelinedFetch(noInstr);
+    } else if (GlobalVar.CLOCK === 3) {
+        // Memory then Execute then Decode then Fetch
+        pipelinedMemory();
+        pipelinedExecute();
+        let res = pipelinedDecode();
+        if (res === true) {
+            // If stall is true
+            GlobalVar.isb.updatePCBufferOnStall();
+            GlobalVar.CLOCK++;
+            return;
+        }
+        noInstr = pipelinedFetch(noInstr);
+    } else {
+        // Run all steps WriteBack then Memory then Execute then Decode then Fetch
+        pipelineWriteBack();
+        pipelinedMemory()
+        pipelinedExecute();
+        let res = pipelinedDecode();
+        if (res === true) {
+            // If stall is true
+            GlobalVar.isb.updatePCBufferOnStall();
+            GlobalVar.CLOCK++;
+            return;
+        }
+        noInstr = pipelinedFetch(noInstr);
+    }
+    GlobalVar.CLOCK++;
+    if (bp) {
+        return true;
+    }
+    return false;
+}
+
+
 export function singlePipelineStep() {
+    // Setting dataForwardingType as null
+    GlobalVar.isb.dataForwardingType = null;
     console.log('-----------*****PIPE*****------------');
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
-    console.log("OLD: ", GlobalVar.isb.pcBuf);
+    // console.log("OLD: ", GlobalVar.isb.pcBuf);
     if (GlobalVar.isComplete) {
         console.log("ALREADY COMPLETE: times: ", times);
         return;
     }
+
     if (GlobalVar.CLOCK === 0) {
         // Pipeline is empty! Only Fetching a new instruction
         noInstr = pipelinedFetch(noInstr);
@@ -395,10 +473,6 @@ export function singlePipelineStep() {
     GlobalVar.CLOCK++;
 
     // GlobalVar.isb.showInterStateBuffer();
-
-    if (noInstr === false) {
-
-    }
 }
 
 

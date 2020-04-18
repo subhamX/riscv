@@ -209,6 +209,18 @@ header {
   --statement_degree: 90deg;
 }
 
+.instructions_wrapper .breakpoint_statement {
+  background: linear-gradient(
+    45deg,
+    #b71c1c 3%,
+    #f44336 3%,
+    #f44336 95%,
+    #b71c1c 95%,
+    #b71c1c 100%
+  ) !important;
+  color: white;
+}
+/* Fetch Statment More Powerful than BreakPoint */
 .curr_fetch_statement {
   background: linear-gradient(
     var(--statement_degree),
@@ -267,18 +279,6 @@ header {
     var(--curr_writeback_statement_color) 100%
   ) !important;
   /* background-color: #880e4f !important; */
-  color: white;
-}
-
-.instructions_wrapper .breakpoint_statement {
-  background: linear-gradient(
-    45deg,
-    #b71c1c 3%,
-    #f44336 3%,
-    #f44336 95%,
-    #b71c1c 95%,
-    #b71c1c 100%
-  ) !important;
   color: white;
 }
 

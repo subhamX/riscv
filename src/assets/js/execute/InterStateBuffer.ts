@@ -67,6 +67,9 @@ export class InterStateBuffer {
     // This is entirely for GUI purposes
     pcBuf: ProgramCounterBuffer;
 
+    // E2E = 1 | M2E = 2 | M2M = 3
+    // ! Don't forget to set this null before every step
+    dataForwardingType: Number;
 
     // Stores the Address of the Register
     prevWriteReg: Number;
@@ -106,7 +109,6 @@ export class InterStateBuffer {
         this.pcBuf.memoryPC = this.pcBuf.executePC;
         this.pcBuf.executePC = this.pcBuf.decodePC;
         this.pcBuf.decodePC = this.pcBuf.fetchPC;
-        console.log("PCTEMP: ", GlobalVar.pcTemp)
         this.pcBuf.fetchPC = GlobalVar.pcTemp;
     }
 

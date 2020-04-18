@@ -154,13 +154,13 @@ export function Decode() {
             let prevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
             if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
                 // load instructions
-                // TODO: WE may need M to M data forwarding! Check
+                // TODO: WE may need M to M data forwarding! (NO, M2M is handled only for RB)
                 stallRA = true;
             } else {
                 stallRA = false;
-                // Address is already set above
-                // ? CHECK: Type Data Forwarding
-                console.warn("Data Forwarding: RA = ", GlobalVar.RZ)
+                // ! E to E data Forwarding
+                GlobalVar.isb.dataForwardingType = 1;
+                console.log("(E2E)Data Forwarding: RA = ", GlobalVar.RZ);
                 GlobalVar.RA = GlobalVar.RZ;
             }
         } else {
@@ -169,7 +169,8 @@ export function Decode() {
     } else if ((GlobalVar.pipelineEnabled) && (locationA == GlobalVar.isb.prevPrevWriteReg && GlobalVar.isb.prevPrevWriteReg != 0)) {
         if (GlobalVar.mode === 1) {
             stallRA = false;
-            // ? CHECK: Type Data Forwarding
+            // ! M to E data Forwarding
+            GlobalVar.isb.dataForwardingType = 2;
             GlobalVar.RA = GlobalVar.RY;
         } else {
             stallRA = true;
@@ -194,7 +195,8 @@ export function Decode() {
                     stallRB = true;
                 } else {
                     stallRB = false;
-                    // ? CHECK: Type Data Forwarding
+                    // ! E to E data Forwarding
+                    GlobalVar.isb.dataForwardingType = 1;
                     GlobalVar.RB = GlobalVar.RZ;
                 }
             } else {
@@ -206,7 +208,8 @@ export function Decode() {
             if (GlobalVar.mode === 1) {
                 // Data Forwarding is enabled
                 stallRB = false;
-                // ? CHECK: Type Data Forwarding
+                // ! M to E data Forwarding
+                GlobalVar.isb.dataForwardingType = 2;
                 GlobalVar.RB = GlobalVar.RY;
             } else {
                 stallRB = true;
@@ -241,10 +244,11 @@ export function Decode() {
                     // ! M to M data forwarding will be done at ALU
                     GlobalVar.RB = GlobalVar.regFile.getRS2()
                 } else {
+                    // ! E to E data Forwarding
                     stallRC = false;
-                    console.log("RX DATA", GlobalVar.RZ, GlobalVar.RY);
                     // Forwarding Data
                     GlobalVar.RB = GlobalVar.RZ;
+                    GlobalVar.isb.dataForwardingType = 1;
                 }
             } else {
                 // Data Forwarding is disabled and only pipelining is enabled
@@ -254,7 +258,9 @@ export function Decode() {
             if (GlobalVar.mode === 1) {
                 // Data Forwarding is enabled
                 stallRC = false;
+                // ! M to E data Forwarding
                 GlobalVar.RB = GlobalVar.RY;
+                GlobalVar.isb.dataForwardingType = 2;
             } else {
                 stallRC = true;
             }
@@ -263,7 +269,6 @@ export function Decode() {
             stallRC = false;
             // Check if this statement is necessary. Since ALU uses does it too.
             GlobalVar.RB = GlobalVar.regFile.getRS2();
-            console.error("HELLO: ", GlobalVar.RB);
         }
     }
 
@@ -275,11 +280,8 @@ export function Decode() {
 
     // TODO: Handle JALR instructions (DONE)
     if (GlobalVar.isb.controlHazardType === 2) {
-        console.log("JALR(From Decode): Setting newpc value");
         // setting new value of PC
-        console.log(GlobalVar.PC);
         GlobalVar.PC = GlobalVar.regFile.getRS1() + evaluateImm(GlobalVar.immVal);
-        console.log("NEW PC:", GlobalVar.PC);
     }
 
     // Verifing the branch prediction

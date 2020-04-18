@@ -175,37 +175,84 @@ header {
   padding: 5px 5px 5px 30px;
 }
 
-.instructions_wrapper .breakpoint_statement {
-  background-color: rgb(250, 119, 119) !important;
-}
-
-.instructions_wrapper .active_statement {
-  background-color: rgb(107, 216, 107) !important;
+:root {
+  --curr_fetch_statement_color: #aa00ff;
+  --curr_decode_statement_color: #00897b;
+  --curr_execute_statement_color: #0288d1;
+  --curr_memory_statement_color: #880e4f;
+  --curr_writeback_statement_color: #673ab7;
+  --statment_bg_color: #e65100;
+  --statement_degree: 90deg;
 }
 
 .curr_fetch_statement {
-  background-color: #aa00ff !important;
+  background: linear-gradient(
+    var(--statement_degree),
+    var(--curr_fetch_statement_color) 20%,
+    var(--statment_bg_color) 20%
+  ) !important;
+  /* background-color: #aa00ff !important; */
   color: white;
 }
 
 .curr_decode_statement {
-  background-color: #00897b !important;
+  /* background-color: #00897b !important; */
+  background: linear-gradient(
+    var(--statement_degree),
+    var(--statment_bg_color),
+    var(--statment_bg_color) 20%,
+    var(--curr_decode_statement_color) 20%,
+    var(--curr_decode_statement_color) 40%,
+    var(--statment_bg_color) 40%
+  ) !important;
   color: white;
 }
 
 .curr_execute_statement {
-  background-color: #0288d1 !important;
+  background: linear-gradient(
+    var(--statement_degree),
+    var(--statment_bg_color),
+    var(--statment_bg_color) 40%,
+    var(--curr_execute_statement_color) 40%,
+    var(--curr_execute_statement_color) 60%,
+    var(--statment_bg_color) 60%
+  ) !important;
+  /* background-color: #0288d1 !important; */
   color: white;
 }
 
 .curr_memory_statement {
-  background-color: #673ab7 !important;
+  background: linear-gradient(
+    var(--statement_degree),
+    var(--statment_bg_color),
+    var(--statment_bg_color) 60%,
+    var(--curr_memory_statement_color) 60%,
+    var(--curr_memory_statement_color) 80%,
+    var(--statment_bg_color) 80%
+  ) !important;
+  /* background-color: #673ab7 !important; */
   color: white;
 }
 
 .curr_writeback_statement {
-  background-color: #880e4f !important;
+  background: linear-gradient(
+    var(--statement_degree),
+    var(--statment_bg_color),
+    var(--statment_bg_color) 80%,
+    var(--curr_writeback_statement_color) 80%,
+    var(--curr_writeback_statement_color) 100%,
+    var(--statment_bg_color) 100%
+  ) !important;
+  /* background-color: #880e4f !important; */
   color: white;
+}
+
+.instructions_wrapper .breakpoint_statement {
+  background: rgb(250, 119, 119) !important;
+}
+
+.instructions_wrapper .active_statement {
+  background-color: rgb(107, 216, 107) !important;
 }
 
 /* Memory Pane */

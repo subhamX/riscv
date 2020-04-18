@@ -69,7 +69,20 @@ export function Execute() {
         GlobalVar.RZ = inA + evaluateImm(GlobalVar.immVal);
         console.log("RZ", GlobalVar.RZ)
         // Using RB and forwarding it to RM (For both pipelined and non-pipelined instructions)
-        GlobalVar.RM = GlobalVar.RB;
+        if (GlobalVar.pipelineEnabled && (GlobalVar.mode === 1)) {
+            // ! M to M Data Forwarding
+            console.error("M to M data Forwarding: Prev RM, New RM (=MDR)", GlobalVar.RM, GlobalVar.MDR, GlobalVar.isb.prevPrevInstrMnenomic)
+            // Here prev istruction is prevPrev instruction
+            let prevInstrMnenomic = GlobalVar.isb.prevPrevInstrMnenomic;
+            if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
+                GlobalVar.RM = GlobalVar.MDR;
+                console.log("SETTING");
+            } else {
+                GlobalVar.RM = GlobalVar.RB;
+            }
+        } else {
+            GlobalVar.RM = GlobalVar.RB;
+        }
         console.log('RM', GlobalVar.RM);
     }
     else if (GlobalVar.ALU_op == 'lui') {

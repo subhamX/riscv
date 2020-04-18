@@ -229,24 +229,24 @@ export function Decode() {
                 // Data Forwarding is enabled
                 let prevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
                 if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
-                    // stallRC = true;
-                    // ! M to M data forwarding
-                    GlobalVar.RB = GlobalVar.RY
+                    stallRC = false;
+                    console.warn("NOT STALLING as it will be handled by ALU (M to M data forwarding)")
+                    // ! M to M data forwarding will be done at ALU
+                    GlobalVar.RB = GlobalVar.regFile.getRS2()
                 } else {
                     stallRC = false;
                     // Forwarding Data
-                    GlobalVar.isb.isb1.RM = GlobalVar.RZ;
+                    GlobalVar.RB = GlobalVar.RZ;
                 }
             } else {
                 // Data Forwarding is disabled and only pipelining is enabled
                 stallRC = true;
             }
-
         } else if ((GlobalVar.pipelineEnabled) && GlobalVar.isb.prevPrevWriteReg && locationC === GlobalVar.isb.prevPrevWriteReg) {
             if (GlobalVar.mode === 1) {
                 // Data Forwarding is enabled
                 stallRC = false;
-                GlobalVar.isb.isb1.RM = GlobalVar.RY;
+                GlobalVar.RB = GlobalVar.RY;
             } else {
                 stallRC = true;
             }
@@ -254,7 +254,8 @@ export function Decode() {
             // either pipeline is not enabled or there is no data dependency which is causing hazard
             stallRC = false;
             // Check if this statement is necessary. Since ALU uses does it too.
-            GlobalVar.isb.isb1.RM = GlobalVar.regFile.getRegVal(locationC);
+            GlobalVar.RB = GlobalVar.regFile.getRS2();
+            console.error("HELLO: ", GlobalVar.RB);
         }
     }
 

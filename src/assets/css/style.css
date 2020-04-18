@@ -220,8 +220,10 @@ header {
   ) !important;
   color: white;
 }
+
 /* Fetch Statment More Powerful than BreakPoint */
-.curr_fetch_statement {
+.instructions_wrapper .curr_fetch_statement {
+  background: none !important;
   background: linear-gradient(
     var(--statement_degree),
     var(--curr_fetch_statement_color) 20%,

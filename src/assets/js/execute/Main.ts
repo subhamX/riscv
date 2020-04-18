@@ -242,10 +242,12 @@ function Fetch(): boolean {
     if (!temp || (parseInt(temp) >> 0) == -1) {
         GlobalVar.CLOCK++;
         if (!GlobalVar.pipelineEnabled) {
-            // Setting isComplete Flag as true
+            // Setting isComplete Flag as true if pipeline disabled 
             GlobalVar.isComplete = true;
             return true;
         } else {
+            temp = parseInt(temp, 16).toString(2);
+            GlobalVar.IR = temp;
             return true;
         }
     } else {
@@ -392,8 +394,7 @@ export function singlePipelineStep() {
     }
     GlobalVar.CLOCK++;
 
-    GlobalVar.isb.showInterStateBuffer();
-    console.log("CH", GlobalVar.PC);
+    // GlobalVar.isb.showInterStateBuffer();
 
     if (noInstr === false) {
 
@@ -426,7 +427,7 @@ function pipelinedFetch(no_inst): boolean {
     console.log("FETCH: ", no_inst);
     // If no instructions then returning
     if (no_inst) {
-        // Updating ISB
+        // Updating Inter State Buffer
         GlobalVar.isb.updateInterStateBuffer();
         // Only for GUI
         GlobalVar.isb.updatePCBuffer();
@@ -465,8 +466,13 @@ function pipelinedFetch(no_inst): boolean {
     if (GlobalVar.pipelineEnabled) {
         GlobalVar.isb.updatePCBuffer();
     }
-    GlobalVar.isb.updateInterStateBuffer();
+    // Updating Inter State Buffer
 
+    // if(no_inst){
+    //     type
+    // }
+
+    GlobalVar.isb.updateInterStateBuffer();
     return no_inst;
     // TODO: Run for four more times. If Last Instructions is fetched
     // if (no_inst) {

@@ -21,6 +21,8 @@ export function opcodeMapfunc(opMap: Map<String, string>) {
 
     // UJ type
     opMap.set('1101111', 'UJ');
+
+    opMap.set('1111111', 'END');
 }
 
 // function to map opcode + func3 + func7 to operand

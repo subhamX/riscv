@@ -100,6 +100,7 @@ export class InterStateBuffer {
         this.stallAtDecode = false;
     }
 
+    // GUI Exclusive functions
     updatePCBuffer() {
         this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
         this.pcBuf.memoryPC = this.pcBuf.executePC;
@@ -114,14 +115,26 @@ export class InterStateBuffer {
         this.pcBuf.memoryPC = this.pcBuf.executePC;
         // this.pcBuf.executePC = this.pcBuf.decodePC;
     }
+    // GUI Exclusive functions end
+
 
     updateInterStateBufferAfterDecode() {
+        console.log("UPDATING ISB BECAUSE OF DECODE");
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
         this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
-        this.isb2.writeBackRegLocation = GlobalVar.regFile.getRDAddr();
+        // If R | I | U | UJ
+        let type = GlobalVar.type;
+        if (type === 'R' || type === 'I' || type === 'U' || type === 'UJ') {
+            this.isb2.writeBackRegLocation = GlobalVar.regFile.getRDAddr();
+            console.log(`(Type: ${type})Setting isb2 WriteBackRegLocation: `, this.isb2.writeBackRegLocation)
+        } else {
+            console.log(`(Type: ${type})Setting isb2 WriteBackRegLocation: null`);
+            this.isb2.writeBackRegLocation = null;
+        }
     }
 
     updateOnStall() {
+        console.log("UPDATING ISB BECAUSE OF STALL");
         this.isb4.type = this.isb3.type;
         this.isb3.type = this.isb2.type;
         // this.isb2.type = this.isb1.type;
@@ -134,9 +147,14 @@ export class InterStateBuffer {
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
         this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
 
+        this.isb2.writeBackRegLocation = null;
+        this.isb2.returnAddress = null;
+        this.isb2.type = null;
+
     }
 
     updateInterStateBuffer() {
+        console.log("UPDATING ISB (normal)");
         this.isb4.returnAddress = this.isb3.returnAddress;
         this.isb3.returnAddress = this.isb2.returnAddress;
         this.isb2.returnAddress = this.isb1.returnAddress;
@@ -151,10 +169,15 @@ export class InterStateBuffer {
         // Passing type to next Interstatebuffer
         this.isb4.operCode = this.isb3.operCode;
         this.isb3.operCode = this.isb2.operCode;
-        if (this.isb2.type) {
+        if (this.isb2.type !== 'END') {
             this.isb2.operCode = GlobalVar.operCode;
         }
+        // writeBackRegLocation is set after decode since it is the position where it's calculated
         // operCode directly set to isb2
+        // this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
+        // this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
+        // this.isb2.writeBackRegLocation = this.isb1.writeBackRegLocation;
+        // this.isb1.writeBackRegLocation = GlobalVar.regFile.getRDAddr();        
     }
 
     showInterStateBuffer() {

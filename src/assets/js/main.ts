@@ -464,7 +464,8 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
         // execute.singleINS();
         // ! Executing Pipeline step instead of normal step
         execute.singlePipelineStep();
-        console.log("New: ", execute.GlobalVar.isb.pcBuf);
+        execute.GlobalVar.isb.showInterStateBuffer()
+        console.log("New pcBuff(GUI): ", execute.GlobalVar.isb.pcBuf);
 
         updateRegAndMemState();
         // updating Current PC locally

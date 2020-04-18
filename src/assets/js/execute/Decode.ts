@@ -37,6 +37,8 @@ export function Decode() {
 
         let rd = GlobalVar.IR.slice(20, 25);
         GlobalVar.regFile.setRD(parseInt(rd, 2));
+        console.log('rd', GlobalVar.regFile.getRDAddr());
+
 
         let rs1 = GlobalVar.IR.slice(12, 17);
         GlobalVar.regFile.setRS1(parseInt(rs1, 2));
@@ -117,7 +119,10 @@ export function Decode() {
         GlobalVar.immVal = (GlobalVar.immVal + '0');
         // console.log(GlobalVar.immVal);
     }
-    else {
+    else if (GlobalVar.type === 'END') {
+        // GlobalVar.regFile.setRD(0);
+        console.warn("Decoding the End");
+    } else {
         console.log(GlobalVar.operCode)
         console.error('Not a valid instruction!(invalid Opcode)');
         GlobalVar.invalid = true;

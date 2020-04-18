@@ -151,7 +151,7 @@ header {
   grid-template-columns: repeat(3, 1fr);
 }
 
-.instructions_wrapper div {
+.instructions_wrapper .meta_instructions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
 }
@@ -168,13 +168,37 @@ header {
 .code_segment_wrapper .instructions_wrapper .meta_instructions {
   margin-bottom: 10px;
   border-radius: 20px;
-  padding: 5px;
+  padding: 5px 0;
 }
 .code_segment_wrapper .instructions_wrapper .meta_instructions span {
   padding-left: 30px;
   padding: 5px 5px 5px 30px;
 }
 
+.pipeline_color_wrapper {
+  display: grid;
+  margin-bottom: 20px;
+  /* justify-content: ; */
+  grid-template-columns: repeat(5, 1fr);
+  color: white;
+  background: linear-gradient(
+    var(--statement_degree),
+    var(--curr_fetch_statement_color) 20%,
+    var(--curr_decode_statement_color) 20%,
+    var(--curr_decode_statement_color) 40%,
+    var(--curr_execute_statement_color) 40%,
+    var(--curr_execute_statement_color) 60%,
+    var(--curr_memory_statement_color) 60%,
+    var(--curr_memory_statement_color) 80%,
+    var(--curr_writeback_statement_color) 80%
+  ) !important;
+  padding: 5px 0;
+}
+
+.pipeline_color_wrapper div {
+  text-align: center;
+  overflow: hidden;
+}
 :root {
   --curr_fetch_statement_color: #aa00ff;
   --curr_decode_statement_color: #311b92;
@@ -259,7 +283,8 @@ header {
 }
 
 .instructions_wrapper .active_statement {
-  background: rgb(107, 216, 107) !important;
+  background: #26a69a !important;
+  color: white !important;
 }
 
 /* Memory Pane */

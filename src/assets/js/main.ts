@@ -181,6 +181,21 @@ function handleAssembleAndSimulate() {
     instrWrapper.remove();
     instrWrapper = document.createElement('div');
     instrWrapper.classList.add('instructions_wrapper');
+    if (mode === 1 || mode === 2) {
+        let pipelineInfoWrapper = document.createElement('div');
+        pipelineInfoWrapper.classList.add('pipeline_helper');
+        let colorWrapper = document.createElement('div');
+        colorWrapper.classList.add('pipeline_color_wrapper');
+        ['fetch', 'decode', 'alu', 'memory', 'write'].forEach((e) => {
+            let t = document.createElement('div');
+            t.innerText = e.toUpperCase();
+            t.classList.add(`${e}_section`)
+            colorWrapper.appendChild(t);
+        })
+        pipelineInfoWrapper.appendChild(colorWrapper);
+        instrWrapper.appendChild(pipelineInfoWrapper);
+    }
+    console.log(instrWrapper);
     // For Dumping in future
     dumpSeg = response.codeSegment;
     let assembledCode = response.codeSegment.split('\n');

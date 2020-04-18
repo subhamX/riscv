@@ -161,7 +161,7 @@ header {
 }
 
 .code_segment_wrapper .instructions_wrapper .meta_instructions:hover {
-  background-color: #89e1ff;
+  background-color: #ffecb3;
   box-shadow: 0 2px 4px -4px black;
   cursor: pointer;
 }
@@ -177,11 +177,11 @@ header {
 
 :root {
   --curr_fetch_statement_color: #aa00ff;
-  --curr_decode_statement_color: #00897b;
+  --curr_decode_statement_color: #311b92;
   --curr_execute_statement_color: #0288d1;
   --curr_memory_statement_color: #880e4f;
   --curr_writeback_statement_color: #673ab7;
-  --statment_bg_color: #e65100;
+  --statment_bg_color: #ef6c00;
   --statement_degree: 90deg;
 }
 
@@ -240,16 +240,22 @@ header {
     var(--statment_bg_color),
     var(--statment_bg_color) 80%,
     var(--curr_writeback_statement_color) 80%,
-    var(--curr_writeback_statement_color) 100%,
-    var(--statment_bg_color) 100%
+    var(--curr_writeback_statement_color) 100%
   ) !important;
   /* background-color: #880e4f !important; */
   color: white;
 }
 
 .instructions_wrapper .breakpoint_statement {
-  background: rgb(250, 119, 119) !important;
-  width: 50px;
+  background: linear-gradient(
+    45deg,
+    #b71c1c 3%,
+    #f44336 3%,
+    #f44336 95%,
+    #b71c1c 95%,
+    #b71c1c 100%
+  ) !important;
+  color: white;
 }
 
 .instructions_wrapper .active_statement {

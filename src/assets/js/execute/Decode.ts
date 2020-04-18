@@ -148,12 +148,12 @@ export function Decode() {
             let prevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
             if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
                 // load instructions
+                // TODO: WE may need M to M data forwarding! Check
                 stallRA = true;
             } else {
                 stallRA = false;
                 // Address is already set above
                 // ? CHECK: Type Data Forwarding
-                console.log(GlobalVar.RZ, "CHECK YOURSELF")
                 GlobalVar.RA = GlobalVar.RZ;
             }
         } else {
@@ -225,10 +225,13 @@ export function Decode() {
     if (GlobalVar.type == 'S') {
         if ((GlobalVar.pipelineEnabled) && GlobalVar.isb.prevWriteReg && locationC === GlobalVar.isb.prevWriteReg) {
             if (GlobalVar.mode === 1) {
+                console.log("TESTING !)!", GlobalVar.isb.prevInstrMnenomic)
                 // Data Forwarding is enabled
                 let prevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
                 if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
-                    stallRC = true;
+                    // stallRC = true;
+                    // ! M to M data forwarding
+                    GlobalVar.RB = GlobalVar.RY
                 } else {
                     stallRC = false;
                     // Forwarding Data
@@ -332,6 +335,9 @@ export function Decode() {
     } else {
         GlobalVar.isb.stallAtDecode = false;
     }
+
+    GlobalVar.isb.prevPrevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
+    GlobalVar.isb.prevInstrMnenomic = GlobalVar.ALU_op;
 
     // Updating prevWrite and prevPrevWrite Register location
     GlobalVar.isb.prevPrevWriteReg = GlobalVar.isb.prevWriteReg;

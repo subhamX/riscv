@@ -68,6 +68,7 @@ export function Execute() {
         console.log("Imm", evaluateImm(GlobalVar.immVal))
         GlobalVar.RZ = inA + evaluateImm(GlobalVar.immVal);
         console.log("RZ", GlobalVar.RZ)
+        // Using RB and forwarding it to RM (For both pipelined and non-pipelined instructions)
         GlobalVar.RM = GlobalVar.RB;
         console.log('RM', GlobalVar.RM);
     }

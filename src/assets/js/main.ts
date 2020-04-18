@@ -428,11 +428,11 @@ function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, removeOnly: 
         if (e[1] !== -1) {
             let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
             let className = pcBufNameToClassName.get(e[0]);
-            console.log("REMOVING: ", e, className);
+            // console.log("REMOVING: ", e, className);
             if (prevInstr.classList.contains(className))
                 prevInstr.classList.remove(className);
             else
-                console.log("Doesn't contain: ", className, e)
+                console.error("Doesn't contain: ", className, e)
         }
     })
     if (!removeOnly) {

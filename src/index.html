@@ -283,10 +283,15 @@ git checkout GUI
     </section>
     <div id="snackbar">Program Successfully Executed</div>
     <div id="editor">
-        sub x11, x2, x3
-        auipc x10, 100
-        # working1: sw x2, 15(x2)
-        # working1: lw x4, 12(x2)
+
+        # sub x11, x2, x3
+        # auipc x10, 100
+        sw x2, 0(x2)
+        lw x4, 0(x2)
+        sw x4, 5(x2)
+
+        # working1:
+        # working1:
         # working1: sw x4, 20(x2)
 
 
@@ -303,6 +308,7 @@ git checkout GUI
         # hello1:
         # sub x4, x5, x10
         # sub x20, x5, x10
+
     </div>
     <script src="./assets/js/main.ts"></script>
 </body>

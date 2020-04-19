@@ -146,9 +146,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 })
 
-// Function to remove all instructions
-function removeAllInstruction() {
-    document.querySelectorAll('.meta_instructions').forEach(e => {
+// Function to remove all instructions and pipelineWrapper if any
+function removeAllInstructionAndPipeHelper() {
+    document.querySelectorAll('.meta_instructions, .pipeline_helper').forEach(e => {
         e.remove();
     });
 }
@@ -168,8 +168,8 @@ function disableEditor() {
 function activateEditor() {
     document.getElementById("editor").style.display = 'block';
     activateAssembleAndSimulateBtn();
-    // Remove all instruction
-    removeAllInstruction();
+    // Remove all instruction and pipeline helper if any
+    removeAllInstructionAndPipeHelper();
 }
 
 
@@ -198,7 +198,8 @@ function handleAssembleAndSimulate() {
     instrWrapper.classList.add('instructions_wrapper');
     if (mode === 1 || mode === 2) {
         // Pushing pipeline information palette
-        instrWrapper.appendChild(pipelineInfoWrapper);
+        codeSegWrapper.appendChild(pipelineInfoWrapper);
+        instrWrapper.classList.add('pipelied_exec_size');
     }
     // For Dumping in future
     dumpSeg = response.codeSegment;

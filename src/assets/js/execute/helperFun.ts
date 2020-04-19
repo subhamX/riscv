@@ -38,6 +38,10 @@ export function determineSelectLines(t: string) {
 }
 
 export function evaluateImm(imVal: string): number {
+    if (imVal === undefined) {
+        console.warn("No number passed, returning");
+        return;
+    }
     imVal = addOnesZeros(imVal);
     return parseInt(imVal, 2) >> 0;
 }

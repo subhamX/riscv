@@ -272,11 +272,15 @@ document.querySelector(".register_btn").addEventListener("click", () => {
 
 // Handling click event of Cancel Button before Assemble
 document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('click', () => {
+    // Stopping the Run if there is any
+    (<HTMLElement>document.querySelector('.stop_btn')).click();
     (<HTMLElement>document.querySelector('.editor-btn')).click();
 })
 
 // Handling click event of Cancel Button After Assemble
 document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', () => {
+    // Stopping the Run if there is any
+    (<HTMLElement>document.querySelector('.stop_btn')).click();
     document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
     document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
     // Remove all instrcutions and pipeline_helper if it exist

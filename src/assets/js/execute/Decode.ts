@@ -111,7 +111,6 @@ export function Decode() {
     else if (GlobalVar.type == 'UJ') {
         // operation code
         GlobalVar.operCode = opcode;
-
         let rd = GlobalVar.IR.slice(20, 25);
         GlobalVar.regFile.setRD(parseInt(rd, 2));
 
@@ -121,7 +120,12 @@ export function Decode() {
         // console.log(GlobalVar.immVal);
     }
     else if (GlobalVar.type === 'END') {
-        // GlobalVar.regFile.setRD(0);
+        // Setting RD, RS1, RS2 to zero to avoid any possible data hazard
+        GlobalVar.regFile.setRD(0);
+        GlobalVar.regFile.setRS1(0);
+        GlobalVar.regFile.setRS2(0);
+        // Setting ALU_op to zero to avoid any possible data hazard
+        GlobalVar.operCode = opcode;
         console.warn("Decoding the End");
     } else {
         console.log(GlobalVar.operCode)
@@ -160,7 +164,7 @@ export function Decode() {
                 stallRA = false;
                 // ! E to E data Forwarding
                 GlobalVar.isb.dataForwardingType = 1;
-                console.log("(E2E)Data Forwarding: RA = ", GlobalVar.RZ);
+                console.log("1=>(E2E)Data Forwarding: RA = ", GlobalVar.RZ);
                 GlobalVar.RA = GlobalVar.RZ;
             }
         } else {
@@ -171,6 +175,7 @@ export function Decode() {
             stallRA = false;
             // ! M to E data Forwarding
             GlobalVar.isb.dataForwardingType = 2;
+            console.log("1=>(M2E)Data Forwarding: RA = ", GlobalVar.RY);
             GlobalVar.RA = GlobalVar.RY;
         } else {
             stallRA = true;
@@ -197,6 +202,7 @@ export function Decode() {
                     stallRB = false;
                     // ! E to E data Forwarding
                     GlobalVar.isb.dataForwardingType = 1;
+                    console.log("2=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
                     GlobalVar.RB = GlobalVar.RZ;
                 }
             } else {
@@ -210,6 +216,7 @@ export function Decode() {
                 stallRB = false;
                 // ! M to E data Forwarding
                 GlobalVar.isb.dataForwardingType = 2;
+                console.log("2=>(M2E)Data Forwarding: RB = ", GlobalVar.RY);
                 GlobalVar.RB = GlobalVar.RY;
             } else {
                 stallRB = true;
@@ -246,6 +253,7 @@ export function Decode() {
                 } else {
                     // ! E to E data Forwarding
                     stallRC = false;
+                    console.log("3=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
                     // Forwarding Data
                     GlobalVar.RB = GlobalVar.RZ;
                     GlobalVar.isb.dataForwardingType = 1;
@@ -360,6 +368,6 @@ export function Decode() {
         GlobalVar.isb.prevWriteReg = locationC;
     }
 
-    console.log("END OF DECODE: RA, RB", GlobalVar.RA, GlobalVar.RB)
+    console.log("END OF DECODE: RA, RB, prevPrevWriteReg, prevWriteReg", GlobalVar.RA, GlobalVar.RB, GlobalVar.isb.prevPrevWriteReg, GlobalVar.isb.prevWriteReg)
 
 }

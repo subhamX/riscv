@@ -35,6 +35,12 @@ export function determineSelectLines(t: string) {
     if (t == 'S') {
         GlobalVar.selectLineY = 1;
     }
+
+    if(t==='END'){
+        console.log("MUX Y: END reached")
+        GlobalVar.selectLineB = 0;
+        GlobalVar.selectLineY = 0;
+    }
 }
 
 export function evaluateImm(imVal: string): number {

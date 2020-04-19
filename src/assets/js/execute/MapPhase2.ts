@@ -69,4 +69,7 @@ export function operationMapfunc(operMap: Map<string, string>) {
 
     // UJ type
     operMap.set("1101111", 'jal');
+
+    // DUMMY type
+    operMap.set("1111111", 'END');
 }

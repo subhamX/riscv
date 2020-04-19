@@ -105,6 +105,8 @@ export function Execute() {
         if (!GlobalVar.pipelineEnabled) {
             UpdatePC(1, inB);
         }
+    } else if (GlobalVar.ALU_op === 'END') {
+        GlobalVar.RZ = 0;
     }
 
 

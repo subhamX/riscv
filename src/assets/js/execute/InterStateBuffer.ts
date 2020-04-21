@@ -119,7 +119,7 @@ export class InterStateBuffer {
     }
     // GUI Exclusive functions end
 
-    
+
     updateInterStateBufferAfterDecode() {
         console.log("UPDATING ISB BECAUSE OF DECODE");
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
@@ -151,6 +151,7 @@ export class InterStateBuffer {
 
         this.isb2.writeBackRegLocation = null;
         this.isb2.returnAddress = null;
+        this.isb2.operCode = null;
         this.isb2.type = null;
 
     }

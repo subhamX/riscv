@@ -115,11 +115,11 @@ export class InterStateBuffer {
     updatePCBufferOnStall() {
         this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
         this.pcBuf.memoryPC = this.pcBuf.executePC;
-        // this.pcBuf.executePC = this.pcBuf.decodePC;
+        this.pcBuf.executePC = this.pcBuf.decodePC;
     }
     // GUI Exclusive functions end
 
-
+    
     updateInterStateBufferAfterDecode() {
         console.log("UPDATING ISB BECAUSE OF DECODE");
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;

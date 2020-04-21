@@ -61,6 +61,11 @@ body:not(#editor) {
   color: black;
 }
 
+.logo img{
+  width: 250px;  
+}
+
+
 header {
   height: 10vh;
   padding: 0;
@@ -521,7 +526,7 @@ pre {
   hyphens: none;
 }
 
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 620px) {
   .simulator-wapper {
     display: flex;
     flex-direction: column;
@@ -533,6 +538,9 @@ pre {
   .toggle-wrapper a {
     padding: 7px;
     margin: 4px;
+  }
+  .logo img{
+    width: 200px;
   }
 }
 
@@ -549,6 +557,9 @@ pre {
 @media only screen and (max-width: 477px) {
   .logo {
     font-size: 19px;
+  }
+  .logo img{
+    width: 120px;
   }
 }
 

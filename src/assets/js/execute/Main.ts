@@ -98,6 +98,9 @@ export function removeBreakPoint(instrPC: number) {
     GlobalVar.breakPoint = GlobalVar.breakPoint.filter((pc) => instrPC !== pc);
 }
 
+export function getAdditonalRegisters(){
+
+}
 
 
 export function init(data): void {
@@ -133,7 +136,6 @@ export function init(data): void {
         let key = parseInt(dataArr[i].split(" ")[0], 16);
         let value = dataArr[i].split(" ")[1];
         GlobalVar.instructionMap.set(key, value);
-        console.log()
         let index = 7;
         for (let i = 0; i < 8; i += 2) {
             let foo = value.replace('0x', '').slice(index - 1, index + 1);

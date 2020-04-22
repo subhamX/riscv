@@ -172,10 +172,20 @@ function disableEditor() {
 function activateEditor() {
     document.getElementById("editor").style.display = 'block';
     activateAssembleAndSimulateBtn();
+    reorganiseGrid();
     // Remove all instruction and pipeline helper if any
     removeAllInstructionAndPipeHelper();
 }
 
+
+// Function to reorganise the grid if there are any change
+function reorganiseGrid(){
+    if(mode===1 || mode===2){
+        document.querySelector('.simulator-wapper').classList.remove('pipeline_grid');
+        document.querySelector('.additional_registers_wrapper')['style'].display = 'none';
+        // TODO: Removing all control and data hazards segment
+    }
+}
 
 // Function to handle the event Assemble And Simulate Btn
 document.querySelector('.assemble_btn').addEventListener('click', () => {
@@ -199,14 +209,22 @@ function handleAssembleAndSimulate() {
         return true;
     }
     let codeSegWrapper = document.querySelector('.code_segment_wrapper');
-    let instrWrapper = document.querySelector('.instructions_wrapper');
+    let instrWrapper = codeSegWrapper.querySelector('.instructions_wrapper');
     instrWrapper.remove();
     instrWrapper = document.createElement('div');
     instrWrapper.classList.add('instructions_wrapper');
     // Pushing pipeline information palette
     if (mode === 1 || mode === 2) {
+        // changing the grid layout
+        let simulatorWrapper = document.querySelector('.simulator-wapper') as HTMLElement;
+        simulatorWrapper.classList.add('pipeline_grid')
+
+        // removing display:none from additional registers 
+        let additionalRegWrapper = document.querySelector('.additional_registers_wrapper') as HTMLElement;
+        additionalRegWrapper.style.display = '';
         codeSegWrapper.appendChild(pipelineInfoWrapper);
-        instrWrapper.classList.add('pipelied_exec_size');
+        instrWrapper.classList.add('pipelined_exec_size');
+
     }
     // For dumping in future
     dumpSeg = response.codeSegment;
@@ -279,7 +297,8 @@ document.querySelector(".register_btn").addEventListener("click", () => {
 
 // Handling click event of Cancel Button before Assemble
 document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('click', () => {
-    // Stopping the Run if there is any
+    // reorganising the grid
+    reorganiseGrid();
     (<HTMLElement>document.querySelector('.stop_btn')).click();
     (<HTMLElement>document.querySelector('.editor-btn')).click();
 })
@@ -288,6 +307,8 @@ document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('c
 document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', async () => {
     // Stopping the Run if there is any
     await stopCurrentExec();
+    // reorganising the grid
+    reorganiseGrid();
     document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
     document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
     // Remove all instrcutions and pipeline_helper if it exist
@@ -396,8 +417,6 @@ function getRegValToDisplay(num: number) {
 }
 
 
-
-
 // Function to update Registers and Memory after each instruction exectution
 function updateRegAndMemState() {
     let mem: Map<number, number> = execute.GlobalVar.memFile.getMemory();
@@ -413,10 +432,9 @@ function updateRegAndMemState() {
             regData.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
             // adding texthighlight class
             regData.classList.add('reg_text_highlight');
-            setTimeout(() => { console.log(regData); console.timeLog(); regData.classList.remove('reg_text_highlight') }, 700);
+            setTimeout(() => { regData.classList.remove('reg_text_highlight') }, 700);
         }
     });
-    console.log(mem);
     mem.forEach((val, key) => {
         let div = document.querySelector(`.memory_wrapper .memory${key}`) as HTMLElement;
         let displayNum = getMemValToDisplay(val);
@@ -429,7 +447,7 @@ function updateRegAndMemState() {
                 memData.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
                 // adding texthighlight class
                 memData.classList.add('reg_text_highlight');
-                setTimeout(() => { console.log(memData); console.timeLog(); memData.classList.remove('reg_text_highlight') }, 700);
+                setTimeout(() => { memData.classList.remove('reg_text_highlight') }, 700);
             }
         } else {
             // 0 => Code Seg | 1 => Data Seg | 2 => Heap Seg | 3 => Stack Segment |
@@ -452,7 +470,7 @@ function updateRegAndMemState() {
             memData.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
             // adding texthighlight class
             memData.classList.add('reg_text_highlight');
-            setTimeout(() => { console.log(memData); console.timeLog(); memData.classList.remove('reg_text_highlight') }, 700);
+            setTimeout(() => { memData.classList.remove('reg_text_highlight') }, 700);
         }
     });
 }

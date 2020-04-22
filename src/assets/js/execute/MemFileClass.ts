@@ -64,7 +64,7 @@ export class MemoryFile {
         let paddedVal = addZeros(parseInt(value, 16).toString(2), 8);
         paddedVal = addOnesZeros(paddedVal);
         this.memory.set(addr, parseInt(paddedVal, 2) >> 0);
-        console.log(addr, parseInt(paddedVal, 2) >> 0);
+        // console.log(addr, parseInt(paddedVal, 2) >> 0);
     }
 }
 

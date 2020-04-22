@@ -61,10 +61,9 @@ body:not(#editor) {
   color: black;
 }
 
-.logo img{
-  width: 250px;  
+.logo img {
+  width: 250px;
 }
-
 
 header {
   height: 10vh;
@@ -117,6 +116,9 @@ header {
   width: 35px;
 }
 
+.pipeline_grid {
+  grid-template-columns: 5fr 2fr 2fr !important;
+}
 /* SIMULATOR */
 .simulator-wapper {
   display: grid;
@@ -128,15 +130,20 @@ header {
 }
 
 .simulate_btns_wrapper {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
   display: flex;
   justify-content: center;
+  align-items: center;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  /* height: 10vh; */
+  min-height: 10vh;
 }
 
 .simulator-wapper .simulate_btns_wrapper div {
@@ -327,7 +334,7 @@ header {
   display: flex;
   width: 100%;
   justify-content: center;
-  height: 10vh;
+  min-height: 10vh;
 }
 
 .register_btn,
@@ -354,10 +361,10 @@ header {
 }
 
 /* Registers */
-/* 
-.memory_pane{
-  width: 30vh;
-} */
+
+.memory_pane {
+  border-left: 1px solid black;
+}
 .reg_mem_pane {
   height: 75vh;
 }
@@ -373,16 +380,15 @@ header {
   margin-bottom: 10px;
 }
 
-
 .register_data .reg_label {
   font-weight: bold;
 }
 
-.reg_text_highlight{
+.reg_text_highlight {
   color: white;
   font-weight: 700;
   transition: background-color 0.5s ease, font-weight 0.5s ease, color 0.5s ease;
-  background-color: #DC143C;
+  background-color: #dc143c;
 }
 
 .reg_display_settings {
@@ -474,10 +480,41 @@ header {
   background-color: #7b1fa2;
 }
 
-
-.code_segment_wrapper .pipelied_exec_size{
+.code_segment_wrapper .pipelined_exec_size {
   height: 59vh !important;
 }
+
+/* Additional Registers */
+
+.additional_registers_wrapper {
+  /* display: ; */
+}
+
+
+.add_reg_main_wrapper{
+  min-width: 180px;
+}
+.add_reg_main_wrapper .add_reg_instance, .add_reg_heading {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  justify-items: center;
+  text-align: center;
+}
+
+.add_reg_heading {
+  min-height: 10vh;
+  align-items: center;
+  font-weight: bold;
+  /* border-bottom: 1px solid black; */
+}
+
+.add_reg_instance{
+  margin: 10px 0;
+}
+.add_reg_key {
+  /* padding-left: 15%; */
+}
+
 /* 
 .simulator{
   padding-top: 30px;
@@ -538,7 +575,7 @@ pre {
   hyphens: none;
 }
 
-@media only screen and (max-width: 620px) {
+@media only screen and (max-width: 735px) {
   .simulator-wapper {
     display: flex;
     flex-direction: column;
@@ -551,8 +588,12 @@ pre {
     padding: 7px;
     margin: 4px;
   }
-  .logo img{
+  .logo img {
     width: 200px;
+  }
+  /* Border bottom for additional registers segment  */
+  .additional_registers_wrapper{
+    border-bottom: 1px solid black;
   }
 }
 
@@ -570,7 +611,7 @@ pre {
   .logo {
     font-size: 19px;
   }
-  .logo img{
+  .logo img {
     width: 120px;
   }
 }

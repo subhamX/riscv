@@ -12,7 +12,6 @@ vex.defaultOptions.className = 'vex-theme-wireframe'
 let debug: boolean = true;
 
 
-
 // Defining theme asset
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
 
@@ -24,6 +23,8 @@ let currPC: number;
 let activeElem = 0;
 // 
 let dumpSeg: string;
+
+
 // Function to setup the editor
 function setupEditor() {
     editor = ace.edit("editor");
@@ -64,6 +65,8 @@ colorWrapper.classList.add('pipeline_color_wrapper');
     colorWrapper.appendChild(t);
 })
 pipelineInfoWrapper.appendChild(colorWrapper);
+
+
 
 // Helper Function to create an instruction element
 function createInstrElement(pcVal: any, machineCodeVal: any, originalCodeVal: any): HTMLDivElement {
@@ -143,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // setting mode as pipeline + data forwarding
         mode = 1;
         execute.GlobalVar.mode = 1;
+        console.time();
     }
 })
 
@@ -153,6 +157,7 @@ function removeAllInstructionAndPipeHelper() {
     });
 }
 
+// Remove all data from memory segment
 function removeMemorySegment() {
     document.querySelectorAll('.memory_data').forEach(e => {
         e.remove();
@@ -176,6 +181,7 @@ function activateEditor() {
 // Function to handle the event Assemble And Simulate Btn
 document.querySelector('.assemble_btn').addEventListener('click', () => {
     let res = handleAssembleAndSimulate()
+    // response is false if there is no error and true if there is some error
     // Replacing the buttons bars with RUN | STEP | SIMULATE
     if (!res) {
         document.querySelector('.simulate_btns_wrapper')['style'].display = 'none'
@@ -183,6 +189,8 @@ document.querySelector('.assemble_btn').addEventListener('click', () => {
     }
 });
 
+
+// Function assembles and initializes the execution stack
 function handleAssembleAndSimulate() {
     let fileData = editor.getValue();
     let response = main(fileData);
@@ -196,12 +204,12 @@ function handleAssembleAndSimulate() {
     instrWrapper.remove();
     instrWrapper = document.createElement('div');
     instrWrapper.classList.add('instructions_wrapper');
+    // Pushing pipeline information palette
     if (mode === 1 || mode === 2) {
-        // Pushing pipeline information palette
         codeSegWrapper.appendChild(pipelineInfoWrapper);
         instrWrapper.classList.add('pipelied_exec_size');
     }
-    // For Dumping in future
+    // For dumping in future
     dumpSeg = response.codeSegment;
     let assembledCode = response.codeSegment.split('\n');
     // Showing assembledCode | PC | originalCode
@@ -217,12 +225,11 @@ function handleAssembleAndSimulate() {
             codeSegWrapper.appendChild(instrWrapper);
             break;
         }
-
     }
     currPC = 0;
     // Initializing Execute Statement
     execute.init(response.codeSegment);
-    // Updaing Register and Memory State
+    // Updating Register and Memory State
     updateRegAndMemState();
     // Highlighting only if pipeline is enabled
     if (!execute.GlobalVar.pipelineEnabled) {
@@ -233,7 +240,6 @@ function handleAssembleAndSimulate() {
 
 // Wrapper function to activate simulator
 function activateSimulator() {
-    // document.getElementsByClassName('simulator-wapper')[0]["style"].display = "grid";
     document.querySelector('.simulator-wapper').classList.remove('display_none');
 }
 
@@ -278,9 +284,9 @@ document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('c
 })
 
 // Handling click event of Cancel Button After Assemble
-document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', () => {
+document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', async () => {
     // Stopping the Run if there is any
-    (<HTMLElement>document.querySelector('.stop_btn')).click();
+    await stopCurrentExec();
     document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'
     document.querySelector('.simulate1_btns_wrapper')["style"].display = 'none';
     // Remove all instrcutions and pipeline_helper if it exist
@@ -398,7 +404,8 @@ function updateRegAndMemState() {
     regFile.forEach((val, index) => {
         let div = document.querySelector(`.registers_wrapper .register${index}`);
         let regData = div.querySelector('.reg_data') as HTMLElement;
-        regData.innerText = getRegValToDisplay(val);
+        let newVal = getRegValToDisplay(val);
+        regData.innerText = newVal;
     });
     removeMemorySegment();
     mem.forEach((val, key) => {
@@ -428,13 +435,13 @@ function updateRegAndMemState() {
 }
 
 // Helper function to showSnackBar
-function showSnackBar(message: string) {
+function showSnackBar(message: string, timeo?:number) {
     var x = document.getElementById("snackbar");
     x.innerText = message;
     // Add the "show" class to DIV
     x.className = "show";
     // After 3 seconds, remove the show class from DIV
-    setTimeout(function () { x.className = x.className.replace("show", ""); }, 3000);
+    setTimeout(function () { x.className = x.className.replace("show", ""); }, timeo?timeo:3000);
 }
 
 let pcBufNameToClassName: Map<string, string> = new Map<string, string>();
@@ -448,25 +455,35 @@ pcBufNameToClassName.set('writeBackPC', 'curr_writeback_statement')
 function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, removeOnly: boolean = false) {
     // console.log("OLD", prev)
     // console.log("New", execute.GlobalVar.isb.pcBuf)
-    Object.entries(prev).forEach((e) => {
-        if (e[1] !== -1) {
-            let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
-            let className = pcBufNameToClassName.get(e[0]);
-            // console.log("REMOVING: ", e, className);
-            if (prevInstr.classList.contains(className))
-                prevInstr.classList.remove(className);
-            else
-                console.error("Doesn't contain: ", className, e)
-        }
-    })
-    if (!removeOnly) {
-        Object.entries(execute.GlobalVar.isb.pcBuf).forEach((e) => {
+    try {
+        Object.entries(prev).forEach((e) => {
             if (e[1] !== -1) {
                 let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
+                if (!prevInstr) {
+                    return;
+                }
                 let className = pcBufNameToClassName.get(e[0]);
-                prevInstr.classList.add(className);
+                // console.log("REMOVING: ", e, className);
+                if (prevInstr.classList.contains(className))
+                    prevInstr.classList.remove(className);
+                else
+                    console.error("Doesn't contain: ", className, e)
             }
         })
+        if (!removeOnly) {
+            Object.entries(execute.GlobalVar.isb.pcBuf).forEach((e) => {
+                if (e[1] !== -1) {
+                    let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
+                    if (!prevInstr) {
+                        return;
+                    }
+                    let className = pcBufNameToClassName.get(e[0]);
+                    prevInstr.classList.add(className);
+                }
+            })
+        }
+    } catch (err) {
+        console.error(err);
     }
 }
 // Updated by Modal
@@ -485,9 +502,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     if (mode == 1 || mode == 2) {
         // updating Inital PC
         let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
-        // ! Executing SingleINS
-        // execute.singleINS();
-        // ! Executing Pipeline step instead of normal step
+        // Executing Pipeline step instead of normal step
         execute.singlePipelineStep();
         if (execute.GlobalVar.isb.stallAtDecode) {
             showSnackBar('Stalling at Decode')
@@ -502,8 +517,9 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
                 showSnackBar('M to M Data Forwarding')
             }
         }
-        execute.GlobalVar.isb.showInterStateBuffer()
-        console.log("New pcBuff(GUI): ", execute.GlobalVar.isb.pcBuf);
+        // DEBUG Print
+        // execute.GlobalVar.isb.showInterStateBuffer()
+        // console.log("New pcBuff(GUI): ", execute.GlobalVar.isb.pcBuf);
 
         updateRegAndMemState();
         // updating Current PC locally
@@ -535,6 +551,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     }
 })
 
+// Function which run all instructions at one go (No Pipeline Version)
 function runAllInstructions() {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
@@ -547,59 +564,55 @@ function runAllInstructions() {
     })
 }
 
+let canRun = true;
+
 function runPipelinedInstructions() {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
-            let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
-            let res = execute.pipelinedAllINS();
-            updateHighlightedPipelineInstr(prevHighlightedPCBuffer);
-            updateRegAndMemState();
-            if (res || !canRun) {
+            console.error(canRun);
+            if (!canRun) {
                 clearInterval(interval);
                 resolve();
+                return;
             }
+            let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
+            let res = execute.pipelinedAllINS();
+            if (execute.GlobalVar.isb.stallAtDecode) {
+                showSnackBar('Stalling at Decode', 700)
+            }
+            let dfType = execute.GlobalVar.isb.dataForwardingType
+            if (dfType) {
+                if (dfType === 1) {
+                    showSnackBar('E to E Data Forwarding', 700)
+                } else if (dfType === 2) {
+                    showSnackBar('M to E Data Forwarding', 700)
+                } else if (dfType === 3) {
+                    showSnackBar('M to M Data Forwarding', 700)
+                }
+            }
+            updateRegAndMemState();
+            currPC = execute.getPC();
+            console.log("NEW PC", currPC);
+            if (execute.getIsComplete()) {
+                updateHighlightedPipelineInstr(prevHighlightedPCBuffer, true);
+                activateAssembleAndSimulateBtn();
+                showSnackBar('Program Successfully Executed');
+                clearInterval(interval);
+                resolve();
+                return;
+            }
+            updateHighlightedPipelineInstr(prevHighlightedPCBuffer);
         }, 800);
     })
 }
 
 
-let canRun = true;
 // Handling Click Event Of Run Button
 document.getElementsByClassName('run_btn')[0].addEventListener('click', async () => {
     if (mode == 1 || mode == 2) {
-        // updating Inital PC
-        let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
-        // ! Executing SingleINS
-        // execute.singleINS();
-        // ! Executing Pipeline step instead of normal step
+        // Executing Pipeline step instead of normal step
         await runPipelinedInstructions();
-        // if (execute.GlobalVar.isb.stallAtDecode) {
-        //     showSnackBar('Stalling at Decode')
-        // }
-        // let dfType = execute.GlobalVar.isb.dataForwardingType
-        // if (dfType) {
-        //     if (dfType === 1) {
-        //         showSnackBar('E to E Data Forwarding')
-        //     } else if (dfType === 2) {
-        //         showSnackBar('M to E Data Forwarding')
-        //     } else if (dfType === 3) {
-        //         showSnackBar('M to M Data Forwarding')
-        //     }
-        // }
-        // execute.GlobalVar.isb.showInterStateBuffer()
-        // console.log("New pcBuff(GUI): ", execute.GlobalVar.isb.pcBuf);
-
-        updateRegAndMemState();
-        // updating Current PC locally
-        currPC = execute.getPC();
-        console.log("NEW PC", currPC);
-        if (execute.getIsComplete()) {
-            updateHighlightedPipelineInstr(prevHighlightedPCBuffer, true);
-            activateAssembleAndSimulateBtn();
-            showSnackBar('Program Successfully Executed');
-            return;
-        }
-        updateHighlightedPipelineInstr(prevHighlightedPCBuffer)
+        console.log("Fall-through Code (RUN BTN)")
     } else {
         // updating Inital PC
         let prevHighlighted = currPC;
@@ -618,13 +631,28 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', async ()
     }
 })
 
-document.querySelector('.stop_btn').addEventListener('click', () => {
-    canRun = false;
-    console.log("Stopping the Run");
-    setTimeout(() => {
-        canRun = true;
-        console.log("Setting canRun as true");
-    }, 500)
+// stopping current execution
+function stopCurrentExec(timeo?: number) {
+    return new Promise((res, rej) => {
+        canRun = false;
+        console.warn("Stopping the Run");
+        let runBtn = (<HTMLElement>document.querySelector('.run_btn'));
+        runBtn.innerText = 'X';
+        runBtn.style.backgroundColor = '#b71c1c';
+        runBtn.style.color = '#fff';
+        setTimeout(() => {
+            canRun = true;
+            console.warn("Setting canRun as true");
+            runBtn.innerText = 'RUN';
+            runBtn.style.backgroundColor = '';
+            runBtn.style.color = '';
+            res();
+        }, 1000)
+    })
+}
+
+document.querySelector('.stop_btn').addEventListener('click', async () => {
+    await stopCurrentExec();
 })
 
 // Handling Clicking Event Of Hex Button
@@ -772,7 +800,8 @@ document.addEventListener("keydown", function (e) {
 
 
 // On Click Reset Button
-document.querySelector('.reset_btn').addEventListener('click', () => {
+document.querySelector('.reset_btn').addEventListener('click', async () => {
+    await stopCurrentExec();
     handleAssembleAndSimulate();
 })
 

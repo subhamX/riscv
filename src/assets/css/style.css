@@ -120,7 +120,7 @@ header {
 /* SIMULATOR */
 .simulator-wapper {
   display: grid;
-  grid-template-columns: 6fr 4fr;
+  grid-template-columns: 8fr 2fr;
 }
 
 .simulator {
@@ -230,6 +230,7 @@ header {
   text-align: center;
   overflow: hidden;
 }
+
 :root {
   --curr_fetch_statement_color: #aa00ff;
   --curr_decode_statement_color: #311b92;
@@ -353,7 +354,10 @@ header {
 }
 
 /* Registers */
-
+/* 
+.memory_pane{
+  width: 30vh;
+} */
 .reg_mem_pane {
   height: 75vh;
 }
@@ -369,9 +373,11 @@ header {
   margin-bottom: 10px;
 }
 
+
 .register_data .reg_label {
   font-weight: bold;
 }
+
 
 .reg_display_settings {
   display: grid;

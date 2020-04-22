@@ -113,7 +113,7 @@ export function init(data): void {
     // variable used in case of pipelined instructions
     times = 0;
     noInstr = false;
-
+    GlobalVar.operCode = null;
     GlobalVar.isComplete = false;
     GlobalVar.invalid = false;
     GlobalVar.instructionMap = new Map<number, string>();
@@ -325,7 +325,6 @@ export function UpdatePC(PC_Select: number, inpImm?: number): void {
 }
 
 
-
 /**
  * 
  * Pipeline functions
@@ -335,6 +334,8 @@ export function UpdatePC(PC_Select: number, inpImm?: number): void {
 
 // Returns true if execution is complete
 export function pipelinedAllINS() {
+    // Setting dataForwardingType as null
+    GlobalVar.isb.dataForwardingType = null;
     let no_inst: boolean = false;
     let bp: boolean = false;
     console.log('-----------*****PIPEALL*****------------')

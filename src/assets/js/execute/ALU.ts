@@ -17,6 +17,9 @@ export function Execute() {
     else {
         inB = GlobalVar.RB;
     }
+    // Setting inA and inB into GlobalVar
+    GlobalVar.inA = inA;
+    GlobalVar.inB = inB;
     console.log('inB inA', inB, inA);
     console.log("operation", GlobalVar.ALU_op);
     if (GlobalVar.ALU_op == 'add' || GlobalVar.ALU_op == 'addi' || GlobalVar.ALU_op == 'ld' || GlobalVar.ALU_op == 'lb' || GlobalVar.ALU_op == 'lh' || GlobalVar.ALU_op == 'lw') {

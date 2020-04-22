@@ -486,11 +486,6 @@ header {
 
 /* Additional Registers */
 
-.additional_registers_wrapper {
-  /* display: ; */
-}
-
-
 .add_reg_main_wrapper{
   min-width: 180px;
 }
@@ -505,6 +500,7 @@ header {
   min-height: 10vh;
   align-items: center;
   font-weight: bold;
+  font-size: 20px;
   /* border-bottom: 1px solid black; */
 }
 

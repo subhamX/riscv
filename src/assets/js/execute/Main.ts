@@ -41,13 +41,18 @@ export class GlobalVar {
     static returnAddr;
 
     // intermediate Registers
+    static RZ;
+    static RY;
+
     static RA;
     static RB;
-    static RZ;
     static RM;
-    static RY;
+
     static MAR;
     static MDR;
+
+    static inA;
+    static inB;
 
     // instruction Type, operation Code, immediate Value
     static type: string;
@@ -98,8 +103,18 @@ export function removeBreakPoint(instrPC: number) {
     GlobalVar.breakPoint = GlobalVar.breakPoint.filter((pc) => instrPC !== pc);
 }
 
-export function getAdditonalRegisters(){
-
+export function getAdditonalRegisters() {
+    return {
+        'RZ': GlobalVar.RZ,
+        'RY': GlobalVar.RY,
+        'CLOCK': GlobalVar.CLOCK,
+        'RA': GlobalVar.RA,
+        'RB': GlobalVar.RB,
+        'inA': GlobalVar.inA,
+        'inB': GlobalVar.inB,
+        'RM': GlobalVar.RM,
+        'MDR': GlobalVar.MDR
+    }
 }
 
 
@@ -116,6 +131,15 @@ export function init(data): void {
     // variable used in case of pipelined instructions
     times = 0;
     noInstr = false;
+    GlobalVar.RZ = null;
+    GlobalVar.RA = null;
+    GlobalVar.RB = null;
+    GlobalVar.inA = null;
+    GlobalVar.RM = null;
+    GlobalVar.MDR = null;
+    GlobalVar.inB = null;
+    GlobalVar.RY = null;
+    
     GlobalVar.operCode = null;
     GlobalVar.isComplete = false;
     GlobalVar.invalid = false;

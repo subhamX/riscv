@@ -34,14 +34,14 @@ export class RegisterFile {
         this.RS1 = rs1Addr;
     }
     getRS1() {
-        return this.getRegVal(this.RS1);
+        return this.getRegVal(this.RS1)===undefined?null: this.getRegVal(this.RS1);
     }
     // RS2
     setRS2(rs2Addr: number) {
         this.RS2 = rs2Addr;
     }
     getRS2() {
-        return this.getRegVal(this.RS2);
+        return this.getRegVal(this.RS2)===undefined?null: this.getRegVal(this.RS2);
     }
     // RD
     setRD(rdAddr: number) {

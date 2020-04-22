@@ -293,7 +293,26 @@ document.querySelector(".register_btn").addEventListener("click", () => {
     regWrapper["style"].display = 'block';
 })
 
+function updateAdditionalRegPane(){
+    let payload = execute.getAdditonalRegisters();
+    Object.entries(payload).forEach((e) => {
+        console.log(e);
+        let instance = document.querySelector(`.addregI_${e[0].toLowerCase()}`);
+        let valDiv = instance.querySelector(`.add_reg_value`) as HTMLElement;
+        if(e[0]==='CLOCK'){
+            valDiv.innerText = e[1];
+            return;
+        }
+        let value = getRegValToDisplay(e[1]);
+        valDiv.innerText = value
+        if(e){
+            instance
+        }else{
 
+        }
+        console.log(e, instance, value);
+    })
+}
 
 // Handling click event of Cancel Button before Assemble
 document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('click', () => {
@@ -473,6 +492,11 @@ function updateRegAndMemState() {
             setTimeout(() => { memData.classList.remove('reg_text_highlight') }, 700);
         }
     });
+
+    // updatingAdditionalRegPane
+    if(mode===1 || mode===2){
+        updateAdditionalRegPane();
+    }
 }
 
 // Helper function to showSnackBar
@@ -737,6 +761,11 @@ function onSettingsChange(prevDisplaySettings: number) {
             e.children[1].innerHTML = getMemValToDisplay(parseInt(e.children[1].innerHTML) >> 0);
         }
     })
+    // If pipeline is enabled 
+    if(mode===1 || mode===2){
+        // updating additionalregpane
+        updateAdditionalRegPane();
+    }
 }
 
 

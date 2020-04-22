@@ -179,8 +179,8 @@ function activateEditor() {
 
 
 // Function to reorganise the grid if there are any change
-function reorganiseGrid(){
-    if(mode===1 || mode===2){
+function reorganiseGrid() {
+    if (mode === 1 || mode === 2) {
         document.querySelector('.simulator-wapper').classList.remove('pipeline_grid');
         document.querySelector('.additional_registers_wrapper')['style'].display = 'none';
         // TODO: Removing all control and data hazards segment
@@ -293,24 +293,23 @@ document.querySelector(".register_btn").addEventListener("click", () => {
     regWrapper["style"].display = 'block';
 })
 
-function updateAdditionalRegPane(){
+function updateAdditionalRegPane() {
     let payload = execute.getAdditonalRegisters();
     Object.entries(payload).forEach((e) => {
-        console.log(e);
         let instance = document.querySelector(`.addregI_${e[0].toLowerCase()}`);
         let valDiv = instance.querySelector(`.add_reg_value`) as HTMLElement;
-        if(e[0]==='CLOCK'){
+        if (e[0] === 'CLOCK') {
             valDiv.innerText = e[1];
             return;
         }
         let value = getRegValToDisplay(e[1]);
         valDiv.innerText = value
-        if(e){
+        if (e) {
             instance
-        }else{
+        } else {
 
         }
-        console.log(e, instance, value);
+        // console.log(e, instance, value);
     })
 }
 
@@ -494,7 +493,7 @@ function updateRegAndMemState() {
     });
 
     // updatingAdditionalRegPane
-    if(mode===1 || mode===2){
+    if (mode === 1 || mode === 2) {
         updateAdditionalRegPane();
     }
 }
@@ -517,35 +516,86 @@ pcBufNameToClassName.set('executePC', 'curr_execute_statement')
 pcBufNameToClassName.set('memoryPC', 'curr_memory_statement')
 pcBufNameToClassName.set('writeBackPC', 'curr_writeback_statement')
 
+
+// F D E M W
+function getPCBufferColorsArray(pcBuf: Object) {
+    let payload = new Map<number, string>();
+    Object.entries(pcBuf).forEach((e) => {
+        if (e[1] === -1) {
+            return;
+        }
+        let initialVal = payload.get(e[1]) ? payload.get(e[1]) : '';
+        if (e[0] === 'fetchPC') {
+            payload.set(e[1], initialVal + 'F');
+        } else if (e[0] === 'decodePC') {
+            payload.set(e[1], initialVal + 'D');
+        } else if (e[0] === 'executePC') {
+            payload.set(e[1], initialVal + 'E');
+        } else if (e[0] === 'memoryPC') {
+            payload.set(e[1], initialVal + 'M');
+        } else if (e[0] === 'writeBackPC') {
+            payload.set(e[1], initialVal + 'W');
+        }
+    });
+    return payload;
+}
+
+let linearGradientConfig = {
+    'fetch': '#aa00ff',
+    'decode': '#311b92',
+    'execute': '#0288d1',
+    'memory': '#880e4f',
+    'writeback': '#673ab7',
+    'background': '#ef6c00',
+}
+
+function getLinearGradient(metaData: string) {
+    let linearGradProperty = `linear-gradient(90deg, `;
+    if (metaData.includes('F')) {
+        linearGradProperty += `${linearGradientConfig['fetch']}, ${linearGradientConfig['fetch']} 20%, `;
+    } else {
+        linearGradProperty += `${linearGradientConfig['background']}, ${linearGradientConfig['background']} 20%, `;
+    }
+
+    if (metaData.includes('D')) {
+        linearGradProperty += `${linearGradientConfig['decode']} 20%, ${linearGradientConfig['decode']} 40%, `;
+    } else {
+        linearGradProperty += `${linearGradientConfig['background']} 20%, ${linearGradientConfig['background']} 40%, `;
+    }
+
+    if (metaData.includes('E')) {
+        linearGradProperty += `${linearGradientConfig['execute']} 40%, ${linearGradientConfig['execute']} 60%, `;
+    } else {
+        linearGradProperty += `${linearGradientConfig['background']} 40%, ${linearGradientConfig['background']} 60%, `;
+    }
+    if (metaData.includes('M')) {
+        linearGradProperty += `${linearGradientConfig['memory']} 60%, ${linearGradientConfig['memory']} 80%, `;
+    } else {
+        linearGradProperty += `${linearGradientConfig['background']} 60%, ${linearGradientConfig['background']} 80%, `;
+    }
+    if (metaData.includes('W')) {
+        linearGradProperty += `${linearGradientConfig['execute']} 80%, ${linearGradientConfig['execute']} 100%)`;
+    } else {
+        linearGradProperty += `${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 100%)`;
+    }
+    return linearGradProperty;
+}
+
 function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, removeOnly: boolean = false) {
-    // console.log("OLD", prev)
-    // console.log("New", execute.GlobalVar.isb.pcBuf)
+    console.log("OLD", prev)
+    console.log("New", execute.GlobalVar.isb.pcBuf)
     try {
-        Object.entries(prev).forEach((e) => {
-            if (e[1] !== -1) {
-                let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
-                if (!prevInstr) {
-                    return;
-                }
-                let className = pcBufNameToClassName.get(e[0]);
-                // console.log("REMOVING: ", e, className);
-                if (prevInstr.classList.contains(className))
-                    prevInstr.classList.remove(className);
-                else
-                    console.error("Doesn't contain: ", className, e)
-            }
-        })
+        getPCBufferColorsArray(prev).forEach((val, key) => {
+            let instr = document.querySelector(`.pc${key}`) as HTMLElement;
+            instr.style.background = '';
+            instr.style.color = '';
+        });
         if (!removeOnly) {
-            Object.entries(execute.GlobalVar.isb.pcBuf).forEach((e) => {
-                if (e[1] !== -1) {
-                    let prevInstr = document.getElementsByClassName(`pc${e[1]}`)[0];
-                    if (!prevInstr) {
-                        return;
-                    }
-                    let className = pcBufNameToClassName.get(e[0]);
-                    prevInstr.classList.add(className);
-                }
-            })
+            getPCBufferColorsArray(execute.GlobalVar.isb.pcBuf).forEach((val, key) => {
+                let instr = document.querySelector(`.pc${key}`) as HTMLElement;
+                instr.style.background = getLinearGradient(val);
+                instr.style.color = 'white';
+            });
         }
     } catch (err) {
         console.error(err);
@@ -762,7 +812,7 @@ function onSettingsChange(prevDisplaySettings: number) {
         }
     })
     // If pipeline is enabled 
-    if(mode===1 || mode===2){
+    if (mode === 1 || mode === 2) {
         // updating additionalregpane
         updateAdditionalRegPane();
     }

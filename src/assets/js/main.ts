@@ -409,8 +409,9 @@ function updateRegAndMemState() {
         if (regData.innerText !== newVal) {
             regData.innerText = newVal;
             regData.classList.add('reg_text_highlight');
+            regData.scrollIntoView();
             console.timeLog();
-            setTimeout(() => { console.log(regData); console.timeLog();regData.classList.remove('reg_text_highlight') }, 700);
+            setTimeout(() => { console.log(regData); console.timeLog(); regData.classList.remove('reg_text_highlight') }, 700);
         }
     });
     removeMemorySegment();
@@ -441,13 +442,13 @@ function updateRegAndMemState() {
 }
 
 // Helper function to showSnackBar
-function showSnackBar(message: string, timeo?:number) {
+function showSnackBar(message: string, timeo?: number) {
     var x = document.getElementById("snackbar");
     x.innerText = message;
     // Add the "show" class to DIV
     x.className = "show";
     // After 3 seconds, remove the show class from DIV
-    setTimeout(function () { x.className = x.className.replace("show", ""); }, timeo?timeo:3000);
+    setTimeout(function () { x.className = x.className.replace("show", ""); }, timeo ? timeo : 3000);
 }
 
 let pcBufNameToClassName: Map<string, string> = new Map<string, string>();

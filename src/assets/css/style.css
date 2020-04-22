@@ -379,10 +379,10 @@ header {
 }
 
 .reg_text_highlight{
-  color: red;
-  font-weight: bold;
+  color: white;
+  font-weight: 700;
   transition: background-color 0.5s ease, font-weight 0.5s ease, color 0.5s ease;
-  background-color: yellow;
+  background-color: #DC143C;
 }
 
 .reg_display_settings {

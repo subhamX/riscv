@@ -378,6 +378,12 @@ header {
   font-weight: bold;
 }
 
+.reg_text_highlight{
+  color: red;
+  font-weight: bold;
+  transition: background-color 0.5s ease, font-weight 0.5s ease, color 0.5s ease;
+  background-color: yellow;
+}
 
 .reg_display_settings {
   display: grid;

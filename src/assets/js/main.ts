@@ -405,7 +405,13 @@ function updateRegAndMemState() {
         let div = document.querySelector(`.registers_wrapper .register${index}`);
         let regData = div.querySelector('.reg_data') as HTMLElement;
         let newVal = getRegValToDisplay(val);
-        regData.innerText = newVal;
+        // Updating only if there are some changes
+        if (regData.innerText !== newVal) {
+            regData.innerText = newVal;
+            regData.classList.add('reg_text_highlight');
+            console.timeLog();
+            setTimeout(() => { console.log(regData); console.timeLog();regData.classList.remove('reg_text_highlight') }, 700);
+        }
     });
     removeMemorySegment();
     mem.forEach((val, key) => {

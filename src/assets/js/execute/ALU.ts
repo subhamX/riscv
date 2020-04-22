@@ -71,10 +71,10 @@ export function Execute() {
         console.log("RZ", GlobalVar.RZ)
         // Using RB and forwarding it to RM (For both pipelined and non-pipelined instructions)
         if (GlobalVar.pipelineEnabled && (GlobalVar.mode === 1)) {
-            console.error("M to M data Forwarding: Prev RM, New RM (=MDR)", GlobalVar.RM, GlobalVar.MDR, GlobalVar.isb.prevPrevInstrMnenomic)
             // Here prev istruction is prevPrev instruction
             let prevInstrMnenomic = GlobalVar.isb.prevPrevInstrMnenomic;
             if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
+                console.error("M to M data Forwarding: Prev RM, New RM (=MDR)", GlobalVar.RM, GlobalVar.MDR, GlobalVar.isb.prevPrevInstrMnenomic)
                 // ! M to M Data Forwarding
                 GlobalVar.isb.dataForwardingType = 3;
                 GlobalVar.RM = GlobalVar.MDR;
@@ -137,6 +137,7 @@ export function Execute() {
     }
 
     // Converting any overflowing number to negative 
+    console.log('Without Overflow Check: rz', GlobalVar.RZ)
     GlobalVar.RZ <<= 0;
     console.log('rz', GlobalVar.RZ);
 }

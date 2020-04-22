@@ -207,13 +207,13 @@ header {
 .pipeline_color_wrapper {
   display: grid;
   /* Make sure that this margin is same as width of scrollbar */
-  margin-right: 10px;
+  /* margin-right: 10px; */
   margin-bottom: 5px;
   /* justify-content: ; */
   grid-template-columns: repeat(5, 1fr);
   color: white;
   background: linear-gradient(
-    var(--statement_degree),
+    110deg,
     var(--curr_fetch_statement_color) 20%,
     var(--curr_decode_statement_color) 20%,
     var(--curr_decode_statement_color) 40%,

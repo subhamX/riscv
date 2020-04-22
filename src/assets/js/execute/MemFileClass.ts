@@ -38,6 +38,8 @@ export class MemoryFile {
     }
 
     MEM_WRITE(addr: number, value: number, dtype: string) {
+        // converting addr to +ve value if there was a overflow
+        addr = addr >>> 0;
         let len: number;
         if (dtype == 'b') { len = 1; }
         else if (dtype == 'h') { len = 2; }

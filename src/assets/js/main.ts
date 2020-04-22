@@ -146,7 +146,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // setting mode as pipeline + data forwarding
         mode = 1;
         execute.GlobalVar.mode = 1;
-        console.time();
     }
 })
 
@@ -227,6 +226,8 @@ function handleAssembleAndSimulate() {
         }
     }
     currPC = 0;
+    // removing memory segment data
+    removeMemorySegment();
     // Initializing Execute Statement
     execute.init(response.codeSegment);
     // Updating Register and Memory State
@@ -320,7 +321,7 @@ function createMemoryElem(address: number, data) {
     div.classList.add(`memory${address}`);
     let spanLabel = document.createElement('span');
     spanLabel.classList.add('mem_label');
-    spanLabel.innerText = `0x${addZeros(address.toString(16), 8)}`;
+    spanLabel.innerText = `0x${addZeros(address.toString(16), 8).toUpperCase()}`;
     let spanData = document.createElement('span');
     spanData.classList.add('mem_data');
     spanData.innerText = data.toUpperCase();
@@ -408,19 +409,28 @@ function updateRegAndMemState() {
         // Updating only if there are some changes
         if (regData.innerText !== newVal) {
             regData.innerText = newVal;
+            // scrolling into the element
+            regData.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+            // adding texthighlight class
             regData.classList.add('reg_text_highlight');
-            regData.scrollIntoView();
-            console.timeLog();
             setTimeout(() => { console.log(regData); console.timeLog(); regData.classList.remove('reg_text_highlight') }, 700);
         }
     });
-    removeMemorySegment();
+    console.log(mem);
     mem.forEach((val, key) => {
-        let div = document.querySelector(`.memory_wrapper .memory${key}`);
+        let div = document.querySelector(`.memory_wrapper .memory${key}`) as HTMLElement;
         let displayNum = getMemValToDisplay(val);
         if (div) {
             let memData = div.querySelector('.mem_data') as HTMLElement;
-            memData.innerText = displayNum;
+            if (memData.innerText !== displayNum) {
+                console.log("NOT EXIST", memData.innerText, displayNum, memData.innerText === displayNum);
+                memData.innerText = displayNum;
+                // scrolling into the element
+                memData.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+                // adding texthighlight class
+                memData.classList.add('reg_text_highlight');
+                setTimeout(() => { console.log(memData); console.timeLog(); memData.classList.remove('reg_text_highlight') }, 700);
+            }
         } else {
             // 0 => Code Seg | 1 => Data Seg | 2 => Heap Seg | 3 => Stack Segment |
             let div = createMemoryElem(key, displayNum);
@@ -437,6 +447,12 @@ function updateRegAndMemState() {
                 // Add Segment
                 document.getElementsByClassName('addi_segment')[0].append(div);
             }
+            let memData = div.querySelector('.mem_data') as HTMLElement;
+            // scrolling into the element
+            memData.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+            // adding texthighlight class
+            memData.classList.add('reg_text_highlight');
+            setTimeout(() => { console.log(memData); console.timeLog(); memData.classList.remove('reg_text_highlight') }, 700);
         }
     });
 }
@@ -527,7 +543,6 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
         // DEBUG Print
         // execute.GlobalVar.isb.showInterStateBuffer()
         // console.log("New pcBuff(GUI): ", execute.GlobalVar.isb.pcBuf);
-
         updateRegAndMemState();
         // updating Current PC locally
         currPC = execute.getPC();

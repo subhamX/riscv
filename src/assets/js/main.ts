@@ -657,9 +657,24 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', async (
         let prevHighlightedActivePC = currPC;
         // Executing Pipeline step instead of normal step
         execute.singlePipelineStep();
+
+        let lastPred = execute.GlobalVar.isb.lastPrediction;
+        if(lastPred !==null){
+            if(lastPred==0){
+                await showSnackBar(`Branch Prediction for 0x${execute.GlobalVar.isb.pcBuf.fetchPC} is false`)
+            }else if(lastPred==1){
+                await showSnackBar(`Branch Prediction for 0x${execute.GlobalVar.isb.pcBuf.fetchPC} is true`)
+            }else{
+                console.error('Error in Prediction Value')
+            }
+        }
+
+
         if (execute.GlobalVar.isb.stallAtDecode) {
             await showSnackBar('Stalling at Decode')
         }
+
+
         let dfType = execute.GlobalVar.isb.dataForwardingType
         if (dfType) {
             if (dfType === 1) {

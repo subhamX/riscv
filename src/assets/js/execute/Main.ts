@@ -438,8 +438,9 @@ export function pipelinedAllINS() {
 
 
 export function singlePipelineStep() {
-    // Setting dataForwardingType as null
+    // Setting dataForwardingType and lastPrediction as null
     GlobalVar.isb.dataForwardingType = null;
+    GlobalVar.isb.lastPrediction = null;
     console.log('-----------*****PIPE*****------------');
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     // console.log("OLD: ", GlobalVar.isb.pcBuf);
@@ -560,6 +561,7 @@ function pipelinedFetch(no_inst): boolean {
             console.log(instance);
             // If predictor state is true
             if (instance.predictorState) {
+                GlobalVar.isb.lastPrediction = 1;
                 // For control hazard instruction setting decodePC (For GUI)
                 // GlobalVar.isb.pcBuf.decodePC = GlobalVar.pcTemp;
                 GlobalVar.isb.branchAddress = instance.branchTargetAddress;
@@ -570,6 +572,7 @@ function pipelinedFetch(no_inst): boolean {
                 // Setting isBranchTaken as false
                 GlobalVar.isb.isb1.isBranchTaken = true;
             } else {
+                GlobalVar.isb.lastPrediction = 0;
                 // Setting isBranchTaken as false
                 GlobalVar.isb.isb1.isBranchTaken = false;
             }

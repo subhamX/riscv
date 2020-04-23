@@ -64,6 +64,9 @@ export class InterStateBuffer {
     isb3: ISB3;
     isb4: ISB4;
 
+    // stored lastprediction for GUI
+    lastPrediction: number;
+
     branchTargetBuffer: Map<number, {'predictorState':boolean, 'branchTargetAddress': number}>;
 
     // This is entirely for GUI purposes
@@ -109,6 +112,7 @@ export class InterStateBuffer {
         this.flushPipeline = false;
         this.stallAtDecode = false;
         this.stallType = null;
+        this.lastPrediction = null;
         this.branchTargetBuffer = new Map<number, {'predictorState': boolean, 'branchTargetAddress': number}>();
     }
 

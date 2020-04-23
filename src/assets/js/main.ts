@@ -253,6 +253,8 @@ function handleAssembleAndSimulate() {
     // Highlighting only if pipeline is enabled
     if (!execute.GlobalVar.pipelineEnabled) {
         updateHighlightedInst(-1);
+    } else {
+        updateHighlightedPipelineInstr(null, -1);
     }
     return false;
 }
@@ -518,7 +520,7 @@ pcBufNameToClassName.set('writeBackPC', 'curr_writeback_statement')
 
 
 // F D E M W
-function getPCBufferColorsArray(pcBuf: Object) {
+function getPCBufferColorsArray(pcBuf: Object, isPrev?: boolean) {
     let payload = new Map<number, string>();
     Object.entries(pcBuf).forEach((e) => {
         if (e[1] === -1) {
@@ -537,6 +539,12 @@ function getPCBufferColorsArray(pcBuf: Object) {
             payload.set(e[1], initialVal + 'W');
         }
     });
+    if (!isPrev) {
+        // If the pcBuf is not previous
+        let currPC = execute.getPC();
+        let initialVal = payload.get(currPC) ? payload.get(currPC) : '';
+        payload.set(currPC, initialVal + 'A')
+    }
     return payload;
 }
 
@@ -547,6 +555,7 @@ let linearGradientConfig = {
     'memory': '#880e4f',
     'writeback': '#673ab7',
     'background': '#ef6c00',
+    'active': '#fdd835',
 }
 
 function getLinearGradient(metaData: string) {
@@ -573,23 +582,49 @@ function getLinearGradient(metaData: string) {
     } else {
         linearGradProperty += `${linearGradientConfig['background']} 60%, ${linearGradientConfig['background']} 80%, `;
     }
-    if (metaData.includes('W')) {
-        linearGradProperty += `${linearGradientConfig['execute']} 80%, ${linearGradientConfig['execute']} 100%)`;
+    if (metaData.includes('W') && metaData.includes('A')) {
+        linearGradProperty += `${linearGradientConfig['writeback']} 80%, ${linearGradientConfig['writeback']} 95%, rgba(0, 0, 0, 0) 95%, rgba(0, 0, 0, 0) 100% ), `;
+        linearGradProperty += `linear-gradient(70deg, ${linearGradientConfig['writeback']} 80%, ${linearGradientConfig['writeback']} 95%, ${linearGradientConfig['active']} 95%, ${linearGradientConfig['active']} 100%)`;
     } else {
-        linearGradProperty += `${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 100%)`;
+        if(metaData.includes('W')){
+            // only writeback
+            linearGradProperty += `${linearGradientConfig['writeback']} 80%, ${linearGradientConfig['writeback']} 100%)`;
+        }else if(metaData.includes('A')){
+            // only active
+            linearGradProperty += `${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 95%, rgba(0, 0, 0, 0) 95%, rgba(0, 0, 0, 0) 100% ), `;
+            linearGradProperty += `linear-gradient(70deg, ${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 95%, ${linearGradientConfig['active']} 95%, ${linearGradientConfig['active']} 100%)`;
+        }else{
+            // normal backgroud
+            linearGradProperty += `${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 100% )`;
+        }
     }
+    // if (metaData.includes('A')) {
+    //     linearGradProperty += `linear-gradient(70deg, ${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 95%, ${linearGradientConfig['active']} 95%, ${linearGradientConfig['active']} 100%)`;
+    // } else {
+    //     linearGradProperty += `linear-gradient(90deg, ${linearGradientConfig['background']} 95%, ${linearGradientConfig['background']} 100%)`;
+    // }
     return linearGradProperty;
 }
 
-function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, removeOnly: boolean = false) {
+function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, prevPC: number, removeOnly: boolean = false) {
     console.log("OLD", prev)
     console.log("New", execute.GlobalVar.isb.pcBuf)
     try {
-        getPCBufferColorsArray(prev).forEach((val, key) => {
-            let instr = document.querySelector(`.pc${key}`) as HTMLElement;
-            instr.style.background = '';
-            instr.style.color = '';
-        });
+        if (prev) {
+            Object.entries(prev).forEach((e) => {
+                if (e[1] === -1) {
+                    return;
+                }
+                let instr = document.querySelector(`.pc${e[1]}`) as HTMLElement;
+                instr.style.background = '';
+                instr.style.color = '';
+            });
+            if(prevPC!=-1){
+                let instr = document.querySelector(`.pc${prevPC}`) as HTMLElement;
+                instr.style.background = '';
+                instr.style.color = '';
+            }
+        }
         if (!removeOnly) {
             getPCBufferColorsArray(execute.GlobalVar.isb.pcBuf).forEach((val, key) => {
                 let instr = document.querySelector(`.pc${key}`) as HTMLElement;
@@ -617,6 +652,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
     if (mode == 1 || mode == 2) {
         // updating Inital PC
         let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
+        let prevHighlightedActivePC = currPC;
         // Executing Pipeline step instead of normal step
         execute.singlePipelineStep();
         if (execute.GlobalVar.isb.stallAtDecode) {
@@ -633,19 +669,18 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
             }
         }
         // DEBUG Print
-        // execute.GlobalVar.isb.showInterStateBuffer()
-        // console.log("New pcBuff(GUI): ", execute.GlobalVar.isb.pcBuf);
+        execute.GlobalVar.isb.showInterStateBuffer()
         updateRegAndMemState();
         // updating Current PC locally
         currPC = execute.getPC();
         console.log("NEW PC", currPC);
         if (execute.getIsComplete()) {
-            updateHighlightedPipelineInstr(prevHighlightedPCBuffer, true);
+            updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC, true);
             activateAssembleAndSimulateBtn();
             showSnackBar('Program Successfully Executed');
             return;
         }
-        updateHighlightedPipelineInstr(prevHighlightedPCBuffer)
+        updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC);
     } else {
         // updating Inital PC
         let prevHighlighted = currPC;
@@ -690,6 +725,7 @@ function runPipelinedInstructions() {
                 return;
             }
             let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
+            let prevHighlightedActivePC = currPC;
             let res = execute.pipelinedAllINS();
             if (execute.GlobalVar.isb.stallAtDecode) {
                 showSnackBar('Stalling at Decode', 700)
@@ -705,17 +741,18 @@ function runPipelinedInstructions() {
                 }
             }
             updateRegAndMemState();
+            // updating currPC
             currPC = execute.getPC();
             console.log("NEW PC", currPC);
             if (execute.getIsComplete()) {
-                updateHighlightedPipelineInstr(prevHighlightedPCBuffer, true);
+                updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC, true);
                 activateAssembleAndSimulateBtn();
                 showSnackBar('Program Successfully Executed');
                 clearInterval(interval);
                 resolve();
                 return;
             }
-            updateHighlightedPipelineInstr(prevHighlightedPCBuffer);
+            updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC);
         }, 800);
     })
 }

@@ -27,8 +27,10 @@ export class GlobalVar {
     // TODO: Handle Default Values
     static mode: number = 0;
     static pipelineEnabled: boolean = false;
+    static branchPredEnabled: boolean = true;
 
     static CLOCK: number = 0;
+    static stallCount: number;
 
     // Stats
     static totalInstructions: Number; //Stat2
@@ -139,7 +141,7 @@ export function init(data): void {
     GlobalVar.MDR = null;
     GlobalVar.inB = null;
     GlobalVar.RY = null;
-    
+    GlobalVar.stallCount = 0;
     GlobalVar.operCode = null;
     GlobalVar.isComplete = false;
     GlobalVar.invalid = false;
@@ -509,15 +511,19 @@ function pipelinedMemory() {
 
 
 function pipelinedDecode(): boolean {
+    // Make sure to nullify the stallType before calling actual Decode
+    GlobalVar.isb.stallType = null;
     // Decode Begin
     Decode();
     console.log("StallAtDecode:Bool =>", GlobalVar.isb.stallAtDecode);
     if (GlobalVar.isb.stallAtDecode === true) {
         // stall pipeline
-        console.log("STALLING PIPELINE! Returning");
+        console.log("STALLING PIPELINE! Returning true from Decode");
+        GlobalVar.stallCount++;
         GlobalVar.isb.updateOnStall();
         return true;
     } else {
+        GlobalVar.stallCount=0;
         GlobalVar.isb.updateInterStateBufferAfterDecode();
         return false;
     }
@@ -533,6 +539,7 @@ function pipelinedFetch(no_inst): boolean {
         // Only for GUI
         GlobalVar.isb.updatePCBuffer();
         GlobalVar.isb.pcBuf.fetchPC = -1;
+        GlobalVar.PC = -1;
 
         times++;
         console.log("SETTING times as: ", times);
@@ -543,35 +550,51 @@ function pipelinedFetch(no_inst): boolean {
     }
     // Fetch Begin
     no_inst = Fetch();
+    console.log(GlobalVar.isb.branchTargetBuffer);
     // If pipelining is enabled
-    if (GlobalVar.pipelineEnabled) {
-        let controlHazardType = detectControlHazard();
+    // PC is pointing to next instruction and pcTemp is pointing to current one
+    if (GlobalVar.branchPredEnabled) {
         // TODO: Create Branch Target Buffer And save addresses indexed by PC 
-        let { branchAddressDef, branchAddress } = updateBranchAddress(controlHazardType);
-        GlobalVar.isb.branchAddress = branchAddress;
-        GlobalVar.isb.branchAddressDef = branchAddressDef;
-        GlobalVar.isb.controlHazardType = controlHazardType;
-    }
-    // Updating the InterstateBuffer
-    console.log(GlobalVar.pcTemp);
-    // If the fetched instruction is jal, beq, jalr
-    if (GlobalVar.isb.controlHazardType) {
-        console.log("OLD: PCTEMP, PC: ", GlobalVar.pcTemp, GlobalVar.PC);
+        if (GlobalVar.isb.branchTargetBuffer.has(GlobalVar.pcTemp)) {
+            let instance = GlobalVar.isb.branchTargetBuffer.get(GlobalVar.pcTemp);
+            console.log(instance);
+            // If predictor state is true
+            if (instance.predictorState) {
+                // For control hazard instruction setting decodePC (For GUI)
+                // GlobalVar.isb.pcBuf.decodePC = GlobalVar.pcTemp;
+                GlobalVar.isb.branchAddress = instance.branchTargetAddress;
+                GlobalVar.isb.branchAddressDef = GlobalVar.PC;
+                // pcTemp will be used by decode
+                // GlobalVar.pcTemp = GlobalVar.PC;
+                GlobalVar.PC = GlobalVar.isb.branchAddress;
+                // Setting isBranchTaken as false
+                GlobalVar.isb.isb1.isBranchTaken = true;
+            } else {
+                // Setting isBranchTaken as false
+                GlobalVar.isb.isb1.isBranchTaken = false;
+            }
+        } else {
+            console.warn("No state found");
+        }
+        console.log(GlobalVar.pcTemp);
+        // If the fetched instruction is jal, beq, jalr
+        // if (GlobalVar.isb.controlHazardType) {
+        //     console.log("OLD: PCTEMP, PC: ", GlobalVar.pcTemp, GlobalVar.PC);
         // For control hazard instruction setting decodePC (For GUI)
-        GlobalVar.isb.pcBuf.decodePC = GlobalVar.pcTemp;
+        //     GlobalVar.isb.pcBuf.decodePC = GlobalVar.pcTemp;
         // Overriding the updation of PC and pcTemp inside Fetch()
-        GlobalVar.pcTemp = GlobalVar.PC;
-        GlobalVar.PC = GlobalVar.isb.branchAddress;
+        //     GlobalVar.pcTemp = GlobalVar.PC;
+        //     GlobalVar.PC = GlobalVar.isb.branchAddress;
+        // }
     }
     console.log("PCTEMP, PC: ", GlobalVar.pcTemp, GlobalVar.PC);
-    if (GlobalVar.pipelineEnabled) {
-        GlobalVar.isb.updatePCBuffer();
-    }
+    // Updating the InterstateBuffer
+    GlobalVar.isb.updatePCBuffer();
     // Updating Inter State Buffer
 
-    // if(no_inst){
-    //     type
-    // }
+    if (no_inst) {
+        GlobalVar.PC = -1;
+    }
 
     GlobalVar.isb.updateInterStateBuffer();
     return no_inst;

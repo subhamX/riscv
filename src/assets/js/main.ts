@@ -502,12 +502,14 @@ function updateRegAndMemState() {
 
 // Helper function to showSnackBar
 function showSnackBar(message: string, timeo?: number) {
-    var x = document.getElementById("snackbar");
-    x.innerText = message;
-    // Add the "show" class to DIV
-    x.className = "show";
-    // After 3 seconds, remove the show class from DIV
-    setTimeout(function () { x.className = x.className.replace("show", ""); }, timeo ? timeo : 3000);
+    return new Promise((res, rej) => {
+        var x = document.getElementById("snackbar");
+        x.innerText = message;
+        // Add the "show" class to DIV
+        x.className = "show";
+        // After 3 seconds, remove the show class from DIV
+        setTimeout(function () { x.className = x.className.replace("show", ""); res() }, timeo ? timeo : 1200);
+    })
 }
 
 let pcBufNameToClassName: Map<string, string> = new Map<string, string>();
@@ -520,7 +522,7 @@ pcBufNameToClassName.set('writeBackPC', 'curr_writeback_statement')
 
 
 // F D E M W
-function getPCBufferColorsArray(pcBuf: Object, isPrev?: boolean) {
+function getPCBufferColorsArray(pcBuf: Object) {
     let payload = new Map<number, string>();
     Object.entries(pcBuf).forEach((e) => {
         if (e[1] === -1) {
@@ -539,12 +541,12 @@ function getPCBufferColorsArray(pcBuf: Object, isPrev?: boolean) {
             payload.set(e[1], initialVal + 'W');
         }
     });
-    if (!isPrev) {
-        // If the pcBuf is not previous
-        let currPC = execute.getPC();
-        let initialVal = payload.get(currPC) ? payload.get(currPC) : '';
-        payload.set(currPC, initialVal + 'A')
-    }
+    // If the pcBuf is not previous
+    let currPC = execute.getPC();
+    let initialVal = payload.get(currPC) ? payload.get(currPC) : '';
+    if (currPC != -1)
+        payload.set(currPC, initialVal + 'A');
+
     return payload;
 }
 
@@ -586,14 +588,14 @@ function getLinearGradient(metaData: string) {
         linearGradProperty += `${linearGradientConfig['writeback']} 80%, ${linearGradientConfig['writeback']} 95%, rgba(0, 0, 0, 0) 95%, rgba(0, 0, 0, 0) 100% ), `;
         linearGradProperty += `linear-gradient(70deg, ${linearGradientConfig['writeback']} 80%, ${linearGradientConfig['writeback']} 95%, ${linearGradientConfig['active']} 95%, ${linearGradientConfig['active']} 100%)`;
     } else {
-        if(metaData.includes('W')){
+        if (metaData.includes('W')) {
             // only writeback
             linearGradProperty += `${linearGradientConfig['writeback']} 80%, ${linearGradientConfig['writeback']} 100%)`;
-        }else if(metaData.includes('A')){
+        } else if (metaData.includes('A')) {
             // only active
             linearGradProperty += `${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 95%, rgba(0, 0, 0, 0) 95%, rgba(0, 0, 0, 0) 100% ), `;
             linearGradProperty += `linear-gradient(70deg, ${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 95%, ${linearGradientConfig['active']} 95%, ${linearGradientConfig['active']} 100%)`;
-        }else{
+        } else {
             // normal backgroud
             linearGradProperty += `${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 100% )`;
         }
@@ -607,8 +609,8 @@ function getLinearGradient(metaData: string) {
 }
 
 function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, prevPC: number, removeOnly: boolean = false) {
-    console.log("OLD", prev)
-    console.log("New", execute.GlobalVar.isb.pcBuf)
+    console.log("OLD", prev, prevPC)
+    console.log("New", execute.GlobalVar.isb.pcBuf, execute.GlobalVar.PC)
     try {
         if (prev) {
             Object.entries(prev).forEach((e) => {
@@ -619,7 +621,7 @@ function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, prevPC: numb
                 instr.style.background = '';
                 instr.style.color = '';
             });
-            if(prevPC!=-1){
+            if (prevPC != -1) {
                 let instr = document.querySelector(`.pc${prevPC}`) as HTMLElement;
                 instr.style.background = '';
                 instr.style.color = '';
@@ -647,7 +649,7 @@ let mode: number = 0;
 
 
 // Handling Click Event Of Step Button
-document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
+document.getElementsByClassName('step_btn')[0].addEventListener('click', async () => {
     // If it's a pipelined execution then calling pipelined step
     if (mode == 1 || mode == 2) {
         // updating Inital PC
@@ -656,16 +658,16 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
         // Executing Pipeline step instead of normal step
         execute.singlePipelineStep();
         if (execute.GlobalVar.isb.stallAtDecode) {
-            showSnackBar('Stalling at Decode')
+            await showSnackBar('Stalling at Decode')
         }
         let dfType = execute.GlobalVar.isb.dataForwardingType
         if (dfType) {
             if (dfType === 1) {
-                showSnackBar('E to E Data Forwarding')
+                await showSnackBar('E to E Data Forwarding')
             } else if (dfType === 2) {
-                showSnackBar('M to E Data Forwarding')
+                await showSnackBar('M to E Data Forwarding')
             } else if (dfType === 3) {
-                showSnackBar('M to M Data Forwarding')
+                await showSnackBar('M to M Data Forwarding')
             }
         }
         // DEBUG Print
@@ -677,6 +679,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', () => {
         if (execute.getIsComplete()) {
             updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC, true);
             activateAssembleAndSimulateBtn();
+            // Not awaiting here
             showSnackBar('Program Successfully Executed');
             return;
         }

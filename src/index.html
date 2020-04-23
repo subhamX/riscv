@@ -382,13 +382,17 @@ git checkout GUI
     </section>
     <div id="snackbar"></div>
     <div id="editor">
-        addi x5, x5, 500
-        addi x31, x5, 500
-        addi x1, x5, 500
-        addi x30, x5, 500
-        addi x6, x5, 500
-        sw x2, 4(x2)
-        sw x2, 8(x2)
+main:
+beq x0, x10, hello
+addi x5, x5, 500
+addi x31, x5, 500
+hello:
+jal x10, main
+addi x1, x5, 500
+addi x30, x5, 500
+addi x6, x5, 500
+sw x2, 4(x2)
+sw x2, 8(x2)
 sw x2, 12(x2)
 sw x2, 16(x2)
 sw x5, 0(x5)

@@ -64,6 +64,8 @@ export class InterStateBuffer {
     isb3: ISB3;
     isb4: ISB4;
 
+    branchTargetBuffer: Map<number, {'predictorState':boolean, 'branchTargetAddress': number}>;
+
     // This is entirely for GUI purposes
     pcBuf: ProgramCounterBuffer;
 
@@ -91,6 +93,11 @@ export class InterStateBuffer {
     controlHazardType: number;
     flushPipeline: boolean;
     stallAtDecode: boolean;
+    // 1 means stall because of prevInstr and 2 means stall because of prevPrevInstr
+    stallType:number;
+
+    // return address is used in jal and jalr
+    // writeBackRegLocation contains the register Location where updation will take place, for some instructions it is null
 
     constructor() {
         this.isb1 = new ISB1();
@@ -101,6 +108,8 @@ export class InterStateBuffer {
         this.branchMispredictions = 0;
         this.flushPipeline = false;
         this.stallAtDecode = false;
+        this.stallType = null;
+        this.branchTargetBuffer = new Map<number, {'predictorState': boolean, 'branchTargetAddress': number}>();
     }
 
     // GUI Exclusive functions
@@ -113,9 +122,33 @@ export class InterStateBuffer {
     }
 
     updatePCBufferOnStall() {
-        this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
-        this.pcBuf.memoryPC = this.pcBuf.executePC;
-        this.pcBuf.executePC = this.pcBuf.decodePC;
+        console.log('GlobalVar.stallCount', GlobalVar.stallCount);
+        if(GlobalVar.stallCount===1){
+            // if stallcount is 1
+            this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
+            this.pcBuf.memoryPC = this.pcBuf.executePC;
+            // stalling means no data passing from decode to ALU
+            this.pcBuf.executePC = this.pcBuf.decodePC;
+            // OLD
+            // this.pcBuf.decodePC = this.pcBuf.fetchPC;
+            // this.pcBuf.fetchPC = -1;
+            // New 
+            this.pcBuf.decodePC = -1;
+            // retaining the same fetchPC
+        }else if(GlobalVar.stallCount===2){
+            // if stallcount is 2
+            this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
+            this.pcBuf.memoryPC = this.pcBuf.executePC;
+            // OLD
+            // this.pcBuf.executePC = -1;
+            // New
+            this.pcBuf.executePC = this.pcBuf.decodePC;
+        }else{
+            console.error('Wrong StallCount NOT POSSIBLE:', GlobalVar.stallCount)
+        }
+
+
+        // Not updating the decode or fetch! Since we need to decode the instruction in next clock cycle
     }
     // GUI Exclusive functions end
 
@@ -139,15 +172,21 @@ export class InterStateBuffer {
         console.log("UPDATING ISB BECAUSE OF STALL");
         this.isb4.type = this.isb3.type;
         this.isb3.type = this.isb2.type;
+        // this.isb3.type = null;
+        
         // this.isb2.type = this.isb1.type;
+        
         this.isb4.returnAddress = this.isb3.returnAddress;
         this.isb3.returnAddress = this.isb2.returnAddress;
+        // this.isb3.returnAddress = null;
 
         this.isb4.operCode = this.isb3.operCode;
         this.isb3.operCode = this.isb2.operCode;
+        // this.isb3.operCode = null;
 
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
         this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
+        // this.isb3.writeBackRegLocation = null;
 
         this.isb2.writeBackRegLocation = null;
         this.isb2.returnAddress = null;
@@ -161,13 +200,14 @@ export class InterStateBuffer {
         this.isb4.returnAddress = this.isb3.returnAddress;
         this.isb3.returnAddress = this.isb2.returnAddress;
         this.isb2.returnAddress = this.isb1.returnAddress;
-        this.isb1.returnAddress = GlobalVar.pcTemp;
+        // ! check alter of +4
+        this.isb1.returnAddress = GlobalVar.pcTemp + 4;
 
         // Passing type to next Interstatebuffer
         this.isb4.type = this.isb3.type;
         this.isb3.type = this.isb2.type;
-        this.isb2.type = this.isb1.type;
-        this.isb1.type = GlobalVar.type;
+        this.isb2.type = GlobalVar.type;
+        this.isb1.type = 'DECODE_WILL_UPDATE';
 
         // Passing type to next Interstatebuffer
         this.isb4.operCode = this.isb3.operCode;

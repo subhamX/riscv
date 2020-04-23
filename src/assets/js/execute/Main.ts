@@ -33,10 +33,10 @@ export class GlobalVar {
     static stallCount: number;
 
     // Stats
-    static totalInstructions: Number; //Stat2
-    static numberOfDataTransfers: Number; //Stat4
-    static numberOfALUInstr: Number; //Stat5
-    static numberOfControlInstr: Number; // Stat6
+    static totalInstructions: number; //Stat2
+    static numberOfDataTransfers: number; //Stat4
+    static numberOfALUInstr: number; //Stat5
+    static numberOfControlInstr: number; // Stat6
 
     static isb: InterStateBuffer;
     // Holds return address
@@ -262,6 +262,8 @@ export function allINS() {
 
 
 function Fetch(): boolean {
+    // incrementing total number of instructions
+    GlobalVar.totalInstructions++;
     // Fetching the current Instruction
     let temp = GlobalVar.instructionMap.get(GlobalVar.PC);
     GlobalVar.pcTemp = GlobalVar.PC;

@@ -418,6 +418,7 @@ export function Decode() {
                     // adding this branch instruction instance in BTB
                     GlobalVar.isb.branchTargetBuffer.set(GlobalVar.pcTemp, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                     GlobalVar.PC = actualBranchAddress;
+                    
                     console.log('We did\'t had it; Now we do');
                 }
 
@@ -474,7 +475,6 @@ export function Decode() {
                 GlobalVar.PC = actualBranchAddress;
             }
         }
-
     }
 
     // Handling Immediate values for I, S, U, UJ

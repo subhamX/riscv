@@ -67,7 +67,7 @@ export class InterStateBuffer {
     // stored lastprediction for GUI
     lastPrediction: number;
 
-    branchTargetBuffer: Map<number, {'predictorState':boolean, 'branchTargetAddress': number}>;
+    branchTargetBuffer: Map<number, { 'predictorState': boolean, 'branchTargetAddress': number }>;
 
     // This is entirely for GUI purposes
     pcBuf: ProgramCounterBuffer;
@@ -97,7 +97,7 @@ export class InterStateBuffer {
     flushPipeline: boolean;
     stallAtDecode: boolean;
     // 1 means stall because of prevInstr and 2 means stall because of prevPrevInstr
-    stallType:number;
+    stallType: number;
 
     // return address is used in jal and jalr
     // writeBackRegLocation contains the register Location where updation will take place, for some instructions it is null
@@ -113,7 +113,7 @@ export class InterStateBuffer {
         this.stallAtDecode = false;
         this.stallType = null;
         this.lastPrediction = null;
-        this.branchTargetBuffer = new Map<number, {'predictorState': boolean, 'branchTargetAddress': number}>();
+        this.branchTargetBuffer = new Map<number, { 'predictorState': boolean, 'branchTargetAddress': number }>();
     }
 
     // GUI Exclusive functions
@@ -125,29 +125,36 @@ export class InterStateBuffer {
         this.pcBuf.fetchPC = GlobalVar.pcTemp;
     }
 
+    // pcBuf represents which hardware was used by the particular instruction in last clock cycle
+    // In pcBuf it represents the last instruction executed
     updatePCBufferOnStall() {
         console.log('GlobalVar.stallCount', GlobalVar.stallCount);
-        if(GlobalVar.stallCount===1){
+        if (GlobalVar.isb.flushPipeline) {
+            this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
+            this.pcBuf.memoryPC = this.pcBuf.executePC;
+            this.pcBuf.executePC = this.pcBuf.decodePC;
+            this.pcBuf.decodePC = this.pcBuf.fetchPC;
+            this.pcBuf.fetchPC = -1;
+            return;
+        }
+        if (GlobalVar.stallCount === 1) {
             // if stallcount is 1
             this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
             this.pcBuf.memoryPC = this.pcBuf.executePC;
-            // stalling means no data passing from decode to ALU
+            // whatever had been decoded in last cycle executed in current cycle
             this.pcBuf.executePC = this.pcBuf.decodePC;
-            // OLD
-            // this.pcBuf.decodePC = this.pcBuf.fetchPC;
-            // this.pcBuf.fetchPC = -1;
-            // New 
-            this.pcBuf.decodePC = -1;
-            // retaining the same fetchPC
-        }else if(GlobalVar.stallCount===2){
-            // if stallcount is 2
+            // whatever was fetched in last cycle is decoded in current cycle and caused stalling
+            this.pcBuf.decodePC = this.pcBuf.fetchPC;
+            // because of stalling no fetching can be done
+            this.pcBuf.fetchPC = -1;
+        } else if (GlobalVar.stallCount >= 2) {
+            // if stallcount is >=2
             this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
             this.pcBuf.memoryPC = this.pcBuf.executePC;
-            // OLD
-            // this.pcBuf.executePC = -1;
-            // New
-            this.pcBuf.executePC = this.pcBuf.decodePC;
-        }else{
+            // decoded value cannot be passed to execute
+            this.pcBuf.executePC = -1;
+            // fetch is also -1
+        } else {
             console.error('Wrong StallCount NOT POSSIBLE:', GlobalVar.stallCount)
         }
 
@@ -161,6 +168,7 @@ export class InterStateBuffer {
         console.log("UPDATING ISB BECAUSE OF DECODE");
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
         this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
+        console.warn(GlobalVar.type);
         // If R | I | U | UJ
         let type = GlobalVar.type;
         if (type === 'R' || type === 'I' || type === 'U' || type === 'UJ') {
@@ -172,14 +180,58 @@ export class InterStateBuffer {
         }
     }
 
+
+    updateDataFlowOnFlush() {
+        this.isb4.type = this.isb3.type;
+        this.isb3.type = this.isb2.type;
+        // updating type (Fundamental duty of decode) :)
+        this.isb2.type = GlobalVar.type;
+
+        this.isb4.returnAddress = this.isb3.returnAddress;
+        this.isb3.returnAddress = this.isb2.returnAddress;
+        this.isb2.returnAddress = this.isb1.returnAddress;
+
+
+        this.isb4.operCode = this.isb3.operCode;
+        this.isb3.operCode = this.isb2.operCode;
+        if (this.isb2.type !== 'END') {
+            this.isb2.operCode = GlobalVar.operCode;
+        }
+
+        this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
+        this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
+
+        // If R | I | U | UJ
+        let type = GlobalVar.type;
+        if (type === 'R' || type === 'I' || type === 'U' || type === 'UJ') {
+            this.isb2.writeBackRegLocation = GlobalVar.regFile.getRDAddr();
+            console.log(`(Type: ${type})Setting isb2 WriteBackRegLocation: `, this.isb2.writeBackRegLocation)
+        } else {
+            console.log(`(Type: ${type})Setting isb2 WriteBackRegLocation: null`);
+            this.isb2.writeBackRegLocation = null;
+        }
+        
+        // Since there was no fetch thus destroying data
+        this.isb1.writeBackRegLocation = null;
+        this.isb1.returnAddress = null;
+        this.isb1.operCode = null;
+        this.isb1.type = null;
+
+        GlobalVar.type = null;
+        GlobalVar.operCode = null;
+        GlobalVar.IR = null;
+        return
+    }
+
     updateOnStall() {
         console.log("UPDATING ISB BECAUSE OF STALL");
+
         this.isb4.type = this.isb3.type;
         this.isb3.type = this.isb2.type;
         // this.isb3.type = null;
-        
+
         // this.isb2.type = this.isb1.type;
-        
+
         this.isb4.returnAddress = this.isb3.returnAddress;
         this.isb3.returnAddress = this.isb2.returnAddress;
         // this.isb3.returnAddress = null;
@@ -210,8 +262,10 @@ export class InterStateBuffer {
         // Passing type to next Interstatebuffer
         this.isb4.type = this.isb3.type;
         this.isb3.type = this.isb2.type;
+        console.warn(GlobalVar.type);
+        // updating type (Fundamental duty of decode) :)
         this.isb2.type = GlobalVar.type;
-        this.isb1.type = 'DECODE_WILL_UPDATE';
+        this.isb1.type = 'WILL_UPDATE_IN_NEXT_CYCLE';
 
         // Passing type to next Interstatebuffer
         this.isb4.operCode = this.isb3.operCode;

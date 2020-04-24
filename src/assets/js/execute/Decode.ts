@@ -2,7 +2,16 @@ import { GlobalVar } from './Main';
 import { evaluateImm } from './helperFun';
 
 export function Decode() {
-    console.log("BEGIN OF DECODE", GlobalVar.isb.prevPrevInstrMnenomic, GlobalVar.isb.prevInstrMnenomic)
+    if (GlobalVar.pipelineEnabled) {
+        // setting flushpipeline to false;
+        GlobalVar.isb.flushPipeline = false;
+    }
+
+    console.log("BEGIN OF DECODE: ppInstr, pInstr, ppWrite, pWrite", GlobalVar.isb.prevPrevInstrMnenomic, GlobalVar.isb.prevInstrMnenomic, GlobalVar.isb.prevPrevWriteReg, GlobalVar.isb.prevWriteReg)
+    if(GlobalVar.IR===null){
+        GlobalVar.type = null;
+        return;
+    }
     // extracting opcode of current instruction
     let opcode = GlobalVar.IR.slice(25, 32);
     // setting instruction type of current instruction
@@ -112,7 +121,7 @@ export function Decode() {
 
         // as RS2 does not have any value
         GlobalVar.regFile.setRS2(null);
-        
+
         // as RS1 does not have any value
         GlobalVar.regFile.setRS1(null);
 
@@ -125,10 +134,10 @@ export function Decode() {
         let rd = GlobalVar.IR.slice(20, 25);
         GlobalVar.regFile.setRD(parseInt(rd, 2));
 
-        
+
         // as RS2 does not have any value
         GlobalVar.regFile.setRS2(null);
-        
+
         // as RS1 does not have any value
         GlobalVar.regFile.setRS1(null);
 
@@ -167,9 +176,9 @@ export function Decode() {
 
     let locationA = GlobalVar.regFile.getR1Addr();
     let stallRA: number = 0;
-
+    console.log("locationA:", locationA);
     // Only for R || I || S || SB instructions RS1 is set
-    if ((GlobalVar.pipelineEnabled) && (locationA == GlobalVar.isb.prevWriteReg && locationA != 0)) {
+    if (locationA&&(GlobalVar.pipelineEnabled) && (locationA === GlobalVar.isb.prevWriteReg && locationA != 0)) {
         // Pipelining is Enabled 
         if (GlobalVar.mode == 1) {
             // Data Forwarding is Enabled
@@ -195,7 +204,7 @@ export function Decode() {
         } else {
             stallRA = 1;
         }
-    } else if ((GlobalVar.pipelineEnabled) && (locationA == GlobalVar.isb.prevPrevWriteReg && GlobalVar.isb.prevPrevWriteReg != 0)) {
+    } else if (locationA&&(GlobalVar.pipelineEnabled) && (locationA == GlobalVar.isb.prevPrevWriteReg && GlobalVar.isb.prevPrevWriteReg != 0)) {
         if (GlobalVar.mode === 1) {
             // Data Forwarding is Enabled
             let prevPrevInstrMnenomic = GlobalVar.isb.prevPrevInstrMnenomic;
@@ -227,7 +236,7 @@ export function Decode() {
     let locationB = GlobalVar.regFile.getRS2Addr();
 
     if (GlobalVar.type === 'R' || GlobalVar.type === 'SB') {
-        if ((GlobalVar.pipelineEnabled) && GlobalVar.isb.prevWriteReg && locationB === GlobalVar.isb.prevWriteReg) {
+        if (locationB&&(GlobalVar.pipelineEnabled) && GlobalVar.isb.prevWriteReg && locationB === GlobalVar.isb.prevWriteReg) {
             if (GlobalVar.mode === 1) {
                 // Data Forwarding is enabled
                 let prevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
@@ -251,7 +260,7 @@ export function Decode() {
                 // stalling
                 stallRB = 1;
             }
-        } else if ((GlobalVar.pipelineEnabled) && GlobalVar.isb.prevPrevWriteReg && locationB === GlobalVar.isb.prevPrevWriteReg) {
+        } else if (locationB&&(GlobalVar.pipelineEnabled) && GlobalVar.isb.prevPrevWriteReg && locationB === GlobalVar.isb.prevPrevWriteReg) {
             if (GlobalVar.mode === 1) {
                 // Data Forwarding is enabled
                 let prevPrevInstrMnenomic = GlobalVar.isb.prevPrevInstrMnenomic;
@@ -293,7 +302,7 @@ export function Decode() {
 
     // For store instructions
     if (GlobalVar.type === 'S') {
-        if ((GlobalVar.pipelineEnabled) && GlobalVar.isb.prevWriteReg && locationC === GlobalVar.isb.prevWriteReg) {
+        if (locationC&&(GlobalVar.pipelineEnabled) && GlobalVar.isb.prevWriteReg && locationC === GlobalVar.isb.prevWriteReg) {
             if (GlobalVar.mode === 1) {
                 console.log("TESTING !)!", GlobalVar.isb.prevInstrMnenomic)
                 // Data Forwarding is enabled
@@ -318,7 +327,7 @@ export function Decode() {
                 // Data Forwarding is disabled and only pipelining is enabled
                 stallRC = 1;
             }
-        } else if ((GlobalVar.pipelineEnabled) && GlobalVar.isb.prevPrevWriteReg && locationC === GlobalVar.isb.prevPrevWriteReg) {
+        } else if (locationC&&(GlobalVar.pipelineEnabled) && GlobalVar.isb.prevPrevWriteReg && locationC === GlobalVar.isb.prevPrevWriteReg) {
             if (GlobalVar.mode === 1) {
                 // Data Forwarding is enabled
                 let prevPrevInstrMnenomic = GlobalVar.isb.prevPrevInstrMnenomic;
@@ -418,7 +427,7 @@ export function Decode() {
                     // adding this branch instruction instance in BTB
                     GlobalVar.isb.branchTargetBuffer.set(GlobalVar.pcTemp, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                     GlobalVar.PC = actualBranchAddress;
-                    
+                    GlobalVar.isb.flushPipeline = true;
                     console.log('We did\'t had it; Now we do');
                 }
 
@@ -438,8 +447,7 @@ export function Decode() {
                     GlobalVar.isb.branchTargetBuffer.set(GlobalVar.pcTemp, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                     // updating PC
                     GlobalVar.PC = actualBranchAddress;
-                } else {
-                    // Already Jumped and nothing need to be done
+                    GlobalVar.isb.flushPipeline = true;
                 }
             } else {
                 // prediction is not enabled
@@ -455,6 +463,7 @@ export function Decode() {
                     GlobalVar.isb.branchTargetBuffer.set(GlobalVar.pcTemp, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                     // updating PC
                     GlobalVar.PC = actualBranchAddress;
+                    GlobalVar.isb.flushPipeline = true;
                 } else {
                     // Instance found
                     let instance = GlobalVar.isb.branchTargetBuffer.get(GlobalVar.pcTemp);
@@ -468,6 +477,7 @@ export function Decode() {
                         GlobalVar.PC = actualBranchAddress;
                         // increment stat12
                         // GlobalVar.isb.numberOfControlHazardStalls++;
+                        GlobalVar.isb.flushPipeline = true;
                     }
                 }
             } else {
@@ -477,7 +487,7 @@ export function Decode() {
         }
     }
 
-    // Handling Immediate values for I, S, U, UJ
+    // ! Handling Immediate values for I, S, U, UJ (It goes to inB not RB)
     // if (!(GlobalVar.type === 'R' || GlobalVar.type == 'SB')) {
     //     GlobalVar.RB = evaluateImm(GlobalVar.immVal);
     // }
@@ -510,7 +520,7 @@ export function Decode() {
     } else {
         GlobalVar.isb.prevWriteReg = locationC;
     }
-    if(GlobalVar.isb.flushPipeline){
+    if (GlobalVar.isb.flushPipeline) {
         console.error('FLUSH PIPELINE')
     }
 

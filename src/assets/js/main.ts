@@ -659,18 +659,20 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', async (
         execute.singlePipelineStep();
 
         let lastPred = execute.GlobalVar.isb.lastPrediction;
-        if(lastPred !==null){
-            if(lastPred==0){
+        if (lastPred !== null) {
+            if (lastPred == 0) {
                 await showSnackBar(`Branch Prediction for 0x${execute.GlobalVar.isb.pcBuf.fetchPC} is false`)
-            }else if(lastPred==1){
+            } else if (lastPred == 1) {
                 await showSnackBar(`Branch Prediction for 0x${execute.GlobalVar.isb.pcBuf.fetchPC} is true`)
-            }else{
+            } else {
                 console.error('Error in Prediction Value')
             }
         }
 
 
-        if (execute.GlobalVar.isb.stallAtDecode) {
+        if (execute.GlobalVar.isb.flushPipeline) {
+            await showSnackBar('Flushing the Pipeline')
+        } else if (execute.GlobalVar.isb.stallAtDecode) {
             await showSnackBar('Stalling at Decode')
         }
 

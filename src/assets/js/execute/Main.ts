@@ -262,6 +262,10 @@ export function allINS() {
 
 
 function Fetch(): boolean {
+    if (GlobalVar.pipelineEnabled) {
+        // setting isBranchTaken to false;
+        GlobalVar.isb.isb1.isBranchTaken = false;
+    }
     // incrementing total number of instructions
     GlobalVar.totalInstructions++;
     // Fetching the current Instruction
@@ -519,6 +523,12 @@ function pipelinedDecode(): boolean {
     // Decode Begin
     Decode();
     console.log("StallAtDecode:Bool =>", GlobalVar.isb.stallAtDecode);
+    // flushing has more weitage than others
+    if(GlobalVar.isb.flushPipeline){
+        GlobalVar.isb.updateDataFlowOnFlush();
+        // Flushing the pipeline
+        return true;
+    }
     if (GlobalVar.isb.stallAtDecode === true) {
         // stall pipeline
         console.log("STALLING PIPELINE! Returning true from Decode");
@@ -534,7 +544,7 @@ function pipelinedDecode(): boolean {
 }
 
 function pipelinedFetch(no_inst): boolean {
-    console.log("FETCH: ", no_inst);
+    console.log("FETCH: PC", GlobalVar.PC);
     // If no instructions then returning
     if (no_inst) {
         // Updating Inter State Buffer

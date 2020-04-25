@@ -661,9 +661,9 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', async (
         let lastPred = execute.GlobalVar.isb.lastPrediction;
         if (lastPred !== null) {
             if (lastPred == 0) {
-                await showSnackBar(`Branch Prediction for 0x${execute.GlobalVar.isb.pcBuf.fetchPC} is false`)
+                await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.fetchPC.toString(16)}: Branch Prediction -> False`)
             } else if (lastPred == 1) {
-                await showSnackBar(`Branch Prediction for 0x${execute.GlobalVar.isb.pcBuf.fetchPC} is true`)
+                await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.fetchPC.toString(16)}: Branch Prediction -> True`)
             } else {
                 console.error('Error in Prediction Value')
             }
@@ -671,20 +671,22 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', async (
 
 
         if (execute.GlobalVar.isb.flushPipeline) {
-            await showSnackBar('Flushing the Pipeline')
-        } else if (execute.GlobalVar.isb.stallAtDecode) {
-            await showSnackBar('Stalling at Decode')
+            await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}: Flushing the Pipeline`);
+        }
+
+        if (execute.GlobalVar.isb.stallAtDecode) {
+            await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}: Stalling at Decode`)
         }
 
 
         let dfType = execute.GlobalVar.isb.dataForwardingType
         if (dfType) {
             if (dfType === 1) {
-                await showSnackBar('E to E Data Forwarding')
+                await showSnackBar(`E (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`)
             } else if (dfType === 2) {
-                await showSnackBar('M to E Data Forwarding')
+                await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) Data Forwarding`)
             } else if (dfType === 3) {
-                await showSnackBar('M to M Data Forwarding')
+                await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to M (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) Data Forwarding`)
             }
         }
         // DEBUG Print
@@ -780,6 +782,8 @@ function runPipelinedInstructions() {
 
 // Handling Click Event Of Run Button
 document.getElementsByClassName('run_btn')[0].addEventListener('click', async () => {
+    alert('Work On Progress. Please use step button instead');
+    return;
     if (mode == 1 || mode == 2) {
         // Executing Pipeline step instead of normal step
         await runPipelinedInstructions();

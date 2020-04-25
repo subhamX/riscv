@@ -31,6 +31,7 @@ export class GlobalVar {
 
     static CLOCK: number = 0;
     static stallCount: number;
+    static isBranchTaken: boolean;
 
     // Stats
     static totalInstructions: number; //Stat2
@@ -260,22 +261,20 @@ export function allINS() {
 }
 
 
-
+// Returns true if last instruction is fetched
 function Fetch(): boolean {
-    if (GlobalVar.pipelineEnabled) {
-        // setting isBranchTaken to false;
-        GlobalVar.isb.isb1.isBranchTaken = false;
-    }
     // incrementing total number of instructions
     GlobalVar.totalInstructions++;
     // Fetching the current Instruction
     let temp = GlobalVar.instructionMap.get(GlobalVar.PC);
     GlobalVar.pcTemp = GlobalVar.PC;
     GlobalVar.PC += 4;
+    // pcTemp points to current instruction and PC points to next instruction
+
     // Terminating Condition 
     if (!temp || (parseInt(temp) >> 0) == -1) {
-        GlobalVar.CLOCK++;
         if (!GlobalVar.pipelineEnabled) {
+            GlobalVar.CLOCK++;
             // Setting isComplete Flag as true if pipeline disabled 
             GlobalVar.isComplete = true;
             return true;
@@ -293,7 +292,9 @@ function Fetch(): boolean {
 }
 
 
-
+/**
+ * ! START
+ */
 function updateBranchAddress(controlHazardType: Number) {
     let branchAddress, branchAddressDef, immVal;
     if (controlHazardType == 3) {
@@ -340,6 +341,10 @@ function detectControlHazard() {
     }
 }
 
+/**
+ * ! END
+ */
+
 
 
 export function UpdatePC(PC_Select: number, inpImm?: number): void {
@@ -367,6 +372,7 @@ export function UpdatePC(PC_Select: number, inpImm?: number): void {
  */
 
 // Returns true if execution is complete
+// TODO: Need attention
 export function pipelinedAllINS() {
     // Setting dataForwardingType as null
     GlobalVar.isb.dataForwardingType = null;
@@ -444,9 +450,9 @@ export function pipelinedAllINS() {
 
 
 export function singlePipelineStep() {
-    // Setting dataForwardingType and lastPrediction as null
+    // Setting dataForwardingType as null
     GlobalVar.isb.dataForwardingType = null;
-    GlobalVar.isb.lastPrediction = null;
+
     console.log('-----------*****PIPE*****------------');
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     // console.log("OLD: ", GlobalVar.isb.pcBuf);
@@ -455,52 +461,66 @@ export function singlePipelineStep() {
         return;
     }
 
+
     if (GlobalVar.CLOCK === 0) {
-        // Pipeline is empty! Only Fetching a new instruction
+        // Pipeline is empty
+        // Fetch
         noInstr = pipelinedFetch(noInstr);
     } else if (GlobalVar.CLOCK === 1) {
-        // Decode then Fetch
+        // Decode -> Fetch
         let res = pipelinedDecode();
         if (res === true) {
             // If stall is true
-            GlobalVar.isb.updatePCBufferOnStall();
             GlobalVar.CLOCK++;
             return;
         }
         noInstr = pipelinedFetch(noInstr);
     } else if (GlobalVar.CLOCK === 2) {
-        // Execute then Decode then Fetch
+        // Execute -> Decode -> Fetch
         console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
-        pipelinedExecute();
+        let flushRes = pipelinedExecute();
+        if (flushRes) {
+            // If flush is true
+            GlobalVar.CLOCK++;
+            return;
+        }
         let res = pipelinedDecode();
         if (res === true) {
             // If stall is true
-            GlobalVar.isb.updatePCBufferOnStall();
             GlobalVar.CLOCK++;
             return;
         }
         noInstr = pipelinedFetch(noInstr);
     } else if (GlobalVar.CLOCK === 3) {
-        // Memory then Execute then Decode then Fetch
+        // Memory -> Execute -> Decode -> Fetch
         pipelinedMemory();
-        pipelinedExecute();
+        let flushRes = pipelinedExecute();
+        if (flushRes) {
+            // If flush is true
+            GlobalVar.CLOCK++;
+            return;
+        }
         let res = pipelinedDecode();
         if (res === true) {
-            // If stall is true
-            GlobalVar.isb.updatePCBufferOnStall();
+            // stall is true
+            // updating pc buffer for GUI 
             GlobalVar.CLOCK++;
             return;
         }
         noInstr = pipelinedFetch(noInstr);
     } else {
-        // Run all steps WriteBack then Memory then Execute then Decode then Fetch
+        // WriteBack -> Memory -> Execute -> Decode -> Fetch
         pipelineWriteBack();
         pipelinedMemory()
-        pipelinedExecute();
+        let flushRes = pipelinedExecute();
+        if (flushRes) {
+            // If flush is true
+            GlobalVar.CLOCK++;
+            return;
+        }
         let res = pipelinedDecode();
         if (res === true) {
             // If stall is true
-            GlobalVar.isb.updatePCBufferOnStall();
             GlobalVar.CLOCK++;
             return;
         }
@@ -512,6 +532,8 @@ export function singlePipelineStep() {
 }
 
 
+
+
 function pipelinedMemory() {
     MemoryOperations();
 }
@@ -520,37 +542,43 @@ function pipelinedMemory() {
 function pipelinedDecode(): boolean {
     // Make sure to nullify the stallType before calling actual Decode
     GlobalVar.isb.stallType = null;
-    // Decode Begin
+
     Decode();
+
     console.log("StallAtDecode:Bool =>", GlobalVar.isb.stallAtDecode);
-    // flushing has more weitage than others
-    if(GlobalVar.isb.flushPipeline){
-        GlobalVar.isb.updateDataFlowOnFlush();
-        // Flushing the pipeline
-        return true;
-    }
+
     if (GlobalVar.isb.stallAtDecode === true) {
         // stall pipeline
         console.log("STALLING PIPELINE! Returning true from Decode");
         GlobalVar.stallCount++;
         GlobalVar.isb.updateOnStall();
+        GlobalVar.isb.updatePCBufferOnStall();
         return true;
     } else {
-        GlobalVar.stallCount=0;
+        GlobalVar.stallCount = 0;
         GlobalVar.isb.updateInterStateBufferAfterDecode();
         return false;
     }
-    // Decode End    
 }
-
+/**
+ * 
+ * @param no_inst : Returns state of the current execution
+ * true -> Means no new instruction need to be fetched
+ */
 function pipelinedFetch(no_inst): boolean {
+    // setting lastPrediction as null
+    GlobalVar.isb.lastPrediction = null;
+
+    GlobalVar.isb.branchAddress = null;
+
     console.log("FETCH: PC", GlobalVar.PC);
-    // If no instructions then returning
+
+    // If no instructions then returning true
     if (no_inst) {
         // Updating Inter State Buffer
         GlobalVar.isb.updateInterStateBuffer();
-        // Only for GUI
         GlobalVar.isb.updatePCBuffer();
+
         GlobalVar.isb.pcBuf.fetchPC = -1;
         GlobalVar.PC = -1;
 
@@ -561,10 +589,9 @@ function pipelinedFetch(no_inst): boolean {
         }
         return true;
     }
-    // Fetch Begin
+
     no_inst = Fetch();
-    console.log(GlobalVar.isb.branchTargetBuffer);
-    // If pipelining is enabled
+
     // PC is pointing to next instruction and pcTemp is pointing to current one
     if (GlobalVar.branchPredEnabled) {
         // TODO: Create Branch Target Buffer And save addresses indexed by PC 
@@ -573,56 +600,56 @@ function pipelinedFetch(no_inst): boolean {
             console.log(instance);
             // If predictor state is true
             if (instance.predictorState) {
+                // setting lastPrediction as 1
                 GlobalVar.isb.lastPrediction = 1;
-                // For control hazard instruction setting decodePC (For GUI)
+
                 // GlobalVar.isb.pcBuf.decodePC = GlobalVar.pcTemp;
                 GlobalVar.isb.branchAddress = instance.branchTargetAddress;
                 GlobalVar.isb.branchAddressDef = GlobalVar.PC;
+
                 // pcTemp will be used by decode
-                // GlobalVar.pcTemp = GlobalVar.PC;
                 GlobalVar.PC = GlobalVar.isb.branchAddress;
-                // Setting isBranchTaken as false
-                GlobalVar.isb.isb1.isBranchTaken = true;
             } else {
                 GlobalVar.isb.lastPrediction = 0;
-                // Setting isBranchTaken as false
-                GlobalVar.isb.isb1.isBranchTaken = false;
             }
         } else {
             console.warn("No state found");
         }
-        console.log(GlobalVar.pcTemp);
-        // If the fetched instruction is jal, beq, jalr
-        // if (GlobalVar.isb.controlHazardType) {
-        //     console.log("OLD: PCTEMP, PC: ", GlobalVar.pcTemp, GlobalVar.PC);
-        // For control hazard instruction setting decodePC (For GUI)
-        //     GlobalVar.isb.pcBuf.decodePC = GlobalVar.pcTemp;
-        // Overriding the updation of PC and pcTemp inside Fetch()
-        //     GlobalVar.pcTemp = GlobalVar.PC;
-        //     GlobalVar.PC = GlobalVar.isb.branchAddress;
-        // }
     }
-    console.log("PCTEMP, PC: ", GlobalVar.pcTemp, GlobalVar.PC);
-    // Updating the InterstateBuffer
-    GlobalVar.isb.updatePCBuffer();
-    // Updating Inter State Buffer
 
     if (no_inst) {
         GlobalVar.PC = -1;
     }
 
+    // Updating the InterstateBuffer
+    GlobalVar.isb.updatePCBuffer();
+    // Updating Inter State Buffer
     GlobalVar.isb.updateInterStateBuffer();
+
     return no_inst;
-    // TODO: Run for four more times. If Last Instructions is fetched
-    // if (no_inst) {
-    //     return;
-    // }
-    // Fetch End
 }
 
 
 function pipelinedExecute() {
+    // overriding any previous values
+    GlobalVar.isb.flushPipeline = false;
+    // Calling main function
     Execute();
+    // Checking if I need to flushPipeline or not
+    if (GlobalVar.isb.flushPipeline) {
+        console.error('FLUSHING<<');
+        // updating prev and prevPrev instruction metadata
+        GlobalVar.isb.prevPrevInstrMnenomic = null;
+        GlobalVar.isb.prevInstrMnenomic = null;
+
+        GlobalVar.isb.prevPrevWriteReg = null;
+        GlobalVar.isb.prevWriteReg = null;
+
+        GlobalVar.isb.updateDataFlowOnFlush();
+        GlobalVar.isb.updatePCBufferOnFlush();
+        return true;
+    }
+    return false;
 }
 
 

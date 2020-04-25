@@ -1,32 +1,42 @@
 import { GlobalVar } from "./Main";
 
 
+// returnAddress acts as branchAddressDef
+// branchAddress tells if branch is taken. Will be used by Execute to find if there is misprediction or not
+// ! We don't need to use it. Its value is same as predictor state
+
+// operCode is opcode + func3 + func7. For identification of jalr
+// writeBackRegLocation contains the writebacklocation. Will be used by WriteBack
+// type contains the instruction mnenomic
+// branchAddress used to check if jalr target address is same or not
+
+
 class ISB1 {
     type: string;
-    returnAddress;
-    // For identification of jalr
-    // operCode is opcode + func3 + func7
+    returnAddress: number;
+    branchAddress: number;
+    // branchAddress: boolean = true;
     operCode: string;
-    RM;
-    isBranchTaken: boolean = true;
     writeBackRegLocation: number;
+    // RM;
 }
 
 
 class ISB2 {
     type: string;
-    returnAddress;
-    // operCode is opcode + func3 + func7
+    returnAddress: number;
+    branchAddress: number;
+    // branchAddress: boolean = true;
     operCode: string;
     writeBackRegLocation: number;
-
 }
 
 
 class ISB3 {
     type: string;
-    returnAddress;
-    // operCode is opcode + func3 + func7
+    returnAddress: number;
+    branchAddress: number;
+    // branchAddress: boolean = true;
     operCode: string;
     writeBackRegLocation: number;
 
@@ -35,8 +45,9 @@ class ISB3 {
 
 class ISB4 {
     type: string;
-    returnAddress;
-    // operCode is opcode + func3 + func7
+    returnAddress: number;
+    branchAddress: number;
+    // branchAddress: boolean = true;
     operCode: string;
     writeBackRegLocation: number;
 
@@ -64,17 +75,22 @@ export class InterStateBuffer {
     isb3: ISB3;
     isb4: ISB4;
 
-    // stored lastprediction for GUI
-    lastPrediction: number;
+    // This is entirely for GUI purposes
+    pcBuf: ProgramCounterBuffer;
 
     branchTargetBuffer: Map<number, { 'predictorState': boolean, 'branchTargetAddress': number }>;
 
-    // This is entirely for GUI purposes
-    pcBuf: ProgramCounterBuffer;
+    // stores lastprediction for GUI
+    lastPrediction: number;
+
 
     // E2E = 1 | M2E = 2 | M2M = 3
     // ! Don't forget to set this null before every step
     dataForwardingType: Number;
+
+    // 1 means stall because of prevInstr and 2 means stall because of prevPrevInstr
+    stallType: number;
+
 
     // Stores the Address of the Register
     prevWriteReg: Number;
@@ -82,6 +98,7 @@ export class InterStateBuffer {
 
     prevInstrMnenomic: string;
     prevPrevInstrMnenomic: string;
+
 
     // Rest stats are in GlobalVar
     numberOfStalls: number; // Stat7
@@ -96,8 +113,7 @@ export class InterStateBuffer {
     controlHazardType: number;
     flushPipeline: boolean;
     stallAtDecode: boolean;
-    // 1 means stall because of prevInstr and 2 means stall because of prevPrevInstr
-    stallType: number;
+
 
     // return address is used in jal and jalr
     // writeBackRegLocation contains the register Location where updation will take place, for some instructions it is null
@@ -127,16 +143,18 @@ export class InterStateBuffer {
 
     // pcBuf represents which hardware was used by the particular instruction in last clock cycle
     // In pcBuf it represents the last instruction executed
+
+    updatePCBufferOnFlush() {
+        // will be called by Execute on Flush
+        this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
+        this.pcBuf.memoryPC = this.pcBuf.executePC;
+        this.pcBuf.executePC = this.pcBuf.decodePC;
+        this.pcBuf.decodePC = -1;
+        this.pcBuf.fetchPC = -1;
+    }
+
+
     updatePCBufferOnStall() {
-        console.log('GlobalVar.stallCount', GlobalVar.stallCount);
-        if (GlobalVar.isb.flushPipeline) {
-            this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
-            this.pcBuf.memoryPC = this.pcBuf.executePC;
-            this.pcBuf.executePC = this.pcBuf.decodePC;
-            this.pcBuf.decodePC = this.pcBuf.fetchPC;
-            this.pcBuf.fetchPC = -1;
-            return;
-        }
         if (GlobalVar.stallCount === 1) {
             // if stallcount is 1
             this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
@@ -165,99 +183,102 @@ export class InterStateBuffer {
 
 
     updateInterStateBufferAfterDecode() {
+        // Will be called everytime after a successful decode (Not at Stall)
+
         console.log("UPDATING ISB BECAUSE OF DECODE");
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
         this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
-        console.warn(GlobalVar.type);
+
+
         // If R | I | U | UJ
         let type = GlobalVar.type;
         if (type === 'R' || type === 'I' || type === 'U' || type === 'UJ') {
             this.isb2.writeBackRegLocation = GlobalVar.regFile.getRDAddr();
-            console.log(`(Type: ${type})Setting isb2 WriteBackRegLocation: `, this.isb2.writeBackRegLocation)
         } else {
-            console.log(`(Type: ${type})Setting isb2 WriteBackRegLocation: null`);
             this.isb2.writeBackRegLocation = null;
         }
     }
 
 
     updateDataFlowOnFlush() {
+        // Will be called after Execute incase of any misprediction etc
+        // Equivalent to 2 cycle stalls
+
         this.isb4.type = this.isb3.type;
         this.isb3.type = this.isb2.type;
-        // updating type (Fundamental duty of decode) :)
-        this.isb2.type = GlobalVar.type;
 
         this.isb4.returnAddress = this.isb3.returnAddress;
         this.isb3.returnAddress = this.isb2.returnAddress;
-        this.isb2.returnAddress = this.isb1.returnAddress;
 
 
         this.isb4.operCode = this.isb3.operCode;
         this.isb3.operCode = this.isb2.operCode;
-        if (this.isb2.type !== 'END') {
-            this.isb2.operCode = GlobalVar.operCode;
-        }
 
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
         this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
 
-        // If R | I | U | UJ
-        let type = GlobalVar.type;
-        if (type === 'R' || type === 'I' || type === 'U' || type === 'UJ') {
-            this.isb2.writeBackRegLocation = GlobalVar.regFile.getRDAddr();
-            console.log(`(Type: ${type})Setting isb2 WriteBackRegLocation: `, this.isb2.writeBackRegLocation)
-        } else {
-            console.log(`(Type: ${type})Setting isb2 WriteBackRegLocation: null`);
-            this.isb2.writeBackRegLocation = null;
-        }
-        
-        // Since there was no fetch thus destroying data
-        this.isb1.writeBackRegLocation = null;
-        this.isb1.returnAddress = null;
-        this.isb1.operCode = null;
-        this.isb1.type = null;
+        this.isb4.branchAddress = this.isb3.branchAddress;
+        this.isb3.branchAddress = this.isb2.branchAddress;
 
-        GlobalVar.type = null;
-        GlobalVar.operCode = null;
-        GlobalVar.IR = null;
-        return
-    }
 
-    updateOnStall() {
-        console.log("UPDATING ISB BECAUSE OF STALL");
-
-        this.isb4.type = this.isb3.type;
-        this.isb3.type = this.isb2.type;
-        // this.isb3.type = null;
-
-        // this.isb2.type = this.isb1.type;
-
-        this.isb4.returnAddress = this.isb3.returnAddress;
-        this.isb3.returnAddress = this.isb2.returnAddress;
-        // this.isb3.returnAddress = null;
-
-        this.isb4.operCode = this.isb3.operCode;
-        this.isb3.operCode = this.isb2.operCode;
-        // this.isb3.operCode = null;
-
-        this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
-        this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
-        // this.isb3.writeBackRegLocation = null;
-
+        // Destroying all data inside isb1 and other GlobarVar variables like IR
         this.isb2.writeBackRegLocation = null;
         this.isb2.returnAddress = null;
         this.isb2.operCode = null;
         this.isb2.type = null;
 
+        this.isb1.writeBackRegLocation = null;
+        this.isb1.returnAddress = null;
+        this.isb1.operCode = null;
+        this.isb1.type = null;
+
+        GlobalVar.ALU_op = null;
+        GlobalVar.type = null;
+        GlobalVar.operCode = null;
+        GlobalVar.IR = null;
+    }
+
+    updateOnStall() {
+        // Will be called by Decode on stall
+        // No data is forwarded from isb1 to isb2
+        console.log("UPDATING ISB BECAUSE OF STALL");
+
+        this.isb4.type = this.isb3.type;
+        this.isb3.type = this.isb2.type;
+
+        this.isb4.returnAddress = this.isb3.returnAddress;
+        this.isb3.returnAddress = this.isb2.returnAddress;
+
+        this.isb4.operCode = this.isb3.operCode;
+        this.isb3.operCode = this.isb2.operCode;
+
+        this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
+        this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
+
+        // Destroying isb2 data so ALU recieves no data in next cycle
+        this.isb2.writeBackRegLocation = null;
+        this.isb2.returnAddress = null;
+        this.isb2.operCode = null;
+        this.isb2.type = null;
     }
 
     updateInterStateBuffer() {
         console.log("UPDATING ISB (normal)");
+        // Will be set only for jump and branch instructions only
+        this.isb4.branchAddress = this.isb3.branchAddress;
+        this.isb3.branchAddress = this.isb2.branchAddress;
+        this.isb2.branchAddress = this.isb1.branchAddress;
+        this.isb1.branchAddress = GlobalVar.isb.branchAddress;
+
+
         this.isb4.returnAddress = this.isb3.returnAddress;
         this.isb3.returnAddress = this.isb2.returnAddress;
         this.isb2.returnAddress = this.isb1.returnAddress;
         // ! check alter of +4
         this.isb1.returnAddress = GlobalVar.pcTemp + 4;
+        // ! This will also work (CHECK)
+        // this.isb1.returnAddress = GlobalVar.isb.branchAddressDef;
+
 
         // Passing type to next Interstatebuffer
         this.isb4.type = this.isb3.type;
@@ -274,11 +295,6 @@ export class InterStateBuffer {
             this.isb2.operCode = GlobalVar.operCode;
         }
         // writeBackRegLocation is set after decode since it is the position where it's calculated
-        // operCode directly set to isb2
-        // this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
-        // this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
-        // this.isb2.writeBackRegLocation = this.isb1.writeBackRegLocation;
-        // this.isb1.writeBackRegLocation = GlobalVar.regFile.getRDAddr();        
     }
 
     showInterStateBuffer() {

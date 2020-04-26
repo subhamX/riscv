@@ -24,6 +24,9 @@ let activeElem = 0;
 // 
 let dumpSeg: string;
 
+// By default branchPred is enabled
+let branchPred = 1;
+
 
 // Function to setup the editor
 function setupEditor() {
@@ -224,7 +227,6 @@ function handleAssembleAndSimulate() {
         additionalRegWrapper.style.display = '';
         codeSegWrapper.appendChild(pipelineInfoWrapper);
         instrWrapper.classList.add('pipelined_exec_size');
-
     }
     // For dumping in future
     dumpSeg = response.codeSegment;
@@ -987,41 +989,110 @@ document.querySelector('.reset_btn').addEventListener('click', async () => {
 
 
 
+
+var configWrapper = {
+    bPred: function () {
+        vex.dialog.open({
+            input: [
+                `
+                ${mode===0? `<div class='help-text-prompt'>Please enable pipelining to activate Branch Prediction</div>`: `<div class='heading-text-prompt'><input type="checkbox" id="data"  name="data" ${mode === 0 ? 'disabled' : branchPred === 1 ? 'checked' : ''} />
+                <label for="data">Enable Branch Prediction</label></div>`}  
+                `
+            ].join(''),
+            callback: function (value) {
+                if (!value) {
+                    return;
+                }
+                if (value.data == 'on') {
+                    // Branch Prediction Enabled
+                    branchPred = 1;
+                    execute.GlobalVar.branchPredEnabled=true;
+                } else {
+                    // Branch Prediction Disabled
+                    branchPred = 0;
+                    execute.GlobalVar.branchPredEnabled=false;
+                }
+            }
+        });
+    },
+    dForward: function () {
+        vex.dialog.open({
+            input: [
+                `
+                ${mode===0? `<div class='help-text-prompt'>Please enable pipelining to activate Data Forwarding</div>`: `<div class='heading-text-prompt'><input type="checkbox" id="data" name="data" ${mode === 1 ? 'checked' : mode === 0 ? 'disabled' : ''} />
+                <label for="data">Enable Data Forwarding</label></div>`}  
+                `
+            ].join(''),
+            callback: function (value) {
+                if (!value) {
+                    return;
+                }
+                if (value.data == 'on') {
+                    // Pipelining with Data Forwarding
+                    mode = 1;
+                    execute.GlobalVar.mode=1;
+                } else {
+                    // Pipelining without Data Forwarding
+                    mode = 2;
+                    execute.GlobalVar.mode=2;
+                }
+            }
+        });
+    },
+    pipeline: function () {
+        vex.dialog.open({
+            input: [
+                `
+                <div class='heading-text-prompt'><input type="checkbox" id="pipe" name="pipe" ${mode !== 0 ? 'checked' : ''}/>
+                <label for="pipe">Enable Pipeline</label></div>
+                `
+            ].join(''),
+            callback: function (value) {
+                console.log(value)
+                if (!value) {
+                    return;
+                }
+                if (value.pipe === 'on') {
+                    // Pipelining enabled with Data Forwarding
+                    mode = 1;
+                    execute.GlobalVar.mode=1;
+                } else {
+                    // Pipelining Disabled
+                    mode = 0;
+                    execute.GlobalVar.mode=0;
+                }
+            }
+        });
+    }
+};
+
+
 // config Button
 document.querySelector(".config-btn").addEventListener('click', () => {
     vex.dialog.open({
-        message: 'Please select any desired option:',
+        className: 'vex-theme-wireframe main_config_wrapper',
         input: [
-            '<div class="modal-config">',
-            `<input name="configMode" type="radio" value="nopipeline" id="nopipeline" ${mode === 0 ? 'checked' : ''}/>`,
-            '<label for="nopipeline">No pipelining</label>',
-            '</div>',
-            '<div class="modal-config">',
-            `<input name="configMode" type="radio" value="dfEnabledPipeline"  id="dfEnabledPipeline"  ${mode === 1 ? 'checked' : ''}/>`,
-            '<label for="dfEnabledPipeline">Pipelining + Data Forwarding</label>',
-            '</div>',
-            '<div class="modal-config">',
-            `<input name="configMode" type="radio" id="dfDisabledPipeline" value="dfDisabledPipeline" ${mode === 2 ? 'checked' : ''}/>`,
-            '<label for="dfDisabledPipeline">Pipelining without Data Forwarding</label>',
-            '</div>',
+            `
+            <div class='heading-text-prompt' style='color: #155724; background-color: #d4edda; font-weight: bold'>Please select the desired option:</div>
+            <div class="configWrapper">
+            <a data-trigger="pipeline">Pipeline</a>
+            <br>
+            <a data-trigger="dForward">Data Forwarding</a>
+            <br>
+            <a data-trigger="bPred">Branch Prediction</a>
+            <br>
+            </div>`
         ].join(''),
-        callback: function (value) {
-            console.log(value)
-            if (!value) {
-                return;
-            }
-            if (value.configMode === 'nopipeline') {
-                mode = 0;
-                execute.GlobalVar.mode = 0;
-            } else if (value.configMode === 'dfEnabledPipeline') {
-                mode = 1;
-                execute.GlobalVar.mode = 1;
-            } else if (value.configMode === 'dfDisabledPipeline') {
-                mode = 2;
-                execute.GlobalVar.mode = 2;
-            }
+        callback: function () {
+            console.log("Branch Predition, Mode: ", branchPred, mode);
         }
+    });
+    document.querySelectorAll('.configWrapper a').forEach((e) => {
+        e.addEventListener('click', (el) => {
+            configWrapper[e.getAttribute('data-trigger')]();
+        })
     })
+
 })
 
 document.querySelector('.config-btn-display-only').addEventListener('click', () => {
@@ -1037,3 +1108,4 @@ document.querySelector('.config-btn-display-only').addEventListener('click', () 
         unsafeMessage: message
     })
 })
+

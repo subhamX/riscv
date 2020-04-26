@@ -8,14 +8,14 @@ export function MemoryOperations() {
         let opr = GlobalVar.operationMap.get(GlobalVar.isb.isb3.operCode);
         if (GlobalVar.isb.isb3.type === 'S') {
             // Incrementing total number of data transfers
-            GlobalVar.numberOfDataTransfers++;
+            GlobalVar.execStats.numberOfDataTransfers++;
             // ! Check if we really need MDR
             GlobalVar.MDR = GlobalVar.RM;
             console.log("(STORE)HANU: operCode, opr, RZ(Address), RM(Value)", GlobalVar.isb.isb3.operCode, opr, GlobalVar.RZ, GlobalVar.RM)
             GlobalVar.memFile.MEM_WRITE(GlobalVar.RZ, GlobalVar.RM, opr.slice(1));
         } else if (opr == 'ld' || opr == 'lw' || opr == 'lh' || opr == 'lb') {
             // Incrementing total number of data transfers
-            GlobalVar.numberOfDataTransfers++;
+            GlobalVar.execStats.numberOfDataTransfers++;
             console.log("(LOAD)HANU: operCode, opr, RZ(Address)", GlobalVar.isb.isb3.operCode, opr, GlobalVar.RZ)
             GlobalVar.MDR = GlobalVar.memFile.MEM_READ(GlobalVar.RZ, opr.slice(1));
         }

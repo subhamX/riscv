@@ -184,14 +184,14 @@ export function Execute() {
                     // Finding misprediction: If true then updating PC and flushing the pipeline
                     // isBranchTaken contains the prediction
                     if (instance.predictorState && branchActualCondition == false) {
-                        GlobalVar.isb.branchMispredictions++;
+                        GlobalVar.execStats.branchMispredictions++;
                         console.log("MISPREDiCTION");
                         GlobalVar.isb.flushPipeline = true;
                         // toggling the predictor state
                         instance.predictorState = !instance.predictorState;
                         GlobalVar.PC = GlobalVar.isb.branchAddressDef;
                     } else if (instance.predictorState && branchActualCondition) {
-                        GlobalVar.isb.branchMispredictions++;
+                        GlobalVar.execStats.branchMispredictions++;
                         console.log("MISPREDiCTION");
                         GlobalVar.isb.flushPipeline = true;
                         // toggling the predictor state

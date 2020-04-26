@@ -11,6 +11,33 @@ import { GlobalVar } from "./Main";
 // branchAddress used to check if jalr target address is same or not
 
 
+export class ExecutionStats{
+    totalInstructions: number; //Stat2
+    numberOfDataTransfers: number; //Stat4
+    numberOfALUInstr: number; //Stat5
+    numberOfControlInstr: number; // Stat6
+    numberOfStalls: number; // Stat7
+    numberOfDataHazards: number; // Stat8
+    numberOfControlHazard: number; // Stat9
+    branchMispredictions: number; //Stat10
+    numberOfDataHazardStalls: number; // Stat11
+    numberOfControlHazardStalls: number; // Stat12
+
+    constructor(){
+        this.totalInstructions = 0;
+        this.numberOfDataTransfers = 0;
+        this.numberOfALUInstr = 0;
+        this.numberOfControlInstr = 0;
+        this.numberOfStalls = 0;
+        this.numberOfDataHazards = 0;
+        this.numberOfControlHazard = 0;
+        this.branchMispredictions = 0;
+        this.numberOfDataHazardStalls = 0;
+        this.numberOfControlHazardStalls = 0;
+    }
+}
+
+
 class ISB1 {
     type: string;
     returnAddress: number;
@@ -100,13 +127,7 @@ export class InterStateBuffer {
     prevPrevInstrMnenomic: string;
 
 
-    // Rest stats are in GlobalVar
-    numberOfStalls: number; // Stat7
-    numberOfDataHazards: number; // Stat8
-    numberOfControlHazard: number; // Stat9
-    branchMispredictions: number; //Stat10
-    numberOfDataHazardStalls: number; // Stat11
-    numberOfControlHazardStalls: number; // Stat12
+
 
     branchAddressDef: number;
     branchAddress: number;
@@ -124,7 +145,6 @@ export class InterStateBuffer {
         this.isb3 = new ISB3();
         this.isb4 = new ISB4();
         this.pcBuf = new ProgramCounterBuffer();
-        this.branchMispredictions = 0;
         this.flushPipeline = false;
         this.stallAtDecode = false;
         this.stallType = null;

@@ -357,7 +357,7 @@ export function Decode() {
 
     // Increment the stall count
     if (stallRB || stallRA) {
-        GlobalVar.isb.numberOfDataHazardStalls++;
+        GlobalVar.execStats.numberOfDataHazardStalls++;
         GlobalVar.isb.stallAtDecode = true;
     } else {
         GlobalVar.isb.stallAtDecode = false;

@@ -6,7 +6,7 @@ import { opcodeMapfunc, operationMapfunc } from './MapPhase2';
 import { MemoryFile, addZeros } from './MemFileClass'
 import { MemoryOperations, WriteBack } from './MA_MWB';
 import { evaluateImm } from './helperFun';
-import { InterStateBuffer } from './InterStateBuffer';
+import { InterStateBuffer, ExecutionStats } from './InterStateBuffer';
 
 // For pipelined step and run
 let noInstr: boolean = false;
@@ -34,10 +34,7 @@ export class GlobalVar {
     static isBranchTaken: boolean;
 
     // Stats
-    static totalInstructions: number; //Stat2
-    static numberOfDataTransfers: number; //Stat4
-    static numberOfALUInstr: number; //Stat5
-    static numberOfControlInstr: number; // Stat6
+    static execStats: ExecutionStats;
 
     static isb: InterStateBuffer;
     // Holds return address
@@ -86,6 +83,31 @@ export function getPC(): number {
 }
 function getClock(): number {
     return GlobalVar.CLOCK;
+}
+
+export function getPhase3Stats() {
+    // static totalInstructions: number; //Stat2 [At pipelinedFetch]
+    // static numberOfDataTransfers: number; //Stat4 [AT Memory]
+    // TODO: ! static numberOfALUInstr: number; //Stat5 
+    // ! static numberOfControlInstr: number; // Stat6
+    // ! numberOfStalls: number; // Stat7
+    // ! numberOfDataHazards: number; // Stat8
+    // ! numberOfControlHazard: number; // Stat9
+    // ! branchMispredictions: number; //Stat10
+    // ! numberOfDataHazardStalls: number; // Stat11
+    // ! numberOfControlHazardStalls: number; // Stat12
+    return {
+        'totalInstructions': GlobalVar.execStats.totalInstructions,
+        'numberOfDataTransfers': GlobalVar.execStats.numberOfDataTransfers,
+        'numberOfALUInstr': GlobalVar.execStats.numberOfALUInstr,
+        'numberOfControlInstr': GlobalVar.execStats.numberOfControlInstr,
+        'numberOfStalls': GlobalVar.execStats.numberOfStalls,
+        'numberOfDataHazards': GlobalVar.execStats.numberOfDataHazards,
+        'numberOfControlHazard': GlobalVar.execStats.numberOfControlHazard,
+        'branchMispredictions': GlobalVar.execStats.branchMispredictions,
+        'numberOfDataHazardStalls': GlobalVar.execStats.numberOfDataHazardStalls,
+        'numberOfControlHazardStalls': GlobalVar.execStats.numberOfControlHazardStalls
+    }
 }
 
 
@@ -154,6 +176,9 @@ export function init(data): void {
     // Loading all instructions of program into instructionMap
     opcodeMapfunc(GlobalVar.opcodeMap);
     operationMapfunc(GlobalVar.operationMap);
+
+    // Resetting Execution Stats
+    GlobalVar.execStats = new ExecutionStats();
 
     // Initializing Register File
     GlobalVar.memFile = new MemoryFile();
@@ -263,8 +288,6 @@ export function allINS() {
 
 // Returns true if last instruction is fetched
 function Fetch(): boolean {
-    // incrementing total number of instructions
-    GlobalVar.totalInstructions++;
     // Fetching the current Instruction
     let temp = GlobalVar.instructionMap.get(GlobalVar.PC);
     GlobalVar.pcTemp = GlobalVar.PC;
@@ -454,6 +477,7 @@ export function singlePipelineStep() {
     GlobalVar.isb.dataForwardingType = null;
 
     console.log('-----------*****PIPE*****------------');
+    console.table(getPhase3Stats());
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     // console.log("OLD: ", GlobalVar.isb.pcBuf);
     if (GlobalVar.isComplete) {
@@ -589,6 +613,8 @@ function pipelinedFetch(no_inst): boolean {
         }
         return true;
     }
+    // incrementing total number of instructions
+    GlobalVar.execStats.totalInstructions += 1;
 
     no_inst = Fetch();
 
@@ -637,7 +663,9 @@ function pipelinedExecute() {
     Execute();
     // Checking if I need to flushPipeline or not
     if (GlobalVar.isb.flushPipeline) {
-        console.error('FLUSHING<<');
+        console.error('FLUSHING<< Adding 2 to numberOfControlHazardStalls');
+
+        GlobalVar.execStats.numberOfControlHazardStalls+=2;
         // updating prev and prevPrev instruction metadata
         GlobalVar.isb.prevPrevInstrMnenomic = null;
         GlobalVar.isb.prevInstrMnenomic = null;

@@ -1,7 +1,16 @@
+
+
+@font-face{
+  font-family: "Roboto Mono";
+  src: url('./RobotoMono-Regular.ttf');
+}
+
 @font-face {
   font-family: "Lato-Regular";
   src: url("./Lato-Regular.ttf");
 }
+
+
 
 body:not(#editor) {
   padding: 0;
@@ -43,7 +52,9 @@ body:not(#editor) {
   top: 0;
   left: 0;
   height: 90vh;
+  font-size: 17px !important;
   width: 100%;
+  font-family: 'Roboto Mono', monospace !important;
 }
 
 .navbar {
@@ -599,14 +610,10 @@ header {
   line-height: 1.5;
   border-radius: .25rem;
   transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-
   cursor: pointer;
-
   padding: .75rem 1.25rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   border-radius: .25rem;
-  padding: 8px 18px 6px;
-  margin: 0 20px 20px 0;
   display: inline-block;
   width:100%
 }

@@ -814,15 +814,16 @@ function stopCurrentExec(timeo?: number) {
         canRun = false;
         console.warn("Stopping the Run");
         let runBtn = (<HTMLElement>document.querySelector('.run_btn'));
-        runBtn.innerText = 'X';
-        runBtn.style.backgroundColor = '#b71c1c';
+        runBtn.style.textDecoration = 'line-through'
+        runBtn.style.backgroundColor = '#000';
         runBtn.style.color = '#fff';
         setTimeout(() => {
             canRun = true;
             console.warn("Setting canRun as true");
-            runBtn.innerText = 'RUN';
+            runBtn.innerText = 'Run';
             runBtn.style.backgroundColor = '';
             runBtn.style.color = '';
+            runBtn.style.textDecoration = ''
             res();
         }, 1000)
     })
@@ -995,7 +996,7 @@ var configWrapper = {
         vex.dialog.open({
             input: [
                 `
-                ${mode===0? `<div class='help-text-prompt'>Please enable pipelining to activate Branch Prediction</div>`: `<div class='heading-text-prompt'><input type="checkbox" id="data"  name="data" ${mode === 0 ? 'disabled' : branchPred === 1 ? 'checked' : ''} />
+                ${mode === 0 ? `<div class='help-text-prompt'>Please enable pipelining to activate Branch Prediction</div>` : `<div class='heading-text-prompt'><input type="checkbox" id="data"  name="data" ${mode === 0 ? 'disabled' : branchPred === 1 ? 'checked' : ''} />
                 <label for="data">Enable Branch Prediction</label></div>`}  
                 `
             ].join(''),
@@ -1006,11 +1007,11 @@ var configWrapper = {
                 if (value.data == 'on') {
                     // Branch Prediction Enabled
                     branchPred = 1;
-                    execute.GlobalVar.branchPredEnabled=true;
+                    execute.GlobalVar.branchPredEnabled = true;
                 } else {
                     // Branch Prediction Disabled
                     branchPred = 0;
-                    execute.GlobalVar.branchPredEnabled=false;
+                    execute.GlobalVar.branchPredEnabled = false;
                 }
             }
         });
@@ -1019,7 +1020,7 @@ var configWrapper = {
         vex.dialog.open({
             input: [
                 `
-                ${mode===0? `<div class='help-text-prompt'>Please enable pipelining to activate Data Forwarding</div>`: `<div class='heading-text-prompt'><input type="checkbox" id="data" name="data" ${mode === 1 ? 'checked' : mode === 0 ? 'disabled' : ''} />
+                ${mode === 0 ? `<div class='help-text-prompt'>Please enable pipelining to activate Data Forwarding</div>` : `<div class='heading-text-prompt'><input type="checkbox" id="data" name="data" ${mode === 1 ? 'checked' : mode === 0 ? 'disabled' : ''} />
                 <label for="data">Enable Data Forwarding</label></div>`}  
                 `
             ].join(''),
@@ -1030,11 +1031,11 @@ var configWrapper = {
                 if (value.data == 'on') {
                     // Pipelining with Data Forwarding
                     mode = 1;
-                    execute.GlobalVar.mode=1;
+                    execute.GlobalVar.mode = 1;
                 } else {
                     // Pipelining without Data Forwarding
                     mode = 2;
-                    execute.GlobalVar.mode=2;
+                    execute.GlobalVar.mode = 2;
                 }
             }
         });
@@ -1053,13 +1054,15 @@ var configWrapper = {
                     return;
                 }
                 if (value.pipe === 'on') {
-                    // Pipelining enabled with Data Forwarding
+                    // Pipelining enabled with Data Forwarding and branch Pred
                     mode = 1;
-                    execute.GlobalVar.mode=1;
+                    branchPred=1;
+                    execute.GlobalVar.mode = 1;
                 } else {
                     // Pipelining Disabled
                     mode = 0;
-                    execute.GlobalVar.mode=0;
+                    branchPred=0;
+                    execute.GlobalVar.mode = 0;
                 }
             }
         });
@@ -1076,11 +1079,8 @@ document.querySelector(".config-btn").addEventListener('click', () => {
             <div class='heading-text-prompt' style='color: #155724; background-color: #d4edda; font-weight: bold'>Please select the desired option:</div>
             <div class="configWrapper">
             <a data-trigger="pipeline">Pipeline</a>
-            <br>
             <a data-trigger="dForward">Data Forwarding</a>
-            <br>
             <a data-trigger="bPred">Branch Prediction</a>
-            <br>
             </div>`
         ].join(''),
         callback: function () {
@@ -1097,15 +1097,39 @@ document.querySelector(".config-btn").addEventListener('click', () => {
 
 document.querySelector('.config-btn-display-only').addEventListener('click', () => {
     let message;
-    if (mode === 0) {
-        message = 'The following execution is <b>Non Pipelined</b>'
-    } else if (mode === 1) {
-        message = 'The following execution is <b>Pipelined based with Data Forwarding</b>'
-    } else if (mode === 2) {
-        message = 'The following execution is <b>Pipelined based without Data Forwarding</b>'
-    }
-    vex.dialog.alert({
-        unsafeMessage: message
+    // message = 'The following execution is <b>Non Pipelined</b>'
+    // message = 'The following execution is <b>Pipelined based with Data Forwarding</b>'
+    // message = 'The following execution is <b>Pipelined based without Data Forwarding</b>'
+
+    let disabledStyle=`color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    padding: .75rem 1.25rem;
+    margin-bottom: 0.5rem;
+    font-size: 15px
+    `;
+    
+    let activeStyle=`color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    padding: .75rem 1.25rem;
+    margin-bottom: 0.5rem;
+    font-size: 15px
+    `;
+    vex.dialog.open({
+        input: [
+            `
+            <div class='heading-text-prompt' style='font-weight: bold'>Configuration [Read Only]</div>
+            <div class="configWrapper">
+            <div class='heading-text-prompt' style='${mode === 0 ? disabledStyle : activeStyle}'>Pipelining <span style='font-weight: bold'>${mode === 0 ? 'Disabled' : 'Enabled'}</span></div>
+            <div class='heading-text-prompt' style='${mode !== 1 ? disabledStyle : activeStyle}'>Data Forwarding <span style='font-weight: bold'>${mode !== 1 ? 'Disabled' : 'Enabled'}</span></div>
+            <div class='heading-text-prompt' style='${branchPred === 0 ? disabledStyle : activeStyle}'>Branch Prediction <span style='font-weight: bold'>${branchPred === 0 ? 'Disabled' : 'Enabled'}</span></div>
+            </div>
+            `
+        ].join(''),
+        callback: function () {
+            console.log("Branch Predition, Mode: ", branchPred, mode);
+        }
     })
 })
 

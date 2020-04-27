@@ -50,7 +50,8 @@ export class RegisterFile {
 
     // REgisters
     setRegVal(regAddr: number, value: number) {
-        this.Registers[regAddr] = value;
+        if(regAddr!=0)
+            this.Registers[regAddr] = value;
     }
     getRegVal(regAddr: number): number {
         return this.Registers[regAddr];

@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mode = 2;
     }
     execute.GlobalVar.mode = mode;
-    execute.GlobalVar.branchPredEnabled = (branchPred===1);
+    execute.GlobalVar.branchPredEnabled = (branchPred === 1);
 
 })
 
@@ -743,33 +743,54 @@ let canRun = true;
 
 function runPipelinedInstructions() {
     return new Promise((resolve, reject) => {
-        let interval = setInterval(() => {
-            console.error(canRun);
-            if (!canRun) {
-                clearInterval(interval);
-                resolve();
-                return;
-            }
+        let interval = setInterval(async () => {
             let prevHighlightedPCBuffer = Object.assign({}, execute.GlobalVar.isb.pcBuf);
             let prevHighlightedActivePC = currPC;
+            // Calling pipeline run
             let res = execute.pipelinedAllINS();
-            if (execute.GlobalVar.isb.stallAtDecode) {
-                showSnackBar('Stalling at Decode', 700)
+
+            let lastPred = execute.GlobalVar.isb.lastPrediction;
+            if (lastPred !== null) {
+                if (lastPred == 0) {
+                    await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.fetchPC.toString(16)}: Branch Prediction -> False`, 500)
+                } else if (lastPred == 1) {
+                    await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.fetchPC.toString(16)}: Branch Prediction -> True`, 500)
+                } else {
+                    console.error('Error in Prediction Value')
+                }
             }
-            let dfType = execute.GlobalVar.isb.dataForwardingType
-            if (dfType) {
-                if (dfType === 1) {
-                    showSnackBar('E to E Data Forwarding', 700)
-                } else if (dfType === 2) {
-                    showSnackBar('M to E Data Forwarding', 700)
-                } else if (dfType === 3) {
-                    showSnackBar('M to M Data Forwarding', 700)
+
+            // Flush Pipeline Toast
+            if (execute.GlobalVar.isb.flushPipeline) {
+                await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}: Flushing the Pipeline`, 500);
+            }
+            // Stalling At Decode Toast
+            if (execute.GlobalVar.isb.stallAtDecode) {
+                await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}: Stalling at Decode`, 500)
+            }
+            // If data forwarding is enabled
+            if (mode === 1) {
+                // Data Forwarding information
+                let dfType = execute.GlobalVar.isb.dataForwardingType
+                if (dfType) {
+                    if (dfType === 1) {
+                        await showSnackBar(`E (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`, 500)
+                    } else if (dfType === 2) {
+                        await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`, 500)
+                    } else if (dfType === 3) {
+                        await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to M (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) Data Forwarding`, 500)
+                    }
                 }
             }
             updateRegAndMemState();
             // updating currPC
             currPC = execute.getPC();
             console.log("NEW PC", currPC);
+            if (!canRun || res) {
+                clearInterval(interval);
+                resolve();
+                return;
+            }
             if (execute.getIsComplete()) {
                 updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC, true);
                 activateAssembleAndSimulateBtn();
@@ -779,15 +800,13 @@ function runPipelinedInstructions() {
                 return;
             }
             updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC);
-        }, 800);
+        }, 1000);
     })
 }
 
 
 // Handling Click Event Of Run Button
 document.getElementsByClassName('run_btn')[0].addEventListener('click', async () => {
-    alert('Work On Progress. Please use step button instead');
-    return;
     if (mode == 1 || mode == 2) {
         // Executing Pipeline step instead of normal step
         await runPipelinedInstructions();
@@ -797,7 +816,6 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', async ()
         let prevHighlighted = currPC;
         // Executing allINS
         await runAllInstructions();
-        console.log("Hello")
         // updating Current PC locally
         currPC = execute.getPC();
         updateRegAndMemState();
@@ -1059,12 +1077,12 @@ var configWrapper = {
                 if (value.pipe === 'on') {
                     // Pipelining enabled with Data Forwarding and branch Pred
                     mode = 1;
-                    branchPred=1;
+                    branchPred = 1;
                     execute.GlobalVar.mode = 1;
                 } else {
                     // Pipelining Disabled
                     mode = 0;
-                    branchPred=0;
+                    branchPred = 0;
                     execute.GlobalVar.mode = 0;
                 }
             }
@@ -1099,15 +1117,15 @@ document.querySelector(".config-btn").addEventListener('click', () => {
 })
 
 document.querySelector('.config-btn-display-only').addEventListener('click', () => {
-    let disabledStyle=`color: #721c24;
+    let disabledStyle = `color: #721c24;
     background-color: #f8d7da;
     border-color: #f5c6cb;
     padding: .75rem 1.25rem;
     margin-bottom: 0.5rem;
     font-size: 15px
     `;
-    
-    let activeStyle=`color: #155724;
+
+    let activeStyle = `color: #155724;
     background-color: #d4edda;
     border-color: #c3e6cb;
     padding: .75rem 1.25rem;

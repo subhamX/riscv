@@ -147,9 +147,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (debug == true) {
         (<HTMLElement>document.querySelector('.simulator-btn')).click();
         // setting mode as pipeline + data forwarding
-        mode = 1;
-        execute.GlobalVar.mode = 1;
+        mode = 2;
     }
+    execute.GlobalVar.mode = mode;
+    execute.GlobalVar.branchPredEnabled = (branchPred===1);
+
 })
 
 // Function to remove all instructions and pipelineWrapper if any
@@ -1096,11 +1098,6 @@ document.querySelector(".config-btn").addEventListener('click', () => {
 })
 
 document.querySelector('.config-btn-display-only').addEventListener('click', () => {
-    let message;
-    // message = 'The following execution is <b>Non Pipelined</b>'
-    // message = 'The following execution is <b>Pipelined based with Data Forwarding</b>'
-    // message = 'The following execution is <b>Pipelined based without Data Forwarding</b>'
-
     let disabledStyle=`color: #721c24;
     background-color: #f8d7da;
     border-color: #f5c6cb;

@@ -11,7 +11,7 @@ import { GlobalVar } from "./Main";
 // branchAddress used to check if jalr target address is same or not
 
 
-export class ExecutionStats{
+export class ExecutionStats {
     totalInstructions: number; //Stat2
     numberOfDataTransfers: number; //Stat4
     numberOfALUInstr: number; //Stat5
@@ -23,7 +23,7 @@ export class ExecutionStats{
     numberOfDataHazardStalls: number; // Stat11
     numberOfControlHazardStalls: number; // Stat12
 
-    constructor(){
+    constructor() {
         this.totalInstructions = 0;
         this.numberOfDataTransfers = 0;
         this.numberOfALUInstr = 0;
@@ -153,11 +153,15 @@ export class InterStateBuffer {
     }
 
     // GUI Exclusive functions
-    updatePCBuffer() {
+    updatePCBuffer(prevStall?: boolean) {
         this.pcBuf.writeBackPC = this.pcBuf.memoryPC;
         this.pcBuf.memoryPC = this.pcBuf.executePC;
-        this.pcBuf.executePC = this.pcBuf.decodePC;
-        this.pcBuf.decodePC = this.pcBuf.fetchPC;
+        if (prevStall){
+            this.pcBuf.executePC = -1;
+        }else{
+            this.pcBuf.executePC = this.pcBuf.decodePC;
+            this.pcBuf.decodePC = this.pcBuf.fetchPC;
+        }
         this.pcBuf.fetchPC = GlobalVar.pcTemp;
     }
 
@@ -283,7 +287,7 @@ export class InterStateBuffer {
     }
 
     updateInterStateBuffer() {
-        console.log("UPDATING ISB (normal)");
+        console.log("UPDATING ISB (Normal)");
         // Will be set only for jump and branch instructions only
         this.isb4.branchAddress = this.isb3.branchAddress;
         this.isb3.branchAddress = this.isb2.branchAddress;

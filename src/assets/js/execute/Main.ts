@@ -88,14 +88,18 @@ function getClock(): number {
 export function getPhase3Stats() {
     // static totalInstructions: number; //Stat2 [At pipelinedFetch]
     // static numberOfDataTransfers: number; //Stat4 [AT Memory]
-    // TODO: ! static numberOfALUInstr: number; //Stat5 
-    // ! static numberOfControlInstr: number; // Stat6
-    // ! numberOfStalls: number; // Stat7
+    // TODO: static numberOfControlInstr: number; // Stat6
+    // TODO: static numberOfALUInstr: number; //Stat5 [total-control-datatransfers]
+    // TODO: numberOfControlHazard: number; // Stat9 
+    //      [branchPred: 1 => If misprediction then add 1 || 0 => Equal to number of numberOfControlHazardStalls/2]
+    // ? branchMispredictions: number; //Stat10 [ASK SIR]
+    //      For JALR it may happen that there is no branchMisprediction but we need to stall
+    // ! numberOfStalls: number; // Stat7 [numberOfDataHazardStalls+numberOfControlHazardStalls] (CHECK)
+
     // ! numberOfDataHazards: number; // Stat8
-    // ! numberOfControlHazard: number; // Stat9
-    // ! branchMispredictions: number; //Stat10
     // ! numberOfDataHazardStalls: number; // Stat11
     // ! numberOfControlHazardStalls: number; // Stat12
+    //      
     return {
         'totalInstructions': GlobalVar.execStats.totalInstructions,
         'numberOfDataTransfers': GlobalVar.execStats.numberOfDataTransfers,
@@ -579,11 +583,19 @@ function pipelinedDecode(): boolean {
         GlobalVar.isb.updatePCBufferOnStall();
         return true;
     } else {
+        if(GlobalVar.stallCount!=0){
+            // Previously there was stalling. Not updating decodePC
+            prevStall=true;
+        }else{
+            prevStall=false;
+        }
         GlobalVar.stallCount = 0;
         GlobalVar.isb.updateInterStateBufferAfterDecode();
         return false;
     }
 }
+
+let prevStall:boolean = false;
 /**
  * 
  * @param no_inst : Returns state of the current execution
@@ -648,7 +660,7 @@ function pipelinedFetch(no_inst): boolean {
     }
 
     // Updating the InterstateBuffer
-    GlobalVar.isb.updatePCBuffer();
+    GlobalVar.isb.updatePCBuffer(prevStall);
     // Updating Inter State Buffer
     GlobalVar.isb.updateInterStateBuffer();
 

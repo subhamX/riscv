@@ -1,16 +1,12 @@
-
-
-@font-face{
+@font-face {
   font-family: "Roboto Mono";
-  src: url('./RobotoMono-Regular.ttf');
+  src: url("./RobotoMono-Regular.ttf");
 }
 
 @font-face {
   font-family: "Lato-Regular";
   src: url("./Lato-Regular.ttf");
 }
-
-
 
 body:not(#editor) {
   padding: 0;
@@ -21,11 +17,53 @@ body:not(#editor) {
 
 .vex-content {
   font-family: "Lato-Regular" !important;
+  line-height: 1em !important;
 }
 ::-webkit-scrollbar-track {
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
   background-color: #f5f5f5;
+}
+.slider{
+  /* background-color: #404040 !important; */
+  -webkit-appearance: none;
+  line-height: 1.4 !important;
+  margin: 20px 0;
+  width: 100%;
+  /* width: 100%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s; */
+}
+.slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: #03a9f4;
+  border-radius: 25px;
+}
+.slider::-webkit-slider-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 4px 0 rgba(0,0,0, 1);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -8px;
+}
+.slider:focus::-webkit-slider-runnable-track {
+  background: #03a9f4;
+}
+.slider:focus {
+  outline: none;
+}
+#durationVal{
+  font-weight: bold !important;
 }
 
 ::-webkit-scrollbar {
@@ -54,7 +92,7 @@ body:not(#editor) {
   height: 90vh;
   font-size: 17px !important;
   width: 100%;
-  font-family: 'Roboto Mono', monospace !important;
+  font-family: "Roboto Mono", monospace !important;
 }
 
 .navbar {
@@ -225,21 +263,28 @@ header {
 .code_segment_wrapper .instructions_wrapper .meta_instructions span {
   padding: 5px;
 }
-.code_segment_wrapper .instructions_wrapper .meta_instructions span:first-child {
+.code_segment_wrapper
+  .instructions_wrapper
+  .meta_instructions
+  span:first-child {
   padding-left: 30px;
 }
-.code_segment_wrapper .instructions_wrapper .meta_instructions span:nth-child(2) {
+.code_segment_wrapper
+  .instructions_wrapper
+  .meta_instructions
+  span:nth-child(2) {
   padding-left: 30%;
 }
-.code_segment_wrapper .instructions_wrapper .meta_instructions span:nth-child(3) {
+.code_segment_wrapper
+  .instructions_wrapper
+  .meta_instructions
+  span:nth-child(3) {
   padding-left: 20%;
 }
 
-.addregI_clock .add_reg_key{
+.addregI_clock .add_reg_key {
   background-color: #fff176 !important;
-
 }
-
 
 .pipeline_color_wrapper {
   display: grid;
@@ -517,10 +562,11 @@ header {
 
 /* Additional Registers */
 
-.add_reg_main_wrapper{
+.add_reg_main_wrapper {
   min-width: 180px;
 }
-.add_reg_main_wrapper .add_reg_instance, .add_reg_heading {
+.add_reg_main_wrapper .add_reg_instance,
+.add_reg_heading {
   display: grid;
   grid-template-columns: 1fr 2fr;
   justify-items: center;
@@ -535,7 +581,7 @@ header {
   /* border-bottom: 1px solid black; */
 }
 
-.add_reg_instance{
+.add_reg_instance {
   margin: 10px 0;
 }
 .add_reg_key {
@@ -577,35 +623,33 @@ header {
   }
 } */
 
-
 .vex.main_config_wrapper .vex-content {
   width: 700px !important;
 }
-.vex-dialog-message{
+.vex-dialog-message {
   font-weight: 500;
-
 }
-.help-text-prompt{
+.help-text-prompt {
   margin-top: 10px;
   color: #721c24;
   background-color: #f8d7da;
   border-color: #f5c6cb;
   position: relative;
-  padding: .75rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   margin-bottom: 1rem;
   border: 1px solid transparent;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
 }
 
-.heading-text-prompt{
+.heading-text-prompt {
   color: #004085;
   background-color: #cce5ff;
   border-color: #b8daff;
   position: relative;
-  padding: .75rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   margin-bottom: 1rem;
   border: 1px solid transparent;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
 }
 
 .configWrapper a {
@@ -614,7 +658,7 @@ header {
   border-color: #007bff;
   display: inline-block;
   font-weight: 400;
-  text-align: center; 
+  text-align: center;
   white-space: nowrap;
   vertical-align: middle;
   -webkit-user-select: none;
@@ -622,22 +666,21 @@ header {
   -ms-user-select: none;
   user-select: none;
   border: 1px solid transparent;
-  padding: .375rem .75rem;
+  padding: 0.375rem 0.75rem;
   font-size: 1rem;
   line-height: 1.5;
-  border-radius: .25rem;
-  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  border-radius: 0.25rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   cursor: pointer;
-  padding: .75rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   margin-bottom: 0.75rem;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
   display: inline-block;
-  width:100%
+  width: 100%;
 }
 
-
 /* MODAL END */
-
 
 pre {
   padding: 1em;
@@ -664,7 +707,6 @@ pre {
   hyphens: none;
 }
 
-
 @media only screen and (max-width: 735px) {
   .simulator-wapper {
     display: flex;
@@ -681,11 +723,11 @@ pre {
   .logo img {
     width: 200px;
   }
-  .pipeline_color_wrapper{
+  .pipeline_color_wrapper {
     font-size: 15px;
   }
   /* Border bottom for additional registers segment  */
-  .additional_registers_wrapper{
+  .additional_registers_wrapper {
     border-bottom: 1px solid black;
   }
 }

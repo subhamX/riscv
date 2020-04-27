@@ -9,8 +9,13 @@ var vex = require('vex-js')
 vex.registerPlugin(require('vex-dialog'))
 vex.defaultOptions.className = 'vex-theme-wireframe'
 // Debug Flag: Set this true to open simulator pane directly
-let debug: boolean = true;
-
+let debug: boolean = false;
+/* mode: 
+    0=> Without Pipeline 
+    1=> Pipelining with data forwarding 
+    2=> Pipelining without data forwarding
+*/
+let mode: number = 1;
 
 // Defining theme asset
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
@@ -643,13 +648,7 @@ function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, prevPC: numb
     }
 }
 // Updated by Modal
-/* mode: 
-0=> Without Pipeline 
-1=> Pipelining with data forwarding 
-2=> Pipelining without data forwarding
-*/
-// By default Without Pipeline mode is enabled
-let mode: number = 0;
+
 
 
 // Handling Click Event Of Step Button
@@ -740,6 +739,7 @@ function runAllInstructions() {
 }
 
 let canRun = true;
+let pipeAnimationDuration = 900;
 
 function runPipelinedInstructions() {
     return new Promise((resolve, reject) => {
@@ -748,44 +748,46 @@ function runPipelinedInstructions() {
             let prevHighlightedActivePC = currPC;
             // Calling pipeline run
             let res = execute.pipelinedAllINS();
+            if (pipeAnimationDuration > 700) {
 
-            let lastPred = execute.GlobalVar.isb.lastPrediction;
-            if (lastPred !== null) {
-                if (lastPred == 0) {
-                    await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.fetchPC.toString(16)}: Branch Prediction -> False`, 500)
-                } else if (lastPred == 1) {
-                    await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.fetchPC.toString(16)}: Branch Prediction -> True`, 500)
-                } else {
-                    console.error('Error in Prediction Value')
+                let lastPred = execute.GlobalVar.isb.lastPrediction;
+                if (lastPred !== null) {
+                    if (lastPred == 0) {
+                        await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.fetchPC.toString(16)}: Branch Prediction -> False`, pipeAnimationDuration / 2)
+                    } else if (lastPred == 1) {
+                        await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.fetchPC.toString(16)}: Branch Prediction -> True`, pipeAnimationDuration / 2)
+                    } else {
+                        console.error('Error in Prediction Value');
+                    }
                 }
-            }
 
-            // Flush Pipeline Toast
-            if (execute.GlobalVar.isb.flushPipeline) {
-                await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}: Flushing the Pipeline`, 500);
-            }
-            // Stalling At Decode Toast
-            if (execute.GlobalVar.isb.stallAtDecode) {
-                await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}: Stalling at Decode`, 500)
-            }
-            // If data forwarding is enabled
-            if (mode === 1) {
-                // Data Forwarding information
-                let dfType = execute.GlobalVar.isb.dataForwardingType
-                if (dfType) {
-                    if (dfType === 1) {
-                        await showSnackBar(`E (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`, 500)
-                    } else if (dfType === 2) {
-                        await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`, 500)
-                    } else if (dfType === 3) {
-                        await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to M (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) Data Forwarding`, 500)
+                // Flush Pipeline Toast
+                if (execute.GlobalVar.isb.flushPipeline) {
+                    await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}: Flushing the Pipeline`, pipeAnimationDuration / 2);
+                }
+                // Stalling At Decode Toast
+                if (execute.GlobalVar.isb.stallAtDecode) {
+                    await showSnackBar(`0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}: Stalling at Decode`, pipeAnimationDuration / 2)
+                }
+                // If data forwarding is enabled
+                if (mode === 1) {
+                    // Data Forwarding information
+                    let dfType = execute.GlobalVar.isb.dataForwardingType
+                    if (dfType) {
+                        if (dfType === 1) {
+                            await showSnackBar(`E (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`, pipeAnimationDuration / 2)
+                        } else if (dfType === 2) {
+                            await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`, pipeAnimationDuration / 2)
+                        } else if (dfType === 3) {
+                            await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to M (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) Data Forwarding`, pipeAnimationDuration / 2)
+                        }
                     }
                 }
             }
+
             updateRegAndMemState();
             // updating currPC
             currPC = execute.getPC();
-            console.log("NEW PC", currPC);
             if (!canRun || res) {
                 clearInterval(interval);
                 resolve();
@@ -800,7 +802,7 @@ function runPipelinedInstructions() {
                 return;
             }
             updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC);
-        }, 1000);
+        }, pipeAnimationDuration);
     })
 }
 
@@ -1037,6 +1039,33 @@ var configWrapper = {
             }
         });
     },
+    runDuration: function () {
+        vex.dialog.open({
+            input: [
+                `
+                <input type="range" min="10" max="1500" value="${pipeAnimationDuration}" class="slider" id="duration" name='duration'>
+                ${`<div class='heading-text-prompt'><p>Animation Cycle Duration: <span id="durationVal"></span> sec</p></div>`}  
+                
+                <div class='heading-text-prompt' style='color: #856404; background-color: #fff3cd; border-color: #ffeeba; font-size: 13px'>Note: This functionality is only available for pipelined execution</div>
+                `
+            ].join(''),
+            callback: function (value) {
+                console.log(value);
+                if (!value) {
+                    return;
+                }
+                pipeAnimationDuration = parseInt(value.duration);
+            }
+        });
+        var slider = document.getElementById("duration");
+        var output = document.getElementById("durationVal");
+        output.innerHTML = (pipeAnimationDuration/1000).toString();
+
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function () {
+            output.innerHTML = ((parseInt(this['value']))/1000).toString();
+        }
+    },
     dForward: function () {
         vex.dialog.open({
             input: [
@@ -1102,6 +1131,7 @@ document.querySelector(".config-btn").addEventListener('click', () => {
             <a data-trigger="pipeline">Pipeline</a>
             <a data-trigger="dForward">Data Forwarding</a>
             <a data-trigger="bPred">Branch Prediction</a>
+            <a data-trigger="runDuration">Animation Cycle Duration</a>
             </div>`
         ].join(''),
         callback: function () {
@@ -1132,6 +1162,7 @@ document.querySelector('.config-btn-display-only').addEventListener('click', () 
     margin-bottom: 0.5rem;
     font-size: 15px
     `;
+
     vex.dialog.open({
         input: [
             `
@@ -1140,6 +1171,7 @@ document.querySelector('.config-btn-display-only').addEventListener('click', () 
             <div class='heading-text-prompt' style='${mode === 0 ? disabledStyle : activeStyle}'>Pipelining <span style='font-weight: bold'>${mode === 0 ? 'Disabled' : 'Enabled'}</span></div>
             <div class='heading-text-prompt' style='${mode !== 1 ? disabledStyle : activeStyle}'>Data Forwarding <span style='font-weight: bold'>${mode !== 1 ? 'Disabled' : 'Enabled'}</span></div>
             <div class='heading-text-prompt' style='${branchPred === 0 ? disabledStyle : activeStyle}'>Branch Prediction <span style='font-weight: bold'>${branchPred === 0 ? 'Disabled' : 'Enabled'}</span></div>
+            <div class='heading-text-prompt' style='background-color: #d1ecf1; color: #0c5460; border-color: #bee5eb; font-size: 15px'>Animation Cycle Duration: <span style='font-weight: bold'>${pipeAnimationDuration/1000} sec</span></div> 
             </div>
             `
         ].join(''),

@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (debug == true) {
         (<HTMLElement>document.querySelector('.simulator-btn')).click();
         // setting mode as pipeline + data forwarding
-        mode = 1;
+        mode = 2;
     }
     execute.GlobalVar.mode = mode;
     execute.GlobalVar.branchPredEnabled = (branchPred===1);

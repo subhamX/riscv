@@ -235,13 +235,19 @@ header {
   padding-left: 20%;
 }
 
+.addregI_clock .add_reg_key{
+  background-color: #fff176 !important;
+
+}
+
+
 .pipeline_color_wrapper {
   display: grid;
   /* Make sure that this margin is same as width of scrollbar */
   /* margin-right: 10px; */
   margin-bottom: 5px;
   /* justify-content: ; */
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   grid-template-columns: repeat(5, 1fr);
   color: white;
   background: linear-gradient(

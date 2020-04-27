@@ -14,37 +14,32 @@ export function Decode() {
     GlobalVar.type = GlobalVar.opcodeMap.get(GlobalVar.IR.slice(25, 32));
     GlobalVar.immVal = "0";
     if (GlobalVar.type == 'R') {
-        // operation code
+        // for R type instructions ( func7 | rs2 | rs1 | func3 | rd | opcode )
+        // Passing => rA = rs1 and rB = rs2
         GlobalVar.operCode = GlobalVar.IR.slice(17, 20) + GlobalVar.IR.slice(0, 7);
+
         let rd = GlobalVar.IR.slice(20, 25);
         GlobalVar.regFile.setRD(parseInt(rd, 2));
-        console.log('rd', GlobalVar.regFile.getRDAddr());
 
         let rs1 = GlobalVar.IR.slice(12, 17);
-        // console.log("rs1",);
         GlobalVar.regFile.setRS1(parseInt(rs1, 2));
 
         let rs2 = GlobalVar.IR.slice(7, 12)
         GlobalVar.regFile.setRS2(parseInt(rs2, 2));
-
-        // ! updating RA and RB > Commented
-        // GlobalVar.RA = GlobalVar.regFile.getRS1();
-        // GlobalVar.RB = GlobalVar.regFile.getRS2();
     }
     else if (GlobalVar.type == 'I') {
-        // operation code
+        // for I type instructions ( imm | rs1 | func3 | rd | opcode )
+        // Passing => rA = rs1
         GlobalVar.operCode = opcode + GlobalVar.IR.slice(17, 20);
 
         if (GlobalVar.operationMap.get(GlobalVar.operCode) == 'ld') {
-            console.error('`InstructionNotSupportedError: LD is not supported by 32 bit systems!');
+            console.error('`Instruction Not Supported: LD is not supported by 32 bit systems!');
             GlobalVar.invalid = true;
             return;
         }
 
         let rd = GlobalVar.IR.slice(20, 25);
         GlobalVar.regFile.setRD(parseInt(rd, 2));
-        console.log('rd', GlobalVar.regFile.getRDAddr());
-
 
         let rs1 = GlobalVar.IR.slice(12, 17);
         GlobalVar.regFile.setRS1(parseInt(rs1, 2));
@@ -52,15 +47,14 @@ export function Decode() {
         // as RS2 does not have any value
         GlobalVar.regFile.setRS2(null);
 
-        // ! updating RA and RB > Commented
-        // GlobalVar.RA = GlobalVar.regFile.getRS1();
-        // GlobalVar.RB = GlobalVar.regFile.getRS2();
-
         GlobalVar.immVal = GlobalVar.IR.slice(0, 12);
         // console.log('GlobalVar.immVal', GlobalVar.immVal);
     }
     else if (GlobalVar.type == 'S') {
-        // operation code
+        // for S type instructions ( imm | rs2 | rs1 | func3 | imm | opcode )
+        // Passing => rA = rs1 and rB = rs2
+        // rs1 has the base address
+
         GlobalVar.operCode = opcode + GlobalVar.IR.slice(17, 20);
 
         if (GlobalVar.operationMap.get(GlobalVar.operCode) == 'sd') {
@@ -81,14 +75,11 @@ export function Decode() {
 
         // as RD does not have any value
         GlobalVar.regFile.setRD(null);
-        // ! updating RA and RB > Commented
-        // GlobalVar.RA = GlobalVar.regFile.getRS1();
-        // GlobalVar.RB = GlobalVar.regFile.getRS2();
 
-        // RA has the base address
     }
     else if (GlobalVar.type == 'SB') {
-        // operation code
+        // for SB type instructions ( imm | rs2 | rs1 | func3 | imm | opcode )
+        // Passing => rA = rs1 and rB = rs2
         GlobalVar.operCode = opcode + GlobalVar.IR.slice(17, 20);
 
         let rs1 = GlobalVar.IR.slice(12, 17);
@@ -103,13 +94,10 @@ export function Decode() {
         // missing lsb of immediate field
         GlobalVar.immVal = GlobalVar.IR[0] + GlobalVar.IR[24] + GlobalVar.IR.slice(1, 7) + GlobalVar.IR.slice(20, 24);
         GlobalVar.immVal = (GlobalVar.immVal + '0');
-
-        // ! updating RA and RB > Commented
-        // GlobalVar.RA = GlobalVar.regFile.getRS1();
-        // GlobalVar.RB = GlobalVar.regFile.getRS2();
     }
     else if (GlobalVar.type == 'U') {
-        // operation code
+        // for U type instructions ( imm | rd | opcode )
+
         GlobalVar.operCode = opcode;
 
         let rd = GlobalVar.IR.slice(20, 25);
@@ -125,7 +113,8 @@ export function Decode() {
         GlobalVar.immVal = GlobalVar.IR.slice(0, 20)
     }
     else if (GlobalVar.type == 'UJ') {
-        // operation code
+        // for UJ type instructions ( imm | rd | opcode )
+
         GlobalVar.operCode = opcode;
         let rd = GlobalVar.IR.slice(20, 25);
         GlobalVar.regFile.setRD(parseInt(rd, 2));
@@ -152,66 +141,55 @@ export function Decode() {
         console.warn("Decoding the End");
     } else {
         console.log(GlobalVar.operCode)
-        console.error('Not a valid instruction!(invalid Opcode)');
+        console.error('Not a valid instruction!(Invalid Opcode)');
         GlobalVar.invalid = true;
         return;
     }
     GlobalVar.ALU_op = GlobalVar.operationMap.get(GlobalVar.operCode);
-    // console.log("value in GlobalVar.RA => " + GlobalVar.RA);
-    // console.log("value in GlobalVar.RB => " + GlobalVar.RB);
-
-    // ? Reference
-    // Data Forwarding
-    // Write Back Address is in 
-    // GlobalVar.regFile.getRD();
-    // location of inA
-    // GlobalVar.regFile.getRS1();
-    // location of inB
-    // GlobalVar.regFile.getRS2();
-
 
     let locationA = GlobalVar.regFile.getR1Addr();
     let stallRA: number = 0;
-    console.log("locationA:", locationA);
+    // console.log("locationA:", locationA);
 
-    // Only for R || I || S || SB instructions RS1 is set
+    // Only for R || I || S || SB instructions rs1 is set
     if (locationA && (GlobalVar.pipelineEnabled) && (locationA === GlobalVar.isb.prevWriteReg && locationA != 0)) {
         // Pipelining is Enabled 
         if (GlobalVar.mode == 1) {
             // Data Forwarding is Enabled
             let prevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
             if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
-                // load instructions
-                // TODO: WE may need M to M data forwarding! (NO, M2M is handled only for RB)
                 // stalling
                 stallRA = 1;
             } else if (prevInstrMnenomic === 'jal' || prevInstrMnenomic === 'jalr') {
-                // stalling
-                // only possible if jal is prev actually with no misprediction [i.e prediction was correct]
-                console.error('(jal is prev actually with no misprediction)Taking data from ISB JAL or JALR! 1');
+                // no stall
+                // only possible if jal/jalr is prev actually with no misprediction [i.e prediction was correct]
+                console.warn('(jal/jalr is prev instruction with no misprediction)');
                 stallRA = 0;
+                // No dataForwardingType assigned for GUI since it is from ISB
                 GlobalVar.RA = GlobalVar.isb.isb2.returnAddress;
             } else {
                 // no stall
                 stallRA = 0;
-                // ! E to E data Forwarding
+                // E to E data Forwarding
                 GlobalVar.isb.dataForwardingType = 1;
-                console.log("1=>(E2E)Data Forwarding: RA = ", GlobalVar.RZ);
+                console.warn("1=>(E2E)Data Forwarding: RA = ", GlobalVar.RZ);
                 GlobalVar.RA = GlobalVar.RZ;
             }
         } else {
+            // Data Forwarding is disabled
             stallRA = 1;
         }
     } else if (locationA && (GlobalVar.pipelineEnabled) && (locationA == GlobalVar.isb.prevPrevWriteReg && GlobalVar.isb.prevPrevWriteReg != 0)) {
         if (GlobalVar.mode === 1) {
             // Data Forwarding is Enabled
-            // no stall! Handling by data forwarding
+            // no stalling
             stallRA = 0;
-            // ! M to E data Forwarding
+            // M to E data Forwarding
             GlobalVar.isb.dataForwardingType = 2;
-            console.log("1=>(M2E)Data Forwarding: RA = ", GlobalVar.RY);
+            console.warn("1=>(M2E)Data Forwarding: RA = ", GlobalVar.RY);
             GlobalVar.RA = GlobalVar.RY;
         } else {
+            // Data Forwarding is Disabled
             // stalling
             stallRA = 2;
         }
@@ -236,21 +214,21 @@ export function Decode() {
                     // stalling
                     stallRB = 1;
                 } else if (prevInstrMnenomic === 'jal' || prevInstrMnenomic === 'jalr') {
-                    // stalling
+                    // not stalling
                     // only possible if jal is prev actually with no misprediction [i.e prediction was correct]
-                    console.error('(jal is prev actually with no misprediction)Taking data from ISB JAL or JALR! 2');
-                    stallRA = 0;
-                    GlobalVar.RA = GlobalVar.isb.isb2.returnAddress;
+                    console.warn('(jal is prev actually with no misprediction)Taking data from ISB JAL or JALR! 2');
+                    stallRB = 0;
+                    GlobalVar.RB = GlobalVar.isb.isb2.returnAddress;
                 } else {
                     // no stalling
                     stallRB = 0;
-                    // ! E to E data Forwarding
+                    // E to E data Forwarding
                     GlobalVar.isb.dataForwardingType = 1;
-                    console.log("2=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
+                    console.warn("2=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
                     GlobalVar.RB = GlobalVar.RZ;
                 }
             } else {
-                // Data Forwarding is disabled and only pipelining is enabled
+                // Data Forwarding is disabled
                 // stalling
                 stallRB = 1;
             }
@@ -259,9 +237,9 @@ export function Decode() {
                 // Data Forwarding is enabled
                 // no stall
                 stallRB = 0;
-                // ! M to E data Forwarding
+                // M to E data Forwarding
                 GlobalVar.isb.dataForwardingType = 2;
-                console.log("2=>(M2E)Data Forwarding: RB = ", GlobalVar.RY);
+                console.warn("2=>(M2E)Data Forwarding: RB = ", GlobalVar.RY);
                 GlobalVar.RB = GlobalVar.RY;
             } else {
                 // stalling
@@ -275,21 +253,24 @@ export function Decode() {
     } else if (GlobalVar.type === 'S') {
         if (locationB && (GlobalVar.pipelineEnabled) && GlobalVar.isb.prevWriteReg && locationB === GlobalVar.isb.prevWriteReg) {
             if (GlobalVar.mode === 1) {
-                console.log("TESTING !)!", GlobalVar.isb.prevInstrMnenomic)
                 // Data Forwarding is enabled
                 let prevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
                 if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
                     stallRB = 0;
                     console.warn("NOT STALLING as it will be handled by ALU (M to M data forwarding)")
-                    // ! M to M data forwarding will be done at ALU
-                    GlobalVar.RB = GlobalVar.regFile.getRS2()
+                    // M to M data forwarding will be done at ALU
+                    GlobalVar.RB = GlobalVar.regFile.getRS2();
+                    // Dummy Val
                 } else if (prevInstrMnenomic === 'jal' || prevInstrMnenomic === 'jalr') {
-                    stallRB = 1;
-                    console.error('Stalling JAL or JALR! 5');
-                } else {
-                    // ! E to E data Forwarding
+                    // not stalling
+                    // only possible if jal is prev actually with no misprediction [i.e prediction was correct]
+                    console.warn('(jal is prev actually with no misprediction)Taking data from ISB JAL or JALR! 2');
                     stallRB = 0;
-                    console.log("3=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
+                    GlobalVar.RB = GlobalVar.isb.isb2.returnAddress;
+                } else {
+                    // E to E data Forwarding
+                    stallRB = 0;
+                    console.warn("3=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
                     // Forwarding Data
                     GlobalVar.RB = GlobalVar.RZ;
                     GlobalVar.isb.dataForwardingType = 1;
@@ -301,17 +282,10 @@ export function Decode() {
         } else if (locationB && (GlobalVar.pipelineEnabled) && GlobalVar.isb.prevPrevWriteReg && locationB === GlobalVar.isb.prevPrevWriteReg) {
             if (GlobalVar.mode === 1) {
                 // Data Forwarding is enabled
-                let prevPrevInstrMnenomic = GlobalVar.isb.prevPrevInstrMnenomic;
-                if (prevPrevInstrMnenomic === 'jal' || prevPrevInstrMnenomic === 'jalr') {
-                    // stalling
-                    stallRB = 2;
-                    console.error('Stalling JAL or JALR! 6');
-                } else {
-                    stallRB = 0;
-                    // ! M to E data Forwarding
-                    GlobalVar.RB = GlobalVar.RY;
-                    GlobalVar.isb.dataForwardingType = 2;
-                }
+                stallRB = 0;
+                // M to E data Forwarding
+                GlobalVar.RB = GlobalVar.RY;
+                GlobalVar.isb.dataForwardingType = 2;
             } else {
                 stallRB = 2;
             }
@@ -324,36 +298,25 @@ export function Decode() {
     }
 
 
-    // Write after Write is not a hazard! Since we are implementing inorder execution
+    [GlobalVar.isb.isb2, GlobalVar.isb.isb3].forEach((e) => {
+        if (locationA && (e.writeBackRegLocation === locationA)) {
+            GlobalVar.dataHazardMap.set(`${GlobalVar.isb.isb1.returnAddress - 4}-${e.returnAddress - 4}A`, locationA.toString());
+        }
+        if (locationB && e.writeBackRegLocation === locationB) {
+            GlobalVar.dataHazardMap.set(`${GlobalVar.isb.isb1.returnAddress - 4}-${e.returnAddress - 4}B`, locationB.toString());
+        }
+    })
+    if(GlobalVar.isb.isb2.type===null && GlobalVar.isb.isb3.type===null){
+        let e = GlobalVar.isb.isb4;
+        if (locationA && (e.writeBackRegLocation === locationA)) {
+            GlobalVar.dataHazardMap.set(`${GlobalVar.isb.isb1.returnAddress - 4}-${e.returnAddress - 4}A`, locationA.toString());
+        }
+        if (locationB && e.writeBackRegLocation === locationB) {
+            GlobalVar.dataHazardMap.set(`${GlobalVar.isb.isb1.returnAddress - 4}-${e.returnAddress - 4}B`, locationB.toString());
+        }
+    }
 
 
-    // ! Migrating from ALU to here
-    // Passing 
-    // if (!GlobalVar.pipelineEnabled) {
-    //     GlobalVar.isb.isb1.RM = GlobalVar.regFile.getRegVal(locationC);
-    // }
-
-    // TODO: Handle JALR instructions (DONE)
-    // if (GlobalVar.isb.controlHazardType === 2) {
-    //     // setting new value of PC
-    //     GlobalVar.PC = GlobalVar.regFile.getRS1() + evaluateImm(GlobalVar.immVal);
-    // }
-
-
-
-    // ! Handling Immediate values for I, S, U, UJ (It goes to inB not RB)
-    // if (!(GlobalVar.type === 'R' || GlobalVar.type == 'SB')) {
-    //     GlobalVar.RB = evaluateImm(GlobalVar.immVal);
-    // }
-    // else {
-    //     GlobalVar.RB = GlobalVar.regFile.getRS2()
-    // }
-
-
-    // ! (Confirmed By Sir) DON'T DO=> Write Back pcTemp value to Register [We will save 3 cycles if we perform this operation here]
-    // if (GlobalVar.pipelineEnabled && (GlobalVar.isb.controlHazardType === 1 || GlobalVar.isb.controlHazardType === 2)) {
-    //     GlobalVar.regFile.setRegVal(locationC, GlobalVar.isb.isb1.returnAddress);
-    // }
 
     // Increment the stall count
     if (stallRB || stallRA) {

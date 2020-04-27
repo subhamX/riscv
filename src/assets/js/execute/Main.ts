@@ -78,6 +78,9 @@ export class GlobalVar {
     static opcodeMap: Map<string, string> = new Map<string, string>();
     // operation map
     static operationMap: Map<string, string> = new Map<string, string>();
+
+    // for exact dataHazardCount
+    static dataHazardMap: Map<string, string>;
 }
 
 export function getPC(): number {
@@ -176,6 +179,8 @@ export function init(data): void {
     GlobalVar.invalid = false;
     GlobalVar.instructionMap = new Map<number, string>();
     GlobalVar.breakPoint = new Array<number>();
+    // Will be used to get the exact number of dataHazards
+    GlobalVar.dataHazardMap = new Map<string, string>();
     let dataArr = data.split('\n');
     let i = 0;
     GlobalVar.isb = new InterStateBuffer();
@@ -311,7 +316,7 @@ function Fetch(): boolean {
             temp = parseInt(temp, 16).toString(2);
             GlobalVar.IR = temp;
             // resetting times 
-            times=0;
+            times = 0;
             return true;
         }
     } else {
@@ -430,7 +435,8 @@ export function singlePipelineStep() {
     GlobalVar.isb.dataForwardingType = null;
 
     console.log('-----------*****PIPE*****------------');
-    console.table(getPhase3Stats());
+    // console.table(getPhase3Stats());
+    console.log(GlobalVar.dataHazardMap)
     console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     // console.log("OLD: ", GlobalVar.isb.pcBuf);
     if (GlobalVar.isComplete) {

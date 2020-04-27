@@ -1006,6 +1006,7 @@ var configWrapper = {
                 if (!value) {
                     return;
                 }
+                // Assuming mode!=1
                 if (value.data == 'on') {
                     // Branch Prediction Enabled
                     branchPred = 1;

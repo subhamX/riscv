@@ -8,8 +8,7 @@ import { MemoryOperations, WriteBack } from './MA_MWB';
 import { evaluateImm } from './helperFun';
 import { InterStateBuffer, ExecutionStats } from './InterStateBuffer';
 
-// For pipelined step and run
-let noInstr: boolean = false;
+// let GlobalVar.noInstr: boolean = false;
 let times: number = 0;
 
 export class GlobalVar {
@@ -35,6 +34,9 @@ export class GlobalVar {
 
     // Stats
     static execStats: ExecutionStats;
+
+    // For pipelined step and run
+    static noInstr: boolean;
 
     static isb: InterStateBuffer;
     // Holds return address
@@ -159,7 +161,7 @@ export function init(data): void {
     GlobalVar.CLOCK = 0;
     // variable used in case of pipelined instructions
     times = 0;
-    noInstr = false;
+    GlobalVar.noInstr = false;
     GlobalVar.RZ = null;
     GlobalVar.RA = null;
     GlobalVar.RB = null;
@@ -419,7 +421,7 @@ export function pipelinedAllINS() {
     }
     if (GlobalVar.CLOCK === 0) {
         // Pipeline is empty! Only Fetching a new instruction
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else if (GlobalVar.CLOCK === 1) {
         // Decode then Fetch
         let res = pipelinedDecode();
@@ -429,7 +431,7 @@ export function pipelinedAllINS() {
             GlobalVar.CLOCK++;
             return;
         }
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else if (GlobalVar.CLOCK === 2) {
         // Execute then Decode then Fetch
         console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
@@ -441,7 +443,7 @@ export function pipelinedAllINS() {
             GlobalVar.CLOCK++;
             return;
         }
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else if (GlobalVar.CLOCK === 3) {
         // Memory then Execute then Decode then Fetch
         pipelinedMemory();
@@ -453,7 +455,7 @@ export function pipelinedAllINS() {
             GlobalVar.CLOCK++;
             return;
         }
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else {
         // Run all steps WriteBack then Memory then Execute then Decode then Fetch
         pipelineWriteBack();
@@ -466,7 +468,7 @@ export function pipelinedAllINS() {
             GlobalVar.CLOCK++;
             return;
         }
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     }
     GlobalVar.CLOCK++;
     if (bp) {
@@ -493,7 +495,7 @@ export function singlePipelineStep() {
     if (GlobalVar.CLOCK === 0) {
         // Pipeline is empty
         // Fetch
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else if (GlobalVar.CLOCK === 1) {
         // Decode -> Fetch
         let res = pipelinedDecode();
@@ -502,7 +504,7 @@ export function singlePipelineStep() {
             GlobalVar.CLOCK++;
             return;
         }
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else if (GlobalVar.CLOCK === 2) {
         // Execute -> Decode -> Fetch
         console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
@@ -518,7 +520,7 @@ export function singlePipelineStep() {
             GlobalVar.CLOCK++;
             return;
         }
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else if (GlobalVar.CLOCK === 3) {
         // Memory -> Execute -> Decode -> Fetch
         pipelinedMemory();
@@ -535,7 +537,7 @@ export function singlePipelineStep() {
             GlobalVar.CLOCK++;
             return;
         }
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else {
         // WriteBack -> Memory -> Execute -> Decode -> Fetch
         pipelineWriteBack();
@@ -552,7 +554,7 @@ export function singlePipelineStep() {
             GlobalVar.CLOCK++;
             return;
         }
-        noInstr = pipelinedFetch(noInstr);
+        GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     }
     GlobalVar.CLOCK++;
 
@@ -583,11 +585,11 @@ function pipelinedDecode(): boolean {
         GlobalVar.isb.updatePCBufferOnStall();
         return true;
     } else {
-        if(GlobalVar.stallCount!=0){
+        if (GlobalVar.stallCount != 0) {
             // Previously there was stalling. Not updating decodePC
-            prevStall=true;
-        }else{
-            prevStall=false;
+            prevStall = true;
+        } else {
+            prevStall = false;
         }
         GlobalVar.stallCount = 0;
         GlobalVar.isb.updateInterStateBufferAfterDecode();
@@ -595,7 +597,7 @@ function pipelinedDecode(): boolean {
     }
 }
 
-let prevStall:boolean = false;
+let prevStall: boolean = false;
 /**
  * 
  * @param no_inst : Returns state of the current execution
@@ -677,7 +679,7 @@ function pipelinedExecute() {
     if (GlobalVar.isb.flushPipeline) {
         console.error('FLUSHING<< Adding 2 to numberOfControlHazardStalls');
 
-        GlobalVar.execStats.numberOfControlHazardStalls+=2;
+        GlobalVar.execStats.numberOfControlHazardStalls += 2;
         // updating prev and prevPrev instruction metadata
         GlobalVar.isb.prevPrevInstrMnenomic = null;
         GlobalVar.isb.prevInstrMnenomic = null;

@@ -4,7 +4,7 @@ import { determineSelectLines, evaluateImm } from './helperFun';
 export function Execute() {
     console.log("EXECUTE BEGIN: RA, RB, imm", GlobalVar.RA, GlobalVar.RB, evaluateImm(GlobalVar.immVal));
 
-    if(GlobalVar.isb.isb2.type===null){
+    if (GlobalVar.isb.isb2.type === null) {
         console.log('As a result of last cycle flushing! No task');
         return;
     }
@@ -147,7 +147,7 @@ export function Execute() {
 
     // Verifing the branch prediction for pipeline enabled
     if (GlobalVar.pipelineEnabled) {
-        let instrAddress = GlobalVar.isb.isb2.returnAddress-4;
+        let instrAddress = GlobalVar.isb.isb2.returnAddress - 4;
         if (GlobalVar.type === 'SB') {
             // rs1 and rs2 is in RA and RB
             let branchActualCondition: boolean = false;
@@ -189,6 +189,7 @@ export function Execute() {
                         GlobalVar.isb.flushPipeline = true;
                         // toggling the predictor state
                         instance.predictorState = !instance.predictorState;
+                        GlobalVar.noInstr = false;
                         GlobalVar.PC = GlobalVar.isb.branchAddressDef;
                     } else if (instance.predictorState && branchActualCondition) {
                         GlobalVar.execStats.branchMispredictions++;
@@ -196,6 +197,7 @@ export function Execute() {
                         GlobalVar.isb.flushPipeline = true;
                         // toggling the predictor state
                         instance.predictorState = !instance.predictorState;
+                        GlobalVar.noInstr = false;
                         GlobalVar.PC = GlobalVar.isb.branchAddressDef;
                     } else {
                         // Correct Prediction
@@ -208,6 +210,7 @@ export function Execute() {
                         // adding this branch instruction instance in BTB
                         GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                         GlobalVar.PC = actualBranchAddress;
+                        GlobalVar.noInstr = false;
                         GlobalVar.isb.flushPipeline = true;
                         console.log('We did\'t had it; Now we do');
                     }
@@ -218,6 +221,7 @@ export function Execute() {
                 if (branchActualCondition) {
                     // update PC
                     GlobalVar.PC = actualBranchAddress;
+                    GlobalVar.noInstr = false;
                     // flushing the pipeline
                     GlobalVar.isb.flushPipeline = true;
                 }
@@ -232,6 +236,7 @@ export function Execute() {
                     GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                     // updating PC
                     GlobalVar.PC = actualBranchAddress;
+                    GlobalVar.noInstr = false;
                     GlobalVar.isb.flushPipeline = true;
                 }
                 // If there is an instance then we are sure that predictorState is true always! No scope for misprediction
@@ -239,6 +244,7 @@ export function Execute() {
                 // prediction is not enabled
                 // We need to flush and update the PC
                 GlobalVar.PC = actualBranchAddress;
+                GlobalVar.noInstr = false;
                 // flushing the pipeline
                 GlobalVar.isb.flushPipeline = true;
             }
@@ -254,6 +260,7 @@ export function Execute() {
                     GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                     // updating PC
                     GlobalVar.PC = actualBranchAddress;
+                    GlobalVar.noInstr = false;
                     GlobalVar.isb.flushPipeline = true;
                 } else {
                     // Instance found
@@ -265,6 +272,7 @@ export function Execute() {
                         GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                         // updating PC
                         GlobalVar.PC = actualBranchAddress;
+                        GlobalVar.noInstr = false;
                         // increment stat12
                         // GlobalVar.isb.numberOfControlHazardStalls++;
                         GlobalVar.isb.flushPipeline = true;
@@ -274,6 +282,7 @@ export function Execute() {
                 // prediction is not enabled
                 // We need to flush and update the PC
                 GlobalVar.isb.flushPipeline = true;
+                GlobalVar.noInstr = false;
                 GlobalVar.PC = actualBranchAddress;
             }
         }

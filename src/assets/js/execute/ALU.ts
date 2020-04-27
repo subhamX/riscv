@@ -172,6 +172,7 @@ export function Execute() {
                     console.log('evim', evaluateImm(GlobalVar.immVal));
                 }
             }
+            console.log("branchActualCondition: ", GlobalVar.ALU_op, branchActualCondition)
             // actualBranchAddress contains the real target address
             let actualBranchAddress = instrAddress + evaluateImm(GlobalVar.immVal);
 
@@ -185,20 +186,20 @@ export function Execute() {
                     // isBranchTaken contains the prediction
                     if (instance.predictorState && branchActualCondition == false) {
                         GlobalVar.execStats.branchMispredictions++;
-                        console.log("MISPREDiCTION");
+                        console.log("MISPREDiCTION Type1");
                         GlobalVar.isb.flushPipeline = true;
                         // toggling the predictor state
                         instance.predictorState = !instance.predictorState;
                         GlobalVar.noInstr = false;
-                        GlobalVar.PC = GlobalVar.isb.branchAddressDef;
-                    } else if (instance.predictorState && branchActualCondition) {
+                        GlobalVar.PC = GlobalVar.isb.isb2.returnAddress;
+                    } else if (instance.predictorState===false && branchActualCondition) {
                         GlobalVar.execStats.branchMispredictions++;
-                        console.log("MISPREDiCTION");
+                        console.log("MISPREDiCTION Type2");
                         GlobalVar.isb.flushPipeline = true;
                         // toggling the predictor state
                         instance.predictorState = !instance.predictorState;
                         GlobalVar.noInstr = false;
-                        GlobalVar.PC = GlobalVar.isb.branchAddressDef;
+                        GlobalVar.PC = actualBranchAddress;
                     } else {
                         // Correct Prediction
                         GlobalVar.isb.flushPipeline = false;

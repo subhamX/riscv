@@ -310,6 +310,8 @@ function Fetch(): boolean {
         } else {
             temp = parseInt(temp, 16).toString(2);
             GlobalVar.IR = temp;
+            // resetting times 
+            times=0;
             return true;
         }
     } else {
@@ -319,61 +321,6 @@ function Fetch(): boolean {
     }
     return false;
 }
-
-
-/**
- * ! START
- */
-function updateBranchAddress(controlHazardType: Number) {
-    let branchAddress, branchAddressDef, immVal;
-    if (controlHazardType == 3) {
-        // Branch
-        immVal = GlobalVar.IR[0] + GlobalVar.IR[24] + GlobalVar.IR.slice(1, 7) + GlobalVar.IR.slice(20, 24);
-        immVal = (immVal + '0');
-        branchAddress = GlobalVar.PC - 4 + evaluateImm(immVal);
-        console.log("SettingNew BranchAddress as: ", branchAddress)
-    } else if (controlHazardType == 2) {
-        // jalr
-        // !! Check if for JAL Branch address calculation is done here at fetch or not
-        console.log("JAI")
-        immVal = GlobalVar.IR.slice(0, 12);
-        let rs1 = GlobalVar.IR.slice(12, 17);
-        GlobalVar.regFile.setRS1(parseInt(rs1, 2));
-        let inA: number = GlobalVar.regFile.getRS1();
-        branchAddress = GlobalVar.PC - 4 + inA + evaluateImm(immVal);
-    } else if (controlHazardType == 1) {
-        // jal
-        immVal = GlobalVar.IR[0] + GlobalVar.IR.slice(12, 20) + GlobalVar.IR[11] + GlobalVar.IR.slice(1, 11);
-        immVal = (immVal + '0');
-        branchAddress = evaluateImm(immVal) + GlobalVar.PC - 4;
-    }
-    branchAddressDef = GlobalVar.PC;
-    return { branchAddressDef, branchAddress };
-}
-
-
-function detectControlHazard() {
-    let opcode = GlobalVar.IR.slice(25, 32);
-    // setting instruction type of current instruction
-    GlobalVar.type = GlobalVar.opcodeMap.get(opcode);
-    if (GlobalVar.type == 'SB') {
-        // Branch
-        return 3;
-    } else if (opcode == '1100111') {
-        // jalr
-        return 2;
-    } else if (GlobalVar.type == 'UJ') {
-        // jal
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-/**
- * ! END
- */
-
 
 
 export function UpdatePC(PC_Select: number, inpImm?: number): void {
@@ -609,7 +556,7 @@ function pipelinedFetch(no_inst): boolean {
 
     GlobalVar.isb.branchAddress = null;
 
-    console.log("FETCH: PC", GlobalVar.PC);
+    console.log("FETCH: PC, times", GlobalVar.PC, times);
 
     // If no instructions then returning true
     if (no_inst) {

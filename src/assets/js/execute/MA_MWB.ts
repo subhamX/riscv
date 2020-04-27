@@ -9,8 +9,8 @@ export function MemoryOperations() {
         if (GlobalVar.isb.isb3.type === 'S') {
             // Incrementing total number of data transfers
             GlobalVar.execStats.numberOfDataTransfers++;
-            // ! Check if we really need MDR
-            GlobalVar.MDR = GlobalVar.RM;
+            // ! MDR is Memory Data Register
+            // GlobalVar.MDR = GlobalVar.RM;
             console.log("(STORE)HANU: operCode, opr, RZ(Address), RM(Value)", GlobalVar.isb.isb3.operCode, opr, GlobalVar.RZ, GlobalVar.RM)
             GlobalVar.memFile.MEM_WRITE(GlobalVar.RZ, GlobalVar.RM, opr.slice(1));
         } else if (opr == 'ld' || opr == 'lw' || opr == 'lh' || opr == 'lb') {

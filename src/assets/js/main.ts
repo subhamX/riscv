@@ -688,7 +688,7 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', async (
             if (dfType === 1) {
                 await showSnackBar(`E (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`)
             } else if (dfType === 2) {
-                await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) Data Forwarding`)
+                await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to E (0x${execute.GlobalVar.isb.pcBuf.decodePC.toString(16)}) Data Forwarding`)
             } else if (dfType === 3) {
                 await showSnackBar(`M (0x${execute.GlobalVar.isb.pcBuf.memoryPC.toString(16)}) to M (0x${execute.GlobalVar.isb.pcBuf.executePC.toString(16)}) Data Forwarding`)
             }

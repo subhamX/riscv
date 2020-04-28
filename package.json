@@ -1,7 +1,7 @@
 {
-  "name": "heritage",
+  "name": "riscv_heritage",
   "version": "1.0.0",
-  "description": "",
+  "description": "A web simulator which assembles and simulate RISCV code",
   "main": "index.js",
   "scripts": {
     "start:dev": "parcel src/index.html",
@@ -13,8 +13,6 @@
   "dependencies": {
     "@types/node": "^13.9.1",
     "ace-builds": "^1.4.8",
-    "bootbox": "^5.4.0",
-    "micromodal": "^0.4.6",
     "vex-js": "^4.1.0"
   },
   "devDependencies": {

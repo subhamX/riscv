@@ -133,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (prevActive == 0) {
                 disableEditor();
             } else if (prevActive == 1) {
+                stopCurrentExec();
                 disableSimulator();
             } else if (prevActive == 2) {
                 document.getElementById('aboutsection').style.display = 'none';
@@ -329,7 +330,7 @@ document.querySelector('.simulate_btns_wrapper .cancel_btn').addEventListener('c
 // Handling click event of Cancel Button After Assemble
 document.querySelector('.simulate1_btns_wrapper .cancel_btn').addEventListener('click', async () => {
     // Stopping the Run if there is any
-    await stopCurrentExec();
+    stopCurrentExec();
     // reorganising the grid
     reorganiseGrid();
     document.querySelector('.simulate_btns_wrapper')['style'].display = 'flex'

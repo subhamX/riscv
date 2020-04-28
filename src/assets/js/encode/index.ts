@@ -19,30 +19,30 @@ let BASE_DATA_SEG = 65536;
 loadRefMap(refMap);
 
 function sendErrorResponse() {
-    console.log(`RETURNING ERROR RESPONSE`);
+    // console.log(`RETURNING ERROR RESPONSE`);
     return { "firstErrorLineIndex": firstErrorLineIndex, "error": true, "errorMessage": errorMessage };
 }
 
 
-export function main(fileData:string): {"error": boolean, "codeSegment"?:string, "errorMessage"?:string, "firstErrorLineIndex"?:number} {
+export function main(fileData: string): { "error": boolean, "codeSegment"?: string, "errorMessage"?: string, "firstErrorLineIndex"?: number } {
     dataMemory = Array<string>();
     firstErrorLineIndex = -1;
     errorMessage = "";
     dataSegmentMap = new Map();
     labelMap = new Map<string, schema.LabelInterface>()
-    console.log("Reading File src/input/input.asm");
+    // console.log("Reading File src/input/input.asm");
     // Synchronously reading contents of asm file
     let lines: string[] = fileData.split("\n");
     // preProcessing the file
-    console.log("Preprocess all lines");
+    // console.log("Preprocess all lines");
     lines = preProcess(lines);
 
-    console.log("Checking For Errors");
+    // console.log("Checking For Errors");
     let response = check(lines);
     if (firstErrorLineIndex != -1) {
         return sendErrorResponse();
     }
-    console.log("Handling Data Segment");
+    // console.log("Handling Data Segment");
     let dataSegment = response.dataSegment;
     let textSegment = response.textSegment;
     let codeSegment: Array<string> = Array<string>();
@@ -50,12 +50,12 @@ export function main(fileData:string): {"error": boolean, "codeSegment"?:string,
     if (firstErrorLineIndex != -1) {
         return sendErrorResponse();
     }
-    console.log("Handling Text Segment");
+    // console.log("Handling Text Segment");
     handleTextSegment(textSegment, codeSegment);
     if (firstErrorLineIndex != -1) {
         return sendErrorResponse();
     }
-    console.log("Writing Code Segment");
+    // console.log("Writing Code Segment");
     codeSegment = codeSegment.map((a, index) => {
         let temp = a.split(' ');
         let instructionCode = temp[0];
@@ -67,8 +67,8 @@ export function main(fileData:string): {"error": boolean, "codeSegment"?:string,
     codeSegment.push(...dataMemory.map((a, index) => {
         return `0x${(268435456 + index).toString(16)} 0x${a}`
     }));
-    console.log("Success!");
-    return {"error": false, "codeSegment": codeSegment.join('\n')};
+    console.log("Assemble Success!");
+    return { "error": false, "codeSegment": codeSegment.join('\n') };
 }
 
 
@@ -95,7 +95,7 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                     segmentFlag = 2;
                 } else {
                     // Error
-                    throw Error(`(No Label Found) ${i} (${line})`);
+                    throw Error(`No Label Found -> (${line})`);
                 }
             } else {
                 if (segmentFlag == 1) {
@@ -106,7 +106,7 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                         if (i != lines.length) {
                             line += " " + lines[i].trim();
                         } else {
-                            throw Error(`Error Encountered at line: ${i}`);
+                            throw Error(`(${line})`);
                         }
                     }
                     let result = patterns.dataSegPattern.test(line);
@@ -162,7 +162,8 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                             if (resultSBformat) {
                                 // If the instruction is using branch then ERROR
                                 // Only jal is allowed ErrorC Encountered at line
-                                throw Error(`(Branch Instructions Not Allowed In Void Segement)|| ${i} (${line})`);
+                                throw Error(`(${line})`);
+
                             }
                             textSegment.push(line);
                         }
@@ -173,13 +174,15 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                             line = line.replace(':', '');
                             line = line.replace(' ', '');
                             if (labelMap.has(line)) {
-                                throw Error(`Label Already Defined: ${i} (${line})`);
+                                throw Error(`Label Already Defined -> (${line})`);
+
                             }
                             // storing label in labelMap
                             labelMap.set(line, { "location": textSegment.length, "scope": "text" });
                         } else {
                             // Error! The line is neither a valid instruction nor a valid label
-                            throw Error(`${i} (${line})`);
+                            throw Error(`(${line})`);
+
                         }
                     }
 
@@ -189,7 +192,6 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
         return { dataSegment, textSegment };
     } catch (err) {
         console.log(err);
-        console.log('Exiting Code From Check');
         errorMessage = err;
         firstErrorLineIndex = i;
         return;
@@ -222,7 +224,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                 rs1 = addRegZeros(rs1);
                 rs2 = addRegZeros(rs2);
                 rd = addRegZeros(rd);
-                
+
                 // Expecting rd, rs1, rs2 lengths to be exactly 5
                 let encodedInstr = func7 + rs2 + rs1 + func3 + rd + opcode;
                 codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${line.split(",").join(" ")}`);
@@ -233,7 +235,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                     if (!resultLoadformat) {
                         let label = instr[2];
                         let meta = dataSegmentMap.get(label);
-                        if(!meta){
+                        if (!meta) {
                             throw Error("Label Error Occurred!");
                         }
                         let imm = meta.startIndex - (index - 1) * 4;
@@ -250,8 +252,8 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                         let offset = getImmString(imm, 12);
                         let encodedInstr = offset.concat(rs1, func3, rd, opcode);
                         // Converting auipc statement to load one
-                        let lastInstr = codeSegment[codeSegment.length-1];
-                        codeSegment[codeSegment.length-1] = `${lastInstr.split(' ')[0]} ${instr.join(' ')}`;
+                        let lastInstr = codeSegment[codeSegment.length - 1];
+                        codeSegment[codeSegment.length - 1] = `${lastInstr.split(' ')[0]} ${instr.join(' ')}`;
                         // Pushing the current statement 
                         codeSegment.push(`${parseInt(encodedInstr, 2).toString(16)} ${instr.join(" ")}`);
                     } else {

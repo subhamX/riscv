@@ -215,7 +215,7 @@ function handleAssembleAndSimulate() {
     let response = main(fileData);
     if (response.error) {
         // Showing Error Message
-        vex.dialog.alert("Error Occurred! " + response.errorMessage);
+        vex.dialog.alert(`${response.errorMessage}`);
         return true;
     }
     let codeSegWrapper = document.querySelector('.code_segment_wrapper');

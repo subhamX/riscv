@@ -238,12 +238,13 @@
         </div>
 
     </section>
-    <section id="aboutsection" style="display: none; margin: 10px;">
+    <section id="aboutsection" style="display: none; margin: 10px; margin-left: 20px;">
         <h1 class="code-line" data-line-start=0 data-line-end=1><a id="RISCV_Heritage_0"></a>RISCV Heritage</h1>
         <p class="has-line-data" data-line-start="2" data-line-end="3">The following website is a course project under
             the guidance of <a href="https://sites.google.com/view/kalyantv">Dr T.V Kalyan</a>. It is a web simulator
             which converts the <code>Assembly code</code> written <code>RISCV syntax</code> to <code>Machine code</code>
-            and provides a user-friendly environment for its execution.</p>
+            and provides a user-friendly environment for its execution. The simulator implements pipelining, branch
+            prediction and data forwarding, which can be enabled or disabled by the user.</p>
         <h2 class="code-line" data-line-start=4 data-line-end=5><a id="Valid_Instructions_4"></a>Valid Instructions</h2>
         <p class="has-line-data" data-line-start="6" data-line-end="8"><strong>R format:</strong><br>
             add, and, or, sll, slt, sra, srl, sub, xor, mul, div, rem</p>
@@ -282,7 +283,7 @@
         <ol>
             <li class="has-line-data" data-line-start="35" data-line-end="36">Typescript</li>
             <li class="has-line-data" data-line-start="36" data-line-end="37">HTML/CSS</li>
-            <li class="has-line-data" data-line-start="37" data-line-end="39">NodeJS</li>
+            <li class="has-line-data" data-line-start="37" data-line-end="39">NodeJS (For Development Only)</li>
         </ol>
         <h2 class="code-line" data-line-start=39 data-line-end=40><a id="File_Structure_39"></a>File Structure</h2>
         <pre><code class="has-line-data" data-line-start="41" data-line-end="58">src
@@ -290,18 +291,17 @@
 │   tsconfig.json
 │
 └───assets
-   │   index.html
-   │
-   └───css
-   │   style.css
-   │    
-   └───js
+    │   index.html
+    │
+    └───css
+    │   style.css
+    │    
+    └───js
         │ main.ts
         │   
         └───encode
         │
-        └───execute
-</code></pre>
+        └───execute</code></pre>
         <p class="has-line-data" data-line-start="59" data-line-end="62"><strong>encode</strong> contains files required
             to convert <code>Assembly Code</code> written in <code>RISC V</code> syntax into
             <code>Machine Code</code><br>
@@ -311,11 +311,12 @@
         <ol>
             <li class="has-line-data" data-line-start="66" data-line-end="67">On pressing <code>Ctrl+S</code> on
                 <strong>Editor Pane</strong> current file will be downloaded.</li>
-            <li class="has-line-data" data-line-start="67" data-line-end="69">On pressing <code>Ctrl+S</code> on
-                <strong>Simulator Pane</strong> Output file will be downloaded if it’s assembled.<br>
-                Format -</li>
-            <li class="has-line-data" data-line-start="69" data-line-end="70"><strong>Editor Pane</strong> supports
+            <li class="has-line-data" data-line-start="67" data-line-end="68">On pressing <code>Ctrl+S</code> on
+                <strong>Simulator Pane</strong> Output file will be downloaded if it’s assembled.</li>
+            <li class="has-line-data" data-line-start="68" data-line-end="69"><strong>Editor Pane</strong> supports
                 <code>Ctrl+/</code> as comment shortcut</li>
+            <li class="has-line-data" data-line-start="69" data-line-end="70">On pressing <code>Ctrl+D</code> on
+                <strong>Simulator Pane</strong> stats file will be downloaded provided that execution is complete.</li>
         </ol>
         <h2 class="code-line" data-line-start=72 data-line-end=73><a
                 id="General_Instructions_To_Run_Locally_72"></a>General Instructions To Run Locally</h2>
@@ -325,60 +326,125 @@
                 project then go to <code>step 2</code></li>
         </ol>
         <pre><code class="has-line-data" data-line-start="76" data-line-end="79">git clone URL
-git checkout GUI
-</code></pre>
+git checkout GUI</code></pre>
         <ol start="2">
             <li class="has-line-data" data-line-start="79" data-line-end="80">Install all dependencies</li>
         </ol>
-        <pre><code class="has-line-data" data-line-start="81" data-line-end="83">npm install
-</code></pre>
+        <pre><code class="has-line-data" data-line-start="81" data-line-end="83">npm install</code></pre>
         <ol start="3">
-            <li class="has-line-data" data-line-start="83" data-line-end="84">Now to run the developement server run the
+            <li class="has-line-data" data-line-start="83" data-line-end="84">Now to run the development server run the
                 following command in terminal</li>
         </ol>
-        <pre><code class="has-line-data" data-line-start="85" data-line-end="87">npm run start:dev
-</code></pre>
+        <pre><code class="has-line-data" data-line-start="85" data-line-end="87">npm run start:dev</code></pre>
         <ol start="4">
             <li class="has-line-data" data-line-start="87" data-line-end="88">Now access the <code>RISCV Heritage</code>
                 by visiting <a href="http://localhost:1234/">http://localhost:1234/</a></li>
+            <li class="has-line-data" data-line-start="88" data-line-end="89">To build the project run the following
+                command in terminal</li>
         </ol>
-        <h2 class="code-line" data-line-start=90 data-line-end=91><a
-                id="Functionalities_our_GUI_provide_90"></a>Functionalities our GUI provide</h2>
+        <pre><code class="has-line-data" data-line-start="90" data-line-end="92">npm run build</code></pre>
+        <h2 class="code-line" data-line-start=94 data-line-end=95><a
+                id="Functionalities_Our_Project_Offers_94"></a>Functionalities Our Project Offers</h2>
         <ol>
-            <li class="has-line-data" data-line-start="92" data-line-end="94">
-                <p class="has-line-data" data-line-start="92" data-line-end="93">BreakPoint:- Users can use a breakpoint
-                    for debugging. Users can select as many breakpoints as s(he) wants. During the execution of
-                    instructions, the program will stop after the execution of selected instructions in the order of
-                    program flow.</p>
+            <li class="has-line-data" data-line-start="97" data-line-end="99">
+                <p class="has-line-data" data-line-start="97" data-line-end="98"><strong>BreakPoint:-</strong> Users can
+                    use a breakpoint for debugging. Users can select as many breakpoints as s(he) wants. During the
+                    execution of instructions, the program will stop after the execution of selected instructions in the
+                    order of program flow.</p>
             </li>
-            <li class="has-line-data" data-line-start="94" data-line-end="96">
-                <p class="has-line-data" data-line-start="94" data-line-end="95">Run:- To run the complete program in a
-                    single go</p>
+            <li class="has-line-data" data-line-start="99" data-line-end="101">
+                <p class="has-line-data" data-line-start="99" data-line-end="100"><strong>Run:-</strong> To run the
+                    complete program in a single go, users can use it. For pipelined version the <em>animation cycle
+                        duration</em> can be tuned by the user from the settings menu.</p>
             </li>
-            <li class="has-line-data" data-line-start="96" data-line-end="98">
-                <p class="has-line-data" data-line-start="96" data-line-end="97">Step:- To run the program instruction
-                    wise(one instruction at a time).</p>
+            <li class="has-line-data" data-line-start="101" data-line-end="103">
+                <p class="has-line-data" data-line-start="101" data-line-end="102"><strong>Step:-</strong> Run the
+                    program instruction wise(one instruction at a time).</p>
             </li>
-            <li class="has-line-data" data-line-start="98" data-line-end="100">
-                <p class="has-line-data" data-line-start="98" data-line-end="99">Stop:- Users can stop the execution
-                    process using the stop button.</p>
+            <li class="has-line-data" data-line-start="103" data-line-end="105">
+                <p class="has-line-data" data-line-start="103" data-line-end="104"><strong>Stop:-</strong> Stop the
+                    execution process using the stop button.</p>
             </li>
-            <li class="has-line-data" data-line-start="100" data-line-end="102">
-                <p class="has-line-data" data-line-start="100" data-line-end="101">Memory Segment displays only those
+            <li class="has-line-data" data-line-start="105" data-line-end="107">
+                <p class="has-line-data" data-line-start="105" data-line-end="106"><strong>Reset:-</strong> Reset the
+                    current execution process. It will also reset the memory and registers state.</p>
+            </li>
+            <li class="has-line-data" data-line-start="107" data-line-end="109">
+                <p class="has-line-data" data-line-start="107" data-line-end="108"><strong>Dump:-</strong> Users can
+                    copy the machine code to clipboard using it.</p>
+            </li>
+            <li class="has-line-data" data-line-start="109" data-line-end="111">
+                <p class="has-line-data" data-line-start="109" data-line-end="110"><strong>Cancel:-</strong> Destroys
+                    the current execution and moves one step back.</p>
+            </li>
+            <li class="has-line-data" data-line-start="111" data-line-end="113">
+                <p class="has-line-data" data-line-start="111" data-line-end="112"><strong>Settings:-</strong> Execution
+                    configuration can be changed by clicking this button before assembling the code. If assembled then
+                    it shows the configuration in READ ONLY mode.</p>
+            </li>
+        </ol>
+        <img src="../docs/config_menu.png" class="about_section_images"/>
+        <ul>
+            <li class="has-line-data" data-line-start="115" data-line-end="121">We provide our user with some options to
+                enable/disable
+                <ol>
+                    <li class="has-line-data" data-line-start="116" data-line-end="117">Pipelined execution</li>
+                    <li class="has-line-data" data-line-start="117" data-line-end="118">Data Forwarding</li>
+                    <li class="has-line-data" data-line-start="118" data-line-end="119">Branch prediction</li>
+                    <li class="has-line-data" data-line-start="119" data-line-end="121">Animation Cycle Duration, to
+                        increase or decrease program execution speed for pipelined execution</li>
+                </ol>
+            </li>
+        </ul>
+        <ol start="9">
+            <li class="has-line-data" data-line-start="121" data-line-end="123">Each pipelined instruction execution
+                passes through five stages, Fetch, Decode, ALU, Memory, and Write Back. All these stages are
+                colour-coded. So when an instruction has completely executed in any stage, the instruction gets
+                colour-coded with a colour corresponding to the pipeline stage.</li>
+        </ol>
+
+        <img src="../docs/instruction_pane.png" class="about_section_images"/>
+
+        <ol start="10">
+            <li class="has-line-data" data-line-start="128" data-line-end="130">We have added a separate pane for
+                pipelined execution through which the user can see the current status of pipelined ISA.</li>
+        </ol>
+        <img src="../docs/add_reg_pane.png" class="about_section_images"/>
+
+        <ol start="11">
+            <li class="has-line-data" data-line-start="134" data-line-end="137">To make the app more informative,
+                whenever there is a stall, data forwarding, pipeline flushing or branch prediction etc. Our application
+                shows a toast to notify such event.</li>
+        </ol>
+        <img src="../docs/toast.png"  class="about_section_images" />
+        <ol start="9">
+            <li class="has-line-data" data-line-start="140" data-line-end="142">
+                <p class="has-line-data" data-line-start="140" data-line-end="141">Memory Segment displays only those
                     values into which something is explicitly written during program execution or in the data segment
                     and all other values which are not shown are <code>0x00</code></p>
             </li>
-            <li class="has-line-data" data-line-start="102" data-line-end="104">
-                <p class="has-line-data" data-line-start="102" data-line-end="103">On any error, the program will alert
+            <li class="has-line-data" data-line-start="142" data-line-end="144">
+                <p class="has-line-data" data-line-start="142" data-line-end="143">Although code segment data is shown
+                    in memory it cannot be retrieved by the user, by accessing that location. This is to ensure that
+                    there is no structural hazard.</p>
+            </li>
+            <li class="has-line-data" data-line-start="144" data-line-end="146">
+                <p class="has-line-data" data-line-start="144" data-line-end="145">On any error, the program will alert
                     the user and will not proceed further for execution</p>
             </li>
-            <li class="has-line-data" data-line-start="104" data-line-end="106">
-                <p class="has-line-data" data-line-start="104" data-line-end="105">Any instruction which uses
+            <li class="has-line-data" data-line-start="146" data-line-end="148">
+                <p class="has-line-data" data-line-start="146" data-line-end="147">Any instruction which uses
                     <strong>Double</strong> like <code>sd, ld</code> are invalid since it is <code>32-bit system</code>
                 </p>
             </li>
-        </ol>
+            <li class="has-line-data" data-line-start="148" data-line-end="149">
+                <p class="has-line-data" data-line-start="148" data-line-end="149">We have assumed that hazards are
+                    those dependencies which causes our pipeline to stall. So, any data dependency which are
+                    successfully handled by data forwarding won’t be considered as a data hazard.</p>
+            </li>
 
+        </ol>
+        <p class="has-line-data" data-line-start="0" data-line-end="1" style="margin-bottom: 3rem;"><strong>Latest Deployed version:</strong>  <a href="https://riscv.netlify.com/">RISCV Heritage</a></p>
     </section>
     <div id="snackbar"></div>
     <div id="editor"></div>

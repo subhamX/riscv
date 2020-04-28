@@ -81,7 +81,7 @@ git checkout GUI
 ```
 npm install
 ```
-3. Now to run the developement server run the following command in terminal
+3. Now to run the development server run the following command in terminal
 ```
 npm run start:dev
 ```
@@ -149,3 +149,4 @@ npm run build
 13. We have assumed that hazards are those dependencies which causes our pipeline to stall. So, any data dependency which are successfully handled by data forwarding won't be considered as a data hazard.
 
 
+**Latest Deployed version:**  [RISCV Heritage](https://riscv.netlify.com/)

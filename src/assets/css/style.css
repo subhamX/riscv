@@ -15,6 +15,12 @@ body:not(#editor) {
   overflow-y: scroll !important;
 }
 
+.about_section_images{
+  width: 50% !important;
+  border: 1px solid black !important;
+}
+
+
 .vex-content {
   font-family: "Lato-Regular" !important;
   line-height: 1em !important;
@@ -42,7 +48,6 @@ body:not(#editor) {
   width: 100%;
   height: 4px;
   cursor: pointer;
-  animate: 0.2s;
   background: #03a9f4;
   border-radius: 25px;
 }
@@ -584,9 +589,9 @@ header {
 .add_reg_instance {
   margin: 10px 0;
 }
-.add_reg_key {
-  /* padding-left: 15%; */
-}
+/* .add_reg_key {
+  padding-left: 15%;
+} */
 
 /* 
 .simulator{

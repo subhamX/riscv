@@ -20,7 +20,7 @@ let mode: number = 1;
 // state of run button
 let canRun = true;
 // pipeline animation cycle duration in millisecond
-let pipeAnimationDuration = 2;
+let pipeAnimationDuration = 300;
 
 // Defining theme asset
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
@@ -1041,7 +1041,7 @@ function serveStatsFile(message) {
                 data += `Stat11: Stalls due Data Hazard     :  ${tExecStats.numberOfDataHazardStalls}\n`;
                 data += `Stat12: Stalls due Control Hazard  :  ${tExecStats.numberOfControlHazardStalls}\n`;
                 data += `*******************************************************************\n`;
-                console.log(data);
+                // console.log(data);
                 saveContent(data, 'stats.txt');
             }
         }
@@ -1171,7 +1171,7 @@ document.querySelector(".config-btn").addEventListener('click', () => {
         className: 'vex-theme-wireframe main_config_wrapper',
         input: [
             `
-            <div class='heading-text-prompt' style='color: #155724; background-color: #d4edda; font-weight: bold'>Please select the desired option:</div>
+            <div class='heading-text-prompt' style='color: #155724; background-color: #d4edda; font-weight: bold; font-family: "Roboto Mono"'>Configuration Menu:</div>
             <div class="configWrapper">
             <a data-trigger="pipeline">Pipeline</a>
             <a data-trigger="dForward">Data Forwarding</a>
@@ -1213,7 +1213,7 @@ document.querySelector('.config-btn-display-only').addEventListener('click', () 
     vex.dialog.open({
         input: [
             `
-            <div class='heading-text-prompt' style='font-weight: bold'>Configuration [Read Only]</div>
+            <div class='heading-text-prompt' style='font-weight: bold; font-family: "Roboto Mono"'>Configuration [Read Only]</div>
             <div class="configWrapper">
             <div class='heading-text-prompt' style='${mode === 0 ? disabledStyle : activeStyle}'>Pipelining <span style='font-weight: bold'>${mode === 0 ? 'Disabled' : 'Enabled'}</span></div>
             <div class='heading-text-prompt' style='${mode !== 1 ? disabledStyle : activeStyle}'>Data Forwarding <span style='font-weight: bold'>${mode !== 1 ? 'Disabled' : 'Enabled'}</span></div>

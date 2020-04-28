@@ -192,6 +192,9 @@ function activateEditor() {
 // Function to reorganise the grid if there are any change
 function reorganiseGrid() {
     if (mode === 1 || mode === 2) {
+        if(document.querySelector('.simulator-wapper .pipeline_helper')){
+            document.querySelector('.simulator-wapper .pipeline_helper').remove()
+        }
         document.querySelector('.simulator-wapper').classList.remove('pipeline_grid');
         document.querySelector('.additional_registers_wrapper')['style'].display = 'none';
         // TODO: Removing all control and data hazards segment
@@ -200,6 +203,13 @@ function reorganiseGrid() {
 
 // Function to handle the event Assemble And Simulate Btn
 document.querySelector('.assemble_btn').addEventListener('click', () => {
+    if (mode === 0) {
+        if(document.querySelector('.simulator-wapper .pipeline_helper')){
+            document.querySelector('.simulator-wapper .pipeline_helper').remove()
+        }
+        document.querySelector('.simulator-wapper').classList.remove('pipeline_grid');
+        document.querySelector('.additional_registers_wrapper')['style'].display = 'none';
+    }
     let res = handleAssembleAndSimulate()
     // response is false if there is no error and true if there is some error
     // Replacing the buttons bars with RUN | STEP | SIMULATE
@@ -719,7 +729,19 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', async (
 function runAllInstructions() {
     return new Promise((resolve, reject) => {
         let interval = setInterval(() => {
+            // updating Inital PC
+            let prevHighlighted = currPC;
             let res = execute.allINS();
+            // updating Current PC locally
+            currPC = execute.getPC();
+            updateRegAndMemState();
+            if (execute.getIsComplete()) {
+                activateAssembleAndSimulateBtn();
+                showSnackBar('Program Successfully Executed');
+                clearInterval(interval);
+                return;
+            }
+            updateHighlightedInst(prevHighlighted)
             if (res || !canRun) {
                 clearInterval(interval);
                 resolve();
@@ -803,19 +825,18 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', async ()
         // Executing Pipeline step instead of normal step
         await runPipelinedInstructions();
     } else {
-        // updating Inital PC
-        let prevHighlighted = currPC;
+
         // Executing allINS
         await runAllInstructions();
-        // updating Current PC locally
-        currPC = execute.getPC();
-        updateRegAndMemState();
-        if (execute.getIsComplete()) {
-            activateAssembleAndSimulateBtn();
-            showSnackBar('Program Successfully Executed');
-            return;
-        }
-        updateHighlightedInst(prevHighlighted)
+        // // updating Current PC locally
+        // currPC = execute.getPC();
+        // updateRegAndMemState();
+        // if (execute.getIsComplete()) {
+        //     activateAssembleAndSimulateBtn();
+        //     showSnackBar('Program Successfully Executed');
+        //     return;
+        // }
+        // updateHighlightedInst(prevHighlighted)
     }
 })
 

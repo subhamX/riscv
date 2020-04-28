@@ -144,14 +144,19 @@ function check(lines: string[]): { dataSegment: string[], textSegment: string[] 
                         let instr = line.split(/[ ]+|[,]/).filter((a) => a);
                         let mnemonic = instr[0];
                         // If instruction is loading using registers to load or not a load instruction
+                        // ! Mark1
                         if (mnemonic[0] != 'l' || resultLoadformat) {
+                            textSegment.push(line);
+                            continue;
+                        }
+                        if (mnemonic === 'lui') {
                             textSegment.push(line);
                             continue;
                         }
                         // If instruction is loading from labels in data segment
                         let rd = instr[1].replace(',', '').slice(1);
                         rd = parseInt(rd).toString();
-                        // Pusing auipc statement
+                        // Pushing auipc statement
                         textSegment.push(`auipc x${rd} ${BASE_DATA_SEG}`);
 
                         if (segmentFlag == 2) {
@@ -339,6 +344,7 @@ function encodeInstruction(params: { line: string, index: number, lineNumber: nu
                     throw Error(`Label Error Occurred at line: ${line}`);
                 }
             } else if (format == "U") {
+                console.log(line);
                 let offset = instr[2];
                 let imm = parseInt(offset);
                 // Checking if the immediate field is enough to store 

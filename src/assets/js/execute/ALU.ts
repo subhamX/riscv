@@ -203,13 +203,13 @@ export function Execute() {
                     // Only if branchActualCondition is true then we will update PC
                     GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': branchActualCondition, 'branchTargetAddress': actualBranchAddress });
                     // Since by default we updated PC = PC+4
-                    // if (branchActualCondition === true) {
+                    if (branchActualCondition === true) {
                         // adding this branch instruction instance in BTB
                         GlobalVar.PC = actualBranchAddress;
                         GlobalVar.noInstr = false;
                         GlobalVar.isb.flushPipeline = true;
                         // console.log('We did\'t had it; Now we do');
-                    // }
+                    }
                 }
             } else {
                 // branch prediction is disabled

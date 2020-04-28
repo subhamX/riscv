@@ -111,31 +111,31 @@ npm run build
 
 8. **Settings:-** Execution configuration can be changed by clicking this button before assembling the code. If assembled then it shows the configuration in READ ONLY mode. 
 
-<img src="./docs/config_menu.png" width="100%" />
+<img src="./docs/config_menu.png" width="80%" />
 
-    * We provide our user with some options to enable/disable
-        1. Pipelined execution
-        2. Data Forwarding
-        3. Branch prediction
-        4. Animation Cycle Duration, to increase or decrease program execution speed for pipelined execution
+  * We provide our user with some options to enable/disable
+    1. Pipelined execution
+    2. Data Forwarding
+    3. Branch prediction
+    4. Animation Cycle Duration, to increase or decrease program execution speed for pipelined execution
 
 9. Each pipelined instruction execution passes through five stages, Fetch, Decode, ALU,  Memory, and Write Back. All these stages are colour-coded. So when an instruction has completely executed in any stage, the instruction gets colour-coded with a colour corresponding to the pipeline stage.
 
 <!-- Image Pipelined Instruction -->
 
-<img src="./docs/instruction_pane.png" width="100%" />
+<img src="./docs/instruction_pane.png" width="80%" />
 
 
 10. We have added a separate pane for pipelined execution through which the user can see the current status of pipelined ISA.
 
 <!-- Additional Reg Pane -->
-<img src="./docs/add_reg_pane.png" width="100%" />
+<img src="./docs/add_reg_pane.png" width="80%" />
 
 
 11. To make the app more informative, whenever there is a stall, data forwarding, pipeline flushing or branch prediction etc. Our application shows a toast to notify such event.
 <!-- Toast Pic -->
 
-<img src="./docs/toast.png" width="100%" />
+<img src="./docs/toast.png" width="80%" />
 
 
 9. Memory Segment displays only those values into which something is explicitly written during program execution or in the data segment and all other values which are not shown are `0x00`

@@ -21,7 +21,6 @@ export class MemoryFile {
         for (let i = 0; i < len; i++) {
             val = this.memory.get(addr + i);
             if (val == null) {
-                console.log('set',)
                 this.memory.set(addr + i, 0);
                 val = this.memory.get(addr + i);
             }

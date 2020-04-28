@@ -23,7 +23,6 @@ export class GlobalVar {
     1=> Pipelining with data forwarding 
     2=> Pipelining without data forwarding
     */
-    // TODO: Handle Default Values
     static mode: number = 0;
     static pipelineEnabled: boolean = false;
     static branchPredEnabled: boolean = true;
@@ -90,6 +89,7 @@ function getClock(): number {
     return GlobalVar.CLOCK;
 }
 
+// compiling stats
 export function compileStats() {
     // static totalInstructions: number; //Stat2 [At execute]
     // static numberOfDataTransfers: number; //Stat4 [At Memory]
@@ -102,10 +102,7 @@ export function compileStats() {
     // branchMispredictions: number; //Stat10 [ASK SIR]
     //      For JALR it may happen that there is no branchMisprediction but we need to stall
     // numberOfControlHazardStalls: number; // Stat12
-
-
-    // TODO: static numberOfALUInstr: number; //Stat5 [total-control-datatransfers]
-    
+    GlobalVar.execStats.totalInstructions--;
     GlobalVar.execStats.numberOfALUInstr = GlobalVar.execStats.totalInstructions - GlobalVar.execStats.numberOfDataTransfers - GlobalVar.execStats.numberOfControlInstr;
     GlobalVar.execStats.numberOfStalls = GlobalVar.execStats.numberOfDataHazardStalls + GlobalVar.execStats.numberOfControlHazardStalls;
 

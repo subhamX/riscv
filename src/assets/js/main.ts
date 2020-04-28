@@ -17,6 +17,11 @@ let debug: boolean = false;
 */
 let mode: number = 1;
 
+// state of run button
+let canRun = true;
+// pipeline animation cycle duration in millisecond
+let pipeAnimationDuration = 2;
+
 // Defining theme asset
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
 
@@ -563,6 +568,7 @@ function getPCBufferColorsArray(pcBuf: Object) {
     return payload;
 }
 
+// linear gradient colors map
 let linearGradientConfig = {
     'fetch': '#aa00ff',
     'decode': '#311b92',
@@ -573,6 +579,7 @@ let linearGradientConfig = {
     'active': '#fdd835',
 }
 
+// Generates linear-gradient based on current state
 function getLinearGradient(metaData: string) {
     let linearGradProperty = `linear-gradient(90deg, `;
     if (metaData.includes('F')) {
@@ -613,14 +620,10 @@ function getLinearGradient(metaData: string) {
             linearGradProperty += `${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 100% )`;
         }
     }
-    // if (metaData.includes('A')) {
-    //     linearGradProperty += `linear-gradient(70deg, ${linearGradientConfig['background']} 80%, ${linearGradientConfig['background']} 95%, ${linearGradientConfig['active']} 95%, ${linearGradientConfig['active']} 100%)`;
-    // } else {
-    //     linearGradProperty += `linear-gradient(90deg, ${linearGradientConfig['background']} 95%, ${linearGradientConfig['background']} 100%)`;
-    // }
     return linearGradProperty;
 }
 
+// Highlight pipeline instructions during execution 
 function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, prevPC: number, removeOnly: boolean = false) {
     try {
         if (prev) {
@@ -649,8 +652,6 @@ function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, prevPC: numb
         console.error(err);
     }
 }
-// Updated by Modal
-
 
 
 // Handling Click Event Of Step Button
@@ -750,9 +751,7 @@ function runAllInstructions() {
     })
 }
 
-let canRun = true;
-let pipeAnimationDuration = 2;
-
+// Wrapper function to run in pipelined mode
 function runPipelinedInstructions() {
     return new Promise((resolve, reject) => {
         let interval = setInterval(async () => {
@@ -828,15 +827,6 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', async ()
 
         // Executing allINS
         await runAllInstructions();
-        // // updating Current PC locally
-        // currPC = execute.getPC();
-        // updateRegAndMemState();
-        // if (execute.getIsComplete()) {
-        //     activateAssembleAndSimulateBtn();
-        //     showSnackBar('Program Successfully Executed');
-        //     return;
-        // }
-        // updateHighlightedInst(prevHighlighted)
     }
 })
 
@@ -844,14 +834,14 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', async ()
 function stopCurrentExec(timeo?: number) {
     return new Promise((res, rej) => {
         canRun = false;
-        console.warn("Stopping the Run");
+        // console.warn("Stopping the Run");
         let runBtn = (<HTMLElement>document.querySelector('.run_btn'));
         runBtn.style.textDecoration = 'line-through'
         runBtn.style.backgroundColor = '#000';
         runBtn.style.color = '#fff';
         setTimeout(() => {
             canRun = true;
-            console.warn("Setting canRun as true");
+            // console.warn("Setting canRun as true");
             runBtn.innerText = 'Run';
             runBtn.style.backgroundColor = '';
             runBtn.style.color = '';
@@ -922,20 +912,6 @@ function activateAssembleAndSimulateBtn() {
 }
 
 
-// TODO: Search Feature
-// document.getElementById('mem_addr_val').addEventListener('keyup', (e) => {
-//     if(e.keyCode===13){
-//         // Enter Key is pressed
-//         let val = parseInt(e.target["value"]);
-
-//         if(!isNaN(val)){
-//             let memFile = execute.GlobalVar.memFile.getMemory();
-
-//         }
-//         console.log()
-//     }
-// })
-
 // Function to Highlight the Current Instruction 
 function updateHighlightedInst(prevPC: number) {
     let prevInstr = document.getElementsByClassName(`pc${prevPC}`)[0];
@@ -992,6 +968,7 @@ function saveContent(data: string, title: string) {
     window.URL.revokeObjectURL(url);
 }
 
+// Various shortcuts to save the file, stats, assembled code etc
 document.addEventListener("keydown", async function (e) {
     if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
         e.preventDefault();
@@ -1043,6 +1020,7 @@ document.addEventListener("keydown", async function (e) {
 }, false);
 
 
+// Serves compiled stats
 function serveStatsFile(message) {
     vex.dialog.confirm({
         message: `${message}`,
@@ -1064,7 +1042,7 @@ function serveStatsFile(message) {
                 data += `Stat12: Stalls due Control Hazard  :  ${tExecStats.numberOfControlHazardStalls}\n`;
                 data += `*******************************************************************\n`;
                 console.log(data);
-                // saveContent(data, 'stats.txt');
+                saveContent(data, 'stats.txt');
             }
         }
     })
@@ -1081,7 +1059,7 @@ document.querySelector('.reset_btn').addEventListener('click', async () => {
 
 
 
-
+// Contains a set of modals which triggers and allow user to alter execution configuration 
 var configWrapper = {
     bPred: function () {
         vex.dialog.open({
@@ -1187,7 +1165,7 @@ var configWrapper = {
 };
 
 
-// config Button
+// Triggers Modal to allow user to alter configuration before execution
 document.querySelector(".config-btn").addEventListener('click', () => {
     vex.dialog.open({
         className: 'vex-theme-wireframe main_config_wrapper',
@@ -1213,6 +1191,8 @@ document.querySelector(".config-btn").addEventListener('click', () => {
 
 })
 
+
+// Triggers Modal to show configuration during execution
 document.querySelector('.config-btn-display-only').addEventListener('click', () => {
     let disabledStyle = `color: #721c24;
     background-color: #f8d7da;

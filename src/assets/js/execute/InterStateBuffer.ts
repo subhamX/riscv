@@ -2,9 +2,6 @@ import { GlobalVar } from "./Main";
 
 
 // returnAddress acts as branchAddressDef
-// branchAddress tells if branch is taken. Will be used by Execute to find if there is misprediction or not
-// ! We don't need to use it. Its value is same as predictor state
-
 // operCode is opcode + func3 + func7. For identification of jalr
 // writeBackRegLocation contains the writebacklocation. Will be used by WriteBack
 // type contains the instruction mnenomic
@@ -197,7 +194,7 @@ export class InterStateBuffer {
             this.pcBuf.executePC = -1;
             // fetch is also -1
         } else {
-            console.error('Wrong StallCount NOT POSSIBLE:', GlobalVar.stallCount)
+            // console.error('Wrong StallCount NOT POSSIBLE:', GlobalVar.stallCount)
         }
 
 
@@ -209,7 +206,7 @@ export class InterStateBuffer {
     updateInterStateBufferAfterDecode() {
         // Will be called everytime after a successful decode (Not at Stall)
 
-        console.log("UPDATING ISB BECAUSE OF DECODE");
+        // console.log("UPDATING ISB BECAUSE OF DECODE");
         this.isb4.writeBackRegLocation = this.isb3.writeBackRegLocation;
         this.isb3.writeBackRegLocation = this.isb2.writeBackRegLocation;
 
@@ -265,7 +262,7 @@ export class InterStateBuffer {
     updateOnStall() {
         // Will be called by Decode on stall
         // No data is forwarded from isb1 to isb2
-        console.log("UPDATING ISB BECAUSE OF STALL");
+        // console.log("UPDATING ISB BECAUSE OF STALL");
 
         this.isb4.type = this.isb3.type;
         this.isb3.type = this.isb2.type;
@@ -287,7 +284,7 @@ export class InterStateBuffer {
     }
 
     updateInterStateBuffer() {
-        console.log("UPDATING ISB (Normal)");
+        // console.log("UPDATING ISB (Normal)");
         // Will be set only for jump and branch instructions only
         this.isb4.branchAddress = this.isb3.branchAddress;
         this.isb3.branchAddress = this.isb2.branchAddress;
@@ -307,7 +304,6 @@ export class InterStateBuffer {
         // Passing type to next Interstatebuffer
         this.isb4.type = this.isb3.type;
         this.isb3.type = this.isb2.type;
-        console.warn(GlobalVar.type);
         // updating type (Fundamental duty of decode) :)
         this.isb2.type = GlobalVar.type;
         this.isb1.type = 'WILL_UPDATE_IN_NEXT_CYCLE';

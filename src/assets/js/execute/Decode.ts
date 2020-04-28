@@ -2,10 +2,9 @@ import { GlobalVar } from './Main';
 import { evaluateImm } from './helperFun';
 
 export function Decode() {
-    console.log("BEGIN OF DECODE: ppInstr, pInstr, ppWrite, pWrite", GlobalVar.isb.prevPrevInstrMnenomic, GlobalVar.isb.prevInstrMnenomic, GlobalVar.isb.prevPrevWriteReg, GlobalVar.isb.prevWriteReg)
     if (GlobalVar.IR === null) {
         GlobalVar.type = null;
-        console.log('ONLY POSSIBLE IF THERE IS MISPREDICTION!');
+        // console.log('ONLY POSSIBLE IF THERE IS MISPREDICTION!');
         return;
     }
     // extracting opcode of current instruction
@@ -33,7 +32,7 @@ export function Decode() {
         GlobalVar.operCode = opcode + GlobalVar.IR.slice(17, 20);
 
         if (GlobalVar.operationMap.get(GlobalVar.operCode) == 'ld') {
-            console.error('`Instruction Not Supported: LD is not supported by 32 bit systems!');
+            console.error('Instruction Not Supported: LD is not supported by 32 bit systems!');
             GlobalVar.invalid = true;
             return;
         }
@@ -58,7 +57,7 @@ export function Decode() {
         GlobalVar.operCode = opcode + GlobalVar.IR.slice(17, 20);
 
         if (GlobalVar.operationMap.get(GlobalVar.operCode) == 'sd') {
-            console.error('`InstructionNotSupportedError: sd is not supported on 64 bit systems!');
+            console.error('Instruction Not Supported: LD is not supported by 32 bit systems!');
             GlobalVar.invalid = true;
             return;
         }
@@ -138,7 +137,7 @@ export function Decode() {
         GlobalVar.regFile.setRS2(0);
         // Setting ALU_op to zero to avoid any possible data hazard
         GlobalVar.operCode = opcode;
-        console.warn("Decoding the End");
+        // console.warn("Decoding the End");
     } else {
         console.log(GlobalVar.operCode)
         console.error('Not a valid instruction!(Invalid Opcode)');
@@ -172,7 +171,7 @@ export function Decode() {
                 stallRA = 0;
                 // E to E data Forwarding
                 GlobalVar.isb.dataForwardingType = 1;
-                console.warn("1=>(E2E)Data Forwarding: RA = ", GlobalVar.RZ);
+                // console.warn("1=>(E2E)Data Forwarding: RA = ", GlobalVar.RZ);
                 GlobalVar.RA = GlobalVar.RZ;
             }
         } else {
@@ -186,7 +185,7 @@ export function Decode() {
             stallRA = 0;
             // M to E data Forwarding
             GlobalVar.isb.dataForwardingType = 2;
-            console.warn("1=>(M2E)Data Forwarding: RA = ", GlobalVar.RY);
+            // console.warn("1=>(M2E)Data Forwarding: RA = ", GlobalVar.RY);
             GlobalVar.RA = GlobalVar.RY;
         } else {
             // Data Forwarding is Disabled
@@ -224,7 +223,7 @@ export function Decode() {
                     stallRB = 0;
                     // E to E data Forwarding
                     GlobalVar.isb.dataForwardingType = 1;
-                    console.warn("2=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
+                    // console.warn("2=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
                     GlobalVar.RB = GlobalVar.RZ;
                 }
             } else {
@@ -239,7 +238,7 @@ export function Decode() {
                 stallRB = 0;
                 // M to E data Forwarding
                 GlobalVar.isb.dataForwardingType = 2;
-                console.warn("2=>(M2E)Data Forwarding: RB = ", GlobalVar.RY);
+                // console.warn("2=>(M2E)Data Forwarding: RB = ", GlobalVar.RY);
                 GlobalVar.RB = GlobalVar.RY;
             } else {
                 // stalling
@@ -257,20 +256,20 @@ export function Decode() {
                 let prevInstrMnenomic = GlobalVar.isb.prevInstrMnenomic;
                 if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
                     stallRB = 0;
-                    console.warn("NOT STALLING as it will be handled by ALU (M to M data forwarding)")
+                    // console.warn("NOT STALLING as it will be handled by ALU (M to M data forwarding)")
                     // M to M data forwarding will be done at ALU
                     GlobalVar.RB = GlobalVar.regFile.getRS2();
                     // Dummy Val
                 } else if (prevInstrMnenomic === 'jal' || prevInstrMnenomic === 'jalr') {
                     // not stalling
                     // only possible if jal is prev actually with no misprediction [i.e prediction was correct]
-                    console.warn('(jal is prev actually with no misprediction)Taking data from ISB JAL or JALR! 2');
+                    console.warn('(jal is prev actually with no misprediction)Taking data from ISB JAL or JALR! 3');
                     stallRB = 0;
                     GlobalVar.RB = GlobalVar.isb.isb2.returnAddress;
                 } else {
                     // E to E data Forwarding
                     stallRB = 0;
-                    console.warn("3=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
+                    // console.warn("3=>(E2E)Data Forwarding: RB = ", GlobalVar.RZ);
                     // Forwarding Data
                     GlobalVar.RB = GlobalVar.RZ;
                     GlobalVar.isb.dataForwardingType = 1;
@@ -320,7 +319,6 @@ export function Decode() {
 
     // Increment the stall count
     if (stallRB || stallRA) {
-        GlobalVar.execStats.numberOfDataHazardStalls++;
         GlobalVar.isb.stallAtDecode = true;
     } else {
         GlobalVar.isb.stallAtDecode = false;
@@ -338,7 +336,5 @@ export function Decode() {
     } else {
         GlobalVar.isb.prevWriteReg = GlobalVar.regFile.getRDAddr();
     }
-
-    console.log("END OF DECODE: RA, RB, prevPrevWriteReg, prevWriteReg, prevInstrMen, prevPrevInstrMen", GlobalVar.RA, GlobalVar.RB, GlobalVar.isb.prevPrevWriteReg, GlobalVar.isb.prevWriteReg, GlobalVar.isb.prevInstrMnenomic, GlobalVar.isb.prevPrevInstrMnenomic)
 
 }

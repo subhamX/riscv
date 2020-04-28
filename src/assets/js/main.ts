@@ -315,12 +315,6 @@ function updateAdditionalRegPane() {
         }
         let value = getRegValToDisplay(e[1]);
         valDiv.innerText = value
-        if (e) {
-            instance
-        } else {
-
-        }
-        // console.log(e, instance, value);
     })
 }
 
@@ -470,7 +464,6 @@ function updateRegAndMemState() {
         if (div) {
             let memData = div.querySelector('.mem_data') as HTMLElement;
             if (memData.innerText !== displayNum) {
-                console.log("NOT EXIST", memData.innerText, displayNum, memData.innerText === displayNum);
                 memData.innerText = displayNum;
                 // scrolling into the element
                 memData.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
@@ -618,8 +611,6 @@ function getLinearGradient(metaData: string) {
 }
 
 function updateHighlightedPipelineInstr(prev: ProgramCounterBuffer, prevPC: number, removeOnly: boolean = false) {
-    console.log("OLD", prev, prevPC)
-    console.log("New", execute.GlobalVar.isb.pcBuf, execute.GlobalVar.PC)
     try {
         if (prev) {
             Object.entries(prev).forEach((e) => {
@@ -693,11 +684,10 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', async (
             }
         }
         // DEBUG Print
-        execute.GlobalVar.isb.showInterStateBuffer()
+        // execute.GlobalVar.isb.showInterStateBuffer()
         updateRegAndMemState();
         // updating Current PC locally
         currPC = execute.getPC();
-        console.log("NEW PC", currPC);
         if (execute.getIsComplete()) {
             updateHighlightedPipelineInstr(prevHighlightedPCBuffer, prevHighlightedActivePC, true);
             activateAssembleAndSimulateBtn();
@@ -715,7 +705,6 @@ document.getElementsByClassName('step_btn')[0].addEventListener('click', async (
         updateRegAndMemState();
         // updating Current PC locally
         currPC = execute.getPC();
-        console.log("NEW PC", currPC);
         if (execute.getIsComplete()) {
             activateAssembleAndSimulateBtn();
             showSnackBar('Program Successfully Executed');
@@ -739,7 +728,7 @@ function runAllInstructions() {
 }
 
 let canRun = true;
-let pipeAnimationDuration = 900;
+let pipeAnimationDuration = 2;
 
 function runPipelinedInstructions() {
     return new Promise((resolve, reject) => {
@@ -812,7 +801,6 @@ document.getElementsByClassName('run_btn')[0].addEventListener('click', async ()
     if (mode == 1 || mode == 2) {
         // Executing Pipeline step instead of normal step
         await runPipelinedInstructions();
-        console.log("Fall-through Code (RUN BTN)")
     } else {
         // updating Inital PC
         let prevHighlighted = currPC;
@@ -982,26 +970,85 @@ function saveContent(data: string, title: string) {
     window.URL.revokeObjectURL(url);
 }
 
-document.addEventListener("keydown", function (e) {
+document.addEventListener("keydown", async function (e) {
     if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
         e.preventDefault();
         if (activeElem == 0) {
-            let res = confirm('Are you sure you want to download the current version of the code?');
-            if (res) {
-                let data = editor.getValue();
-                saveContent(data, 'riscv_heritage.asm');
-            }
+            vex.dialog.confirm({
+                message: 'Are you sure you want to download the current version of the code?',
+                callback: function (res) {
+                    if (res) {
+                        let data = editor.getValue();
+                        saveContent(data, 'riscv_heritage.asm');
+                    }
+                }
+            })
+
         } else if (activeElem == 1) {
             if (document.querySelector('.simulate_btns_wrapper')['style'].display === 'none') {
-                let res = confirm('Are you sure you want to the Output file?');
-                if (res) {
-                    let data = getdumpArrayOutput();
-                    saveContent(data.join('\n'), 'riscv_heritage_out.m');
+                vex.dialog.confirm({
+                    message: 'Are you sure you want to download the assembled file?',
+                    callback: function (res) {
+                        if (res) {
+                            let data = getdumpArrayOutput();
+                            saveContent(data.join('\n'), 'riscv_heritage_out.m');
+                        }
+                    }
+                })
+            } else {
+                vex.dialog.alert('Please assemble the code before downloading :)')
+            }
+        }
+    } else if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 68) {
+        e.preventDefault();
+        if (activeElem === 1) {
+            if (document.querySelector('.simulate_btns_wrapper')['style'].display !== 'none') {
+                if (execute.GlobalVar.isComplete) {
+                    // serving stats
+                    serveStatsFile(`Are you sure you want to download the stats?`);
+                } else {
+                    vex.dialog.alert('Please assemble and complete the whole execution before downloading the stats :)')
                 }
+            } else {
+                // serving stats
+                // currently simulating
+                vex.dialog.alert('Please complete the whole execution before downloading the stats :)')
+                // serveStatsFile(`Are you sure you want to download the stats at ${execute.GlobalVar.CLOCK} cycle?`);
             }
         }
     }
+
 }, false);
+
+
+function serveStatsFile(message) {
+    vex.dialog.confirm({
+        message: `${message}`,
+        callback: function (res) {
+            if (res) {
+                let tExecStats = execute.compileStats();
+                let data = `*******************************************************************\n`;
+                data += `Stat1 : Total Cycles               :  ${execute.GlobalVar.CLOCK}\n`;
+                data += `Stat2 : Total Instructions         :  ${tExecStats.totalInstructions}\n`;
+                data += `Stat3 : CPI                        :  ${execute.GlobalVar.CLOCK / tExecStats.totalInstructions}\n`;
+                data += `Stat4 : Data-Transfer Instructions :  ${tExecStats.numberOfDataTransfers}\n`;
+                data += `Stat5 : ALU Instruction            :  ${tExecStats.numberOfALUInstr}\n`;
+                data += `Stat6 : Control Instructions       :  ${tExecStats.numberOfControlInstr}\n`;
+                data += `Stat7 : Total Stalls               :  ${tExecStats.numberOfStalls}\n`;
+                data += `Stat8 : Data Hazards               :  ${tExecStats.numberOfDataHazards}\n`;
+                data += `Stat9 : Control Hazards            :  ${tExecStats.numberOfControlHazard}\n`;
+                data += `Stat10: Branch Mis-predictions     :  ${tExecStats.branchMispredictions}\n`;
+                data += `Stat11: Stalls due Data Hazard     :  ${tExecStats.numberOfDataHazardStalls}\n`;
+                data += `Stat12: Stalls due Control Hazard  :  ${tExecStats.numberOfControlHazardStalls}\n`;
+                data += `*******************************************************************\n`;
+                console.log(data);
+                // saveContent(data, 'stats.txt');
+            }
+        }
+    })
+}
+
+
 
 
 // On Click Reset Button
@@ -1050,7 +1097,6 @@ var configWrapper = {
                 `
             ].join(''),
             callback: function (value) {
-                console.log(value);
                 if (!value) {
                     return;
                 }
@@ -1059,11 +1105,11 @@ var configWrapper = {
         });
         var slider = document.getElementById("duration");
         var output = document.getElementById("durationVal");
-        output.innerHTML = (pipeAnimationDuration/1000).toString();
+        output.innerHTML = (pipeAnimationDuration / 1000).toString();
 
         // Update the current slider value (each time you drag the slider handle)
         slider.oninput = function () {
-            output.innerHTML = ((parseInt(this['value']))/1000).toString();
+            output.innerHTML = ((parseInt(this['value'])) / 1000).toString();
         }
     },
     dForward: function () {
@@ -1099,7 +1145,6 @@ var configWrapper = {
                 `
             ].join(''),
             callback: function (value) {
-                console.log(value)
                 if (!value) {
                     return;
                 }
@@ -1171,7 +1216,7 @@ document.querySelector('.config-btn-display-only').addEventListener('click', () 
             <div class='heading-text-prompt' style='${mode === 0 ? disabledStyle : activeStyle}'>Pipelining <span style='font-weight: bold'>${mode === 0 ? 'Disabled' : 'Enabled'}</span></div>
             <div class='heading-text-prompt' style='${mode !== 1 ? disabledStyle : activeStyle}'>Data Forwarding <span style='font-weight: bold'>${mode !== 1 ? 'Disabled' : 'Enabled'}</span></div>
             <div class='heading-text-prompt' style='${branchPred === 0 ? disabledStyle : activeStyle}'>Branch Prediction <span style='font-weight: bold'>${branchPred === 0 ? 'Disabled' : 'Enabled'}</span></div>
-            <div class='heading-text-prompt' style='background-color: #d1ecf1; color: #0c5460; border-color: #bee5eb; font-size: 15px'>Animation Cycle Duration: <span style='font-weight: bold'>${pipeAnimationDuration/1000} sec</span></div> 
+            <div class='heading-text-prompt' style='background-color: #d1ecf1; color: #0c5460; border-color: #bee5eb; font-size: 15px'>Animation Cycle Duration: <span style='font-weight: bold'>${pipeAnimationDuration / 1000} sec</span></div> 
             </div>
             `
         ].join(''),

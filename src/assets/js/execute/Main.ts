@@ -90,33 +90,32 @@ function getClock(): number {
     return GlobalVar.CLOCK;
 }
 
-export function getPhase3Stats() {
-    // static totalInstructions: number; //Stat2 [At pipelinedFetch]
-    // static numberOfDataTransfers: number; //Stat4 [AT Memory]
-    // TODO: static numberOfControlInstr: number; // Stat6
-    // TODO: static numberOfALUInstr: number; //Stat5 [total-control-datatransfers]
-    // TODO: numberOfControlHazard: number; // Stat9 
+export function compileStats() {
+    // static totalInstructions: number; //Stat2 [At execute]
+    // static numberOfDataTransfers: number; //Stat4 [At Memory]
+    // numberOfDataHazards: number; // Stat8 [At pipelinedDecode()]
+    // numberOfDataHazardStalls: number; // Stat11 [At pipelinedDecode()]
+    // numberOfStalls: number; // Stat7 [numberOfDataHazardStalls+numberOfControlHazardStalls] (CHECK)
+    // static numberOfControlInstr: number; // Stat6
+    // numberOfControlHazard: number; // Stat9 
     //      [branchPred: 1 => If misprediction then add 1 || 0 => Equal to number of numberOfControlHazardStalls/2]
-    // ? branchMispredictions: number; //Stat10 [ASK SIR]
+    // branchMispredictions: number; //Stat10 [ASK SIR]
     //      For JALR it may happen that there is no branchMisprediction but we need to stall
-    // ! numberOfStalls: number; // Stat7 [numberOfDataHazardStalls+numberOfControlHazardStalls] (CHECK)
+    // numberOfControlHazardStalls: number; // Stat12
 
-    // ! numberOfDataHazards: number; // Stat8
-    // ! numberOfDataHazardStalls: number; // Stat11
-    // ! numberOfControlHazardStalls: number; // Stat12
-    //      
-    return {
-        'totalInstructions': GlobalVar.execStats.totalInstructions,
-        'numberOfDataTransfers': GlobalVar.execStats.numberOfDataTransfers,
-        'numberOfALUInstr': GlobalVar.execStats.numberOfALUInstr,
-        'numberOfControlInstr': GlobalVar.execStats.numberOfControlInstr,
-        'numberOfStalls': GlobalVar.execStats.numberOfStalls,
-        'numberOfDataHazards': GlobalVar.execStats.numberOfDataHazards,
-        'numberOfControlHazard': GlobalVar.execStats.numberOfControlHazard,
-        'branchMispredictions': GlobalVar.execStats.branchMispredictions,
-        'numberOfDataHazardStalls': GlobalVar.execStats.numberOfDataHazardStalls,
-        'numberOfControlHazardStalls': GlobalVar.execStats.numberOfControlHazardStalls
+
+    // TODO: static numberOfALUInstr: number; //Stat5 [total-control-datatransfers]
+    
+    GlobalVar.execStats.numberOfALUInstr = GlobalVar.execStats.totalInstructions - GlobalVar.execStats.numberOfDataTransfers - GlobalVar.execStats.numberOfControlInstr;
+    GlobalVar.execStats.numberOfStalls = GlobalVar.execStats.numberOfDataHazardStalls + GlobalVar.execStats.numberOfControlHazardStalls;
+
+    if(GlobalVar.branchPredEnabled){
+        // GlobalVar.execStats.numberOfControlHazard = GlobalVar.execStats.branchMispredictions;
+    }else{
+        // GlobalVar.execStats.numberOfControlHazard = GlobalVar.execStats.numberOfControlHazardStalls;
     }
+
+    return GlobalVar.execStats;
 }
 
 
@@ -250,8 +249,6 @@ function showState(atEndAll?: boolean) {
 
 export function singleINS() {
     let no_inst: boolean = false;
-    console.log('-----------**********------------')
-    console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     no_inst = Fetch();
     if (no_inst) {
         return;
@@ -270,8 +267,6 @@ export function singleINS() {
 export function allINS() {
     let no_inst: boolean = false;
     let bp: boolean = false;
-    console.log('-----------**********------------')
-    console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     let isBreakPointPC = GlobalVar.breakPoint.find(pc => pc == GlobalVar.PC);
     if (isBreakPointPC !== undefined) {
         // remove the current breakpoint
@@ -358,8 +353,6 @@ export function pipelinedAllINS() {
     GlobalVar.isb.dataForwardingType = null;
 
     let bp: boolean = false;
-    console.log('-----------*****PIPEALL*****------------')
-    console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     let isBreakPointPC = GlobalVar.breakPoint.find(pc => pc == GlobalVar.PC);
     if (isBreakPointPC !== undefined) {
         // remove the current breakpoint
@@ -367,7 +360,6 @@ export function pipelinedAllINS() {
         bp = true;
     }
     if (GlobalVar.isComplete) {
-        console.log("ALREADY COMPLETE: times: ", times);
         return true;
     }
 
@@ -386,7 +378,6 @@ export function pipelinedAllINS() {
         GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else if (GlobalVar.CLOCK === 2) {
         // Execute -> Decode -> Fetch
-        console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
         let flushRes = pipelinedExecute();
         if (flushRes) {
             // If flush is true
@@ -448,13 +439,9 @@ export function singlePipelineStep() {
     // Setting dataForwardingType as null
     GlobalVar.isb.dataForwardingType = null;
 
-    console.log('-----------*****PIPE*****------------');
     // console.table(getPhase3Stats());
-    console.log(GlobalVar.dataHazardMap)
-    console.log(`Current PC: 0x${GlobalVar.PC.toString(16)}`);
     // console.log("OLD: ", GlobalVar.isb.pcBuf);
     if (GlobalVar.isComplete) {
-        console.log("ALREADY COMPLETE: times: ", times);
         return;
     }
 
@@ -474,7 +461,6 @@ export function singlePipelineStep() {
         GlobalVar.noInstr = pipelinedFetch(GlobalVar.noInstr);
     } else if (GlobalVar.CLOCK === 2) {
         // Execute -> Decode -> Fetch
-        console.log("NEW CHECK:", evaluateImm(GlobalVar.immVal));
         let flushRes = pipelinedExecute();
         if (flushRes) {
             // If flush is true
@@ -541,12 +527,15 @@ function pipelinedDecode(): boolean {
 
     Decode();
 
-    console.log("StallAtDecode:Bool =>", GlobalVar.isb.stallAtDecode);
-
     if (GlobalVar.isb.stallAtDecode === true) {
         // stall pipeline
-        console.log("STALLING PIPELINE! Returning true from Decode");
         GlobalVar.stallCount++;
+        // incrementing data hazard stalls
+        GlobalVar.execStats.numberOfDataHazardStalls++;
+        // incrementing data hazards number for unique stall calls
+        if(GlobalVar.stallCount===1){
+            GlobalVar.execStats.numberOfDataHazards++;
+        }
         GlobalVar.isb.updateOnStall();
         GlobalVar.isb.updatePCBufferOnStall();
         return true;
@@ -575,8 +564,6 @@ function pipelinedFetch(no_inst): boolean {
 
     GlobalVar.isb.branchAddress = null;
 
-    console.log("FETCH: PC, times", GlobalVar.PC, times);
-
     // If no instructions then returning true
     if (no_inst) {
         // Updating Inter State Buffer
@@ -587,23 +574,18 @@ function pipelinedFetch(no_inst): boolean {
         GlobalVar.PC = -1;
 
         times++;
-        console.log("SETTING times as: ", times);
         if (times === 4) {
             GlobalVar.isComplete = true;
         }
         return true;
     }
-    // incrementing total number of instructions
-    GlobalVar.execStats.totalInstructions += 1;
 
     no_inst = Fetch();
 
     // PC is pointing to next instruction and pcTemp is pointing to current one
     if (GlobalVar.branchPredEnabled) {
-        // TODO: Create Branch Target Buffer And save addresses indexed by PC 
         if (GlobalVar.isb.branchTargetBuffer.has(GlobalVar.pcTemp)) {
             let instance = GlobalVar.isb.branchTargetBuffer.get(GlobalVar.pcTemp);
-            console.log(instance);
             // If predictor state is true
             if (instance.predictorState) {
                 // setting lastPrediction as 1
@@ -619,7 +601,7 @@ function pipelinedFetch(no_inst): boolean {
                 GlobalVar.isb.lastPrediction = 0;
             }
         } else {
-            console.warn("No state found");
+            // console.warn("No state found in BTB");
         }
     }
 
@@ -643,9 +625,9 @@ function pipelinedExecute() {
     Execute();
     // Checking if I need to flushPipeline or not
     if (GlobalVar.isb.flushPipeline) {
-        console.error('FLUSHING<< Adding 2 to numberOfControlHazardStalls');
-
+        // Adding 2 to controlHazardStall and 1 to controlHazard
         GlobalVar.execStats.numberOfControlHazardStalls += 2;
+        GlobalVar.execStats.numberOfControlHazard++;
         // updating prev and prevPrev instruction metadata
         GlobalVar.isb.prevPrevInstrMnenomic = null;
         GlobalVar.isb.prevInstrMnenomic = null;

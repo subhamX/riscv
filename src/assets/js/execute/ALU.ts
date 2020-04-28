@@ -2,14 +2,13 @@ import { GlobalVar, UpdatePC } from './Main';
 import { determineSelectLines, evaluateImm } from './helperFun';
 
 export function Execute() {
-    console.log("EXECUTE BEGIN: RA, RB, imm", GlobalVar.RA, GlobalVar.RB, evaluateImm(GlobalVar.immVal));
+    // console.log("EXECUTE BEGIN: RA, RB, imm", GlobalVar.RA, GlobalVar.RB, evaluateImm(GlobalVar.immVal));
 
     if (GlobalVar.isb.isb2.type === null) {
-        console.log('As a result of last cycle flushing! No task');
+        // console.log('As a result of last cycle flushing! No task');
         return;
     }
     if (GlobalVar.pipelineEnabled) {
-        console.log("HELLo ISB2: Type: ", GlobalVar.isb.isb2.type)
         determineSelectLines(GlobalVar.isb.isb2.type);
     } else {
         determineSelectLines(GlobalVar.type);
@@ -25,8 +24,8 @@ export function Execute() {
     // Setting inA and inB into GlobalVar
     GlobalVar.inA = inA;
     GlobalVar.inB = inB;
-    console.log('inB inA', inB, inA);
-    console.log("operation", GlobalVar.ALU_op);
+    // console.log('inB inA', inB, inA);
+    // console.log("operation", GlobalVar.ALU_op);
     if (GlobalVar.ALU_op == 'add' || GlobalVar.ALU_op == 'addi' || GlobalVar.ALU_op == 'ld' || GlobalVar.ALU_op == 'lb' || GlobalVar.ALU_op == 'lh' || GlobalVar.ALU_op == 'lw') {
         GlobalVar.RZ = inA + inB;
     }
@@ -74,32 +73,26 @@ export function Execute() {
         }
     }
     else if (GlobalVar.ALU_op == 'sb' || GlobalVar.ALU_op == 'sw' || GlobalVar.ALU_op == 'sd' || GlobalVar.ALU_op == 'sh') {
-        console.log("Imm", evaluateImm(GlobalVar.immVal))
         GlobalVar.RZ = inA + evaluateImm(GlobalVar.immVal);
-        console.log("RZ", GlobalVar.RZ)
         // Using RB and forwarding it to RM (For both pipelined and non-pipelined instructions)
         if (GlobalVar.pipelineEnabled && (GlobalVar.mode === 1)) {
             // Here prev istruction is prevPrev instruction
             let prevInstrMnenomic = GlobalVar.isb.prevPrevInstrMnenomic;
             if (prevInstrMnenomic === 'lw' || prevInstrMnenomic === 'lb' || prevInstrMnenomic === 'lh') {
-                console.error("M to M data Forwarding: Prev RM, New RM (=MDR)", GlobalVar.RM, GlobalVar.MDR, GlobalVar.isb.prevPrevInstrMnenomic)
                 // ! M to M Data Forwarding
                 GlobalVar.isb.dataForwardingType = 3;
                 GlobalVar.RM = GlobalVar.MDR;
-                console.log("SETTING");
             } else {
                 GlobalVar.RM = GlobalVar.RB;
             }
         } else {
             GlobalVar.RM = GlobalVar.RB;
         }
-        console.log('RM', GlobalVar.RM);
     }
     else if (GlobalVar.ALU_op == 'lui') {
         GlobalVar.RZ = inB << 12;
     }
     else if (GlobalVar.ALU_op == 'auipc') {
-        // TODO: need to use something else (not GlobalVar.PC) maybe returnAddress (DONE)
         if (GlobalVar.pipelineEnabled) {
             inA = GlobalVar.isb.isb2.returnAddress - 4;
             GlobalVar.RZ = inA + (inB << 12)
@@ -139,7 +132,7 @@ export function Execute() {
         else if (GlobalVar.ALU_op == 'blt') {
             if (inA < inB) {
                 UpdatePC(1, evaluateImm(GlobalVar.immVal));
-                console.log('evim', evaluateImm(GlobalVar.immVal));
+                // console.log('evim', evaluateImm(GlobalVar.immVal));
             }
         }
     }
@@ -149,6 +142,7 @@ export function Execute() {
     if (GlobalVar.pipelineEnabled) {
         let instrAddress = GlobalVar.isb.isb2.returnAddress - 4;
         if (GlobalVar.type === 'SB') {
+            GlobalVar.execStats.numberOfControlInstr++;
             // rs1 and rs2 is in RA and RB
             let branchActualCondition: boolean = false;
             if (GlobalVar.ALU_op == 'beq') {
@@ -169,7 +163,6 @@ export function Execute() {
             else if (GlobalVar.ALU_op == 'blt') {
                 if (inA < inB) {
                     branchActualCondition = true;
-                    console.log('evim', evaluateImm(GlobalVar.immVal));
                 }
             }
             // console.log("branchActualCondition: ", GlobalVar.ALU_op, branchActualCondition)
@@ -210,17 +203,17 @@ export function Execute() {
                     // Only if branchActualCondition is true then we will update PC
                     GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': branchActualCondition, 'branchTargetAddress': actualBranchAddress });
                     // Since by default we updated PC = PC+4
-                    if (branchActualCondition === true) {
+                    // if (branchActualCondition === true) {
                         // adding this branch instruction instance in BTB
                         GlobalVar.PC = actualBranchAddress;
                         GlobalVar.noInstr = false;
                         GlobalVar.isb.flushPipeline = true;
-                        console.log('We did\'t had it; Now we do');
-                    }
+                        // console.log('We did\'t had it; Now we do');
+                    // }
                 }
             } else {
                 // branch prediction is disabled
-                console.log('Branch Prediction Disabled');
+                // console.log('Branch Prediction Disabled');
                 if (branchActualCondition) {
                     // update PC
                     GlobalVar.PC = actualBranchAddress;
@@ -230,6 +223,7 @@ export function Execute() {
                 }
             }
         } else if (GlobalVar.type === 'UJ') {
+            GlobalVar.execStats.numberOfControlInstr++;
             let actualBranchAddress = evaluateImm(GlobalVar.immVal) + instrAddress;
             // console.error("Branch to: ", actualBranchAddress);
             if (GlobalVar.branchPredEnabled) {
@@ -254,6 +248,8 @@ export function Execute() {
             }
 
         } else if (GlobalVar.ALU_op === 'jalr') {
+            GlobalVar.execStats.numberOfControlInstr++;
+
             // console.log("CHECKING inA with RS1: ", inA, GlobalVar.regFile.getRS1())
             let actualBranchAddress = GlobalVar.regFile.getRS1() + evaluateImm(GlobalVar.immVal);
             if (GlobalVar.branchPredEnabled) {
@@ -272,6 +268,7 @@ export function Execute() {
                     // check if the targetaddress calculated is true or not
                     // If true then no problem else increment stat12 
                     if (instance.branchTargetAddress !== actualBranchAddress) {
+                        // console.log('JALR special case');
                         // setting the updated value in BTB
                         GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                         // updating PC
@@ -293,7 +290,7 @@ export function Execute() {
     }
 
     // Converting any overflowing number to negative 
-    console.log('Without Overflow Check: rz', GlobalVar.RZ)
+    // console.log('Without Overflow Check: rz', GlobalVar.RZ)
     GlobalVar.RZ <<= 0;
-    console.log('rz', GlobalVar.RZ);
+    // console.log('rz', GlobalVar.RZ);
 }

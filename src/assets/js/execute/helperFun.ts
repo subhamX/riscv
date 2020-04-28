@@ -37,7 +37,7 @@ export function determineSelectLines(t: string) {
     }
 
     if(t==='END'){
-        console.log("MUX Y: END reached")
+        // console.log("MUX Y: END reached")
         GlobalVar.selectLineB = 0;
         GlobalVar.selectLineY = 0;
     }

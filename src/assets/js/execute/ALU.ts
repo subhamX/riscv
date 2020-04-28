@@ -172,7 +172,7 @@ export function Execute() {
                     console.log('evim', evaluateImm(GlobalVar.immVal));
                 }
             }
-            console.log("branchActualCondition: ", GlobalVar.ALU_op, branchActualCondition)
+            // console.log("branchActualCondition: ", GlobalVar.ALU_op, branchActualCondition)
             // actualBranchAddress contains the real target address
             let actualBranchAddress = instrAddress + evaluateImm(GlobalVar.immVal);
 
@@ -186,15 +186,15 @@ export function Execute() {
                     // isBranchTaken contains the prediction
                     if (instance.predictorState && branchActualCondition == false) {
                         GlobalVar.execStats.branchMispredictions++;
-                        console.log("MISPREDiCTION Type1");
+                        // console.log("MISPREDiCTION Type1");
                         GlobalVar.isb.flushPipeline = true;
                         // toggling the predictor state
                         instance.predictorState = !instance.predictorState;
                         GlobalVar.noInstr = false;
                         GlobalVar.PC = GlobalVar.isb.isb2.returnAddress;
-                    } else if (instance.predictorState===false && branchActualCondition) {
+                    } else if (instance.predictorState === false && branchActualCondition) {
                         GlobalVar.execStats.branchMispredictions++;
-                        console.log("MISPREDiCTION Type2");
+                        // console.log("MISPREDiCTION Type2");
                         GlobalVar.isb.flushPipeline = true;
                         // toggling the predictor state
                         instance.predictorState = !instance.predictorState;
@@ -205,11 +205,13 @@ export function Execute() {
                         GlobalVar.isb.flushPipeline = false;
                     }
                 } else {
+                    // BTB Miss
+                    GlobalVar.execStats.branchMispredictions++;
                     // Only if branchActualCondition is true then we will update PC
+                    GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': branchActualCondition, 'branchTargetAddress': actualBranchAddress });
                     // Since by default we updated PC = PC+4
                     if (branchActualCondition === true) {
                         // adding this branch instruction instance in BTB
-                        GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                         GlobalVar.PC = actualBranchAddress;
                         GlobalVar.noInstr = false;
                         GlobalVar.isb.flushPipeline = true;
@@ -229,9 +231,10 @@ export function Execute() {
             }
         } else if (GlobalVar.type === 'UJ') {
             let actualBranchAddress = evaluateImm(GlobalVar.immVal) + instrAddress;
-            console.error("Branch to: ", actualBranchAddress);
+            // console.error("Branch to: ", actualBranchAddress);
             if (GlobalVar.branchPredEnabled) {
-                // If there is no instance of the instruction in BTB
+                // If there is no instance of the instruction in BTB (BTB MISS)
+                GlobalVar.execStats.branchMispredictions++;
                 if (!GlobalVar.isb.branchTargetBuffer.has(instrAddress)) {
                     // adding this jal instruction instance in BTB with predictor state true
                     GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
@@ -251,12 +254,12 @@ export function Execute() {
             }
 
         } else if (GlobalVar.ALU_op === 'jalr') {
-            // ! Check this
-            console.log("CHECKING inA with RS1: ", inA, GlobalVar.regFile.getRS1())
+            // console.log("CHECKING inA with RS1: ", inA, GlobalVar.regFile.getRS1())
             let actualBranchAddress = GlobalVar.regFile.getRS1() + evaluateImm(GlobalVar.immVal);
             if (GlobalVar.branchPredEnabled) {
                 if (!GlobalVar.isb.branchTargetBuffer.has(instrAddress)) {
                     // No instance found
+                    GlobalVar.execStats.branchMispredictions++;
                     // adding this jalr instruction instance in BTB with predictor state true
                     GlobalVar.isb.branchTargetBuffer.set(instrAddress, { 'predictorState': true, 'branchTargetAddress': actualBranchAddress });
                     // updating PC

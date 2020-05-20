@@ -16,7 +16,7 @@ body:not(#editor) {
 }
 
 .about_section_images{
-  width: 50% !important;
+  width: 80% !important;
   border: 1px solid black !important;
 }
 

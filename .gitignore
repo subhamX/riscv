@@ -1,6 +1,7 @@
 .cache/
 node_modules/
 dist/
+public/
 test/
 output/
 *.js

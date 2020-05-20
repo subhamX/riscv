@@ -75,7 +75,7 @@ src
 1. If you do not have a copy of `RISCV Heritage` clone the repo and checkout `GUI` branch. If you do have the project then go to `step 2`
 ```
 git clone URL
-git checkout GUI
+cd riscv
 ```
 2. Install all dependencies
 ```

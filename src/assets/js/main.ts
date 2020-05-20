@@ -197,7 +197,7 @@ function activateEditor() {
 // Function to reorganise the grid if there are any change
 function reorganiseGrid() {
     if (mode === 1 || mode === 2) {
-        if(document.querySelector('.simulator-wapper .pipeline_helper')){
+        if (document.querySelector('.simulator-wapper .pipeline_helper')) {
             document.querySelector('.simulator-wapper .pipeline_helper').remove()
         }
         document.querySelector('.simulator-wapper').classList.remove('pipeline_grid');
@@ -209,7 +209,7 @@ function reorganiseGrid() {
 // Function to handle the event Assemble And Simulate Btn
 document.querySelector('.assemble_btn').addEventListener('click', () => {
     if (mode === 0) {
-        if(document.querySelector('.simulator-wapper .pipeline_helper')){
+        if (document.querySelector('.simulator-wapper .pipeline_helper')) {
             document.querySelector('.simulator-wapper .pipeline_helper').remove()
         }
         document.querySelector('.simulator-wapper').classList.remove('pipeline_grid');
@@ -1009,12 +1009,15 @@ document.addEventListener("keydown", async function (e) {
                     vex.dialog.alert('Please assemble and complete the whole execution before downloading the stats :)')
                 }
             } else {
-                // serving stats
-                // currently simulating
-                vex.dialog.alert('Please complete the whole execution before downloading the stats :)')
-                // serveStatsFile(`Are you sure you want to download the stats at ${execute.GlobalVar.CLOCK} cycle?`);
+                if (mode !== 0) {
+                    // currently simulating
+                    vex.dialog.alert('Please complete the whole execution before downloading the stats :)')
+                } else {
+                    vex.dialog.alert('This functionality is only for pipelined simulation :(')
+                }
             }
         }
+
     }
 
 }, false);
@@ -1022,32 +1025,36 @@ document.addEventListener("keydown", async function (e) {
 
 // Serves compiled stats
 function serveStatsFile(message) {
-    vex.dialog.confirm({
-        message: `${message}`,
-        callback: function (res) {
-            if (res) {
-                let tExecStats = execute.compileStats();
-                let data = `*******************************************************************\n`;
-                data += `Stat1 : Total Cycles               :  ${execute.GlobalVar.CLOCK}\n`;
-                data += `Stat2 : Total Instructions         :  ${tExecStats.totalInstructions}\n`;
-                data += `Stat3 : CPI                        :  ${execute.GlobalVar.CLOCK / tExecStats.totalInstructions}\n`;
-                data += `Stat4 : Data-Transfer Instructions :  ${tExecStats.numberOfDataTransfers}\n`;
-                data += `Stat5 : ALU Instruction            :  ${tExecStats.numberOfALUInstr}\n`;
-                data += `Stat6 : Control Instructions       :  ${tExecStats.numberOfControlInstr}\n`;
-                data += `Stat7 : Total Stalls               :  ${tExecStats.numberOfStalls}\n`;
-                data += `Stat8 : Data Hazards               :  ${tExecStats.numberOfDataHazards}\n`;
-                data += `Stat9 : Control Hazards            :  ${tExecStats.numberOfControlHazard}\n`;
-                data += `Stat10: Branch Mis-predictions     :  ${tExecStats.branchMispredictions}\n`;
-                data += `Stat11: Stalls due Data Hazard     :  ${tExecStats.numberOfDataHazardStalls}\n`;
-                data += `Stat12: Stalls due Control Hazard  :  ${tExecStats.numberOfControlHazardStalls}\n`;
-                data += `*******************************************************************\n`;
-                // console.log(data);
-                saveContent(data, 'stats.txt');
-            }
-        }
-    })
-}
+    if (mode !== 0) {
 
+        vex.dialog.confirm({
+            message: `${message}`,
+            callback: function (res) {
+                if (res) {
+                    let tExecStats = execute.compileStats();
+                    let data = `*******************************************************************\n`;
+                    data += `Stat1 : Total Cycles               :  ${execute.GlobalVar.CLOCK}\n`;
+                    data += `Stat2 : Total Instructions         :  ${tExecStats.totalInstructions}\n`;
+                    data += `Stat3 : CPI                        :  ${execute.GlobalVar.CLOCK / tExecStats.totalInstructions}\n`;
+                    data += `Stat4 : Data-Transfer Instructions :  ${tExecStats.numberOfDataTransfers}\n`;
+                    data += `Stat5 : ALU Instruction            :  ${tExecStats.numberOfALUInstr}\n`;
+                    data += `Stat6 : Control Instructions       :  ${tExecStats.numberOfControlInstr}\n`;
+                    data += `Stat7 : Total Stalls               :  ${tExecStats.numberOfStalls}\n`;
+                    data += `Stat8 : Data Hazards               :  ${tExecStats.numberOfDataHazards}\n`;
+                    data += `Stat9 : Control Hazards            :  ${tExecStats.numberOfControlHazard}\n`;
+                    data += `Stat10: Branch Mis-predictions     :  ${tExecStats.branchMispredictions}\n`;
+                    data += `Stat11: Stalls due Data Hazard     :  ${tExecStats.numberOfDataHazardStalls}\n`;
+                    data += `Stat12: Stalls due Control Hazard  :  ${tExecStats.numberOfControlHazardStalls}\n`;
+                    data += `*******************************************************************\n`;
+                    // console.log(data);
+                    saveContent(data, 'stats.txt');
+                }
+            }
+        })
+    } else {
+        vex.dialog.alert('This functionality is only for pipelined simulation :(')
+    }
+}
 
 
 
@@ -1129,9 +1136,11 @@ var configWrapper = {
                     mode = 1;
                     execute.GlobalVar.mode = 1;
                 } else {
-                    // Pipelining without Data Forwarding
-                    mode = 2;
-                    execute.GlobalVar.mode = 2;
+                    if (mode !== 0) {
+                        // Pipelining without Data Forwarding
+                        mode = 2;
+                        execute.GlobalVar.mode = 2;
+                    }
                 }
             }
         });

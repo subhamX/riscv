@@ -20,7 +20,7 @@ let mode: number = 1;
 // state of run button
 let canRun = true;
 // pipeline animation cycle duration in millisecond
-let pipeAnimationDuration = 300;
+let pipeAnimationDuration = 100;
 
 // Defining theme asset
 ace.config.setModuleUrl('ace/theme/monokai', require('ace-builds/src-noconflict/theme-monokai.js'))
@@ -49,6 +49,7 @@ function setupEditor() {
     });
     editor.setShowPrintMargin(false);
     editor.session.setUseSoftTabs(true);
+    
     editor.commands.addCommand({
         name: 'addComment',
         bindKey: { win: 'Ctrl-/', mac: 'Command-/' },
@@ -747,7 +748,7 @@ function runAllInstructions() {
                 clearInterval(interval);
                 resolve();
             }
-        }, 50);
+        }, pipeAnimationDuration);
     })
 }
 
@@ -760,7 +761,6 @@ function runPipelinedInstructions() {
             // Calling pipeline run
             let res = execute.pipelinedAllINS();
             if (pipeAnimationDuration > 700) {
-
                 let lastPred = execute.GlobalVar.isb.lastPrediction;
                 if (lastPred !== null) {
                     if (lastPred == 0) {
@@ -1097,11 +1097,11 @@ var configWrapper = {
         vex.dialog.open({
             input: [
                 `
-                <input type="range" min="10" max="1500" value="${pipeAnimationDuration}" class="slider" id="duration" name='duration'>
-                ${`<div class='heading-text-prompt'><p>Animation Cycle Duration: <span id="durationVal"></span> sec</p></div>`}  
+                <input type="range" min="5" max="1000" value="${pipeAnimationDuration}" class="slider" id="duration" name='duration'>
+                ${`<div class='heading-text-prompt'><p>Animation Cycle Duration: <span id="durationVal"></span> ms</p></div>`}  
                 
-                <div class='heading-text-prompt' style='color: #856404; background-color: #fff3cd; border-color: #ffeeba; font-size: 13px'>Note: This functionality is only available for pipelined execution</div>
                 `
+                // <div class='heading-text-prompt' style='color: #856404; background-color: #fff3cd; border-color: #ffeeba; font-size: 13px'>Note: This functionality is only available for pipelined execution</div>
             ].join(''),
             callback: function (value) {
                 if (!value) {
@@ -1112,11 +1112,11 @@ var configWrapper = {
         });
         var slider = document.getElementById("duration");
         var output = document.getElementById("durationVal");
-        output.innerHTML = (pipeAnimationDuration / 1000).toString();
+        output.innerHTML = (pipeAnimationDuration).toString();
 
         // Update the current slider value (each time you drag the slider handle)
         slider.oninput = function () {
-            output.innerHTML = ((parseInt(this['value'])) / 1000).toString();
+            output.innerHTML = ((parseInt(this['value']))).toString();
         }
     },
     dForward: function () {
